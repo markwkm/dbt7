@@ -8,4 +8,4 @@
 
 echo "Using pgsql version for ${0}..."
 
-dbt7-pgsql-create-db "${@}"
+dbt7-pgsql-get-query-time "${@}"
