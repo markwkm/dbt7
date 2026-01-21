@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="generator" content="Docutils 0.20.1: https://docutils.sourceforge.io/" />
+<meta name="generator" content="Docutils 0.22.4: https://docutils.sourceforge.io/" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Database Test 7 (DBT-7) User's Guide</title>
 <style type="text/css">
@@ -10,7 +10,7 @@
 /* Minimal style sheet for the HTML output of Docutils.                    */
 /*                                                                         */
 /* :Author: Günter Milde, based on html4css1.css by David Goodger          */
-/* :Id: $Id: minimal.css 9079 2022-06-19 14:00:56Z milde $                                                               */
+/* :Id: $Id: minimal.css 10018 2025-03-06 16:19:15Z milde $                                                               */
 /* :Copyright: © 2015, 2021 Günter Milde.                                  */
 /* :License: Released under the terms of the `2-Clause BSD license`_,      */
 /*    in short:                                                            */
@@ -59,6 +59,7 @@ a.toc-backref {
 /* Warnings, Errors */
 .system-messages h2,
 .system-message-title,
+pre.problematic,
 span.problematic {
   color: red;
 }
@@ -71,13 +72,15 @@ span.problematic {
 /* do not wrap at hyphens and similar: */
 .literal > span.pre { white-space: nowrap; }
 
+/* keep line-breaks (\n) visible */
+.pre-wrap { white-space: pre-wrap; }
+
 /* Lists */
 
 /* compact and simple lists: no margin between items */
-.simple  li, .simple  ul, .simple  ol,
-.compact li, .compact ul, .compact ol,
-.simple  > li p, dl.simple  > dd,
-.compact > li p, dl.compact > dd {
+.simple  li, .simple  ul, .simple  ol, .simple  > li p,
+.compact li, .compact ul, .compact ol, .compact > li p,
+dl.simple  > dd, dl.compact > dd, dl.docinfo > dd {
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -120,7 +123,7 @@ dl.docinfo > dt {
   float: left;
   margin: 0;
   padding: 0;
-  padding-right: 0.2em;
+  padding-right: 0.25em;
 }
 /* Offset for field content (corresponds to the --field-name-limit option) */
 dl.field-list > dd,
@@ -146,7 +149,7 @@ dl.option-list > dd > *:first-child
 /* Bibliographic Fields (docinfo) */
 dl.docinfo pre.address {
   font: inherit;
-  margin: 0.5em 0;
+  margin: 0;
 }
 dl.docinfo > dd.authors > p { margin: 0; }
 
@@ -240,10 +243,11 @@ table.align-left, table.align-center, table.align-right {
 div.line-block { display: block; }
 div.line-block div.line-block, pre { margin-left: 2em; }
 
-/* Code line numbers: dropped when copying text from the page */
+/* Code line numbers: don't copy with drag-and-drop */
 pre.code .ln { display: none; }
 pre.code code:before {
-  content: attr(data-lineno); /* …, none) fallback not supported by any browser */
+  content: attr(data-lineno);
+  font-size: small;
   color: gray;
 }
 
@@ -261,7 +265,7 @@ td, th {
   padding-right: 0.5em /* separate table cells */
 }
 
-table > caption {
+table > caption, figcaption {
   text-align: left;
   margin-top: 0.2em;
   margin-bottom: 0.2em;
@@ -270,17 +274,35 @@ table.captionbelow {
   caption-side: bottom;
 }
 
+/* MathML (see "math.css" for --math-output=HTML) */
+math .boldsymbol { font-weight: bold; }
+math.boxed, math .boxed {padding: 0.25em; border: thin solid; }
+/* style table similar to AMS "align" or "aligned" environment: */
+mtable.cases > mtr > mtd { text-align: left; }
+mtable.ams-align > mtr > mtd { padding-left: 0; padding-right: 0; }
+mtable.ams-align > mtr > mtd:nth-child(2n) { text-align: left; }
+mtable.ams-align > mtr > mtd:nth-child(2n+1) { text-align: right; }
+mtable.ams-align > mtr > mtd:nth-child(2n+3) { padding-left: 2em; }
+.mathscr mi, mi.mathscr {
+  font-family: STIX, XITSMathJax_Script, rsfs10,
+               "Asana Math", Garamond, cursive;
+}
+
 /* Document Header and Footer */
 header { border-bottom: 1px solid black; }
 footer { border-top: 1px solid black; }
 
 /* Images are block-level by default in Docutils */
 /* New HTML5 block elements: set display for older browsers */
-img, header, footer, main, aside, nav, section, figure, video, details {
+img, svg, header, footer, main, aside, nav, section, figure, video, details {
   display: block;
 }
+svg { width: auto; height: auto; }  /* enable scaling of SVG images */
 /* inline images */
-p img, p video, figure img, figure video {
+
+p img, p svg, p video,
+h1 img, h2 img, h3 img, h4 img, h5 img, h6 img,
+h1 svg, h2 svg, h3 svg, h4 svg, h5 svg, h6 svg {
   display: inline;
 }
 
@@ -291,7 +313,7 @@ p img, p video, figure img, figure video {
 /* Rules for easy reading and pre-defined style variants.                  */
 /*                                                                         */
 /* :Author: Günter Milde, based on html4css1.css by David Goodger          */
-/* :Id: $Id: plain.css 9338 2023-04-08 21:08:47Z milde $                                                               */
+/* :Id: $Id: plain.css 10079 2025-04-10 12:01:48Z milde $                                                               */
 /* :Copyright: © 2015 Günter Milde.                                        */
 /* :License: Released under the terms of the `2-Clause BSD license`_,      */
 /*    in short:                                                            */
@@ -361,7 +383,6 @@ hr.docutils {
 
 /* vertical space (parskip) */
 p, ol, ul, dl, li,
-div.line-block,
 .footnote, .citation,
 div > math,
 table {
@@ -447,8 +468,7 @@ pre.math, pre.code {
 
 /* Block Quotes and Topics */
 bockquote { margin: 1em 2em; }
-blockquote p.attribution,
-.topic p.attribution {
+blockquote p.attribution {
   text-align: right;
   margin-left: 20%;
 }
@@ -504,7 +524,9 @@ table.numbered > caption:before {
 /* let content flow to the side of aligned images and figures */
 figure.align-left,
 img.align-left,
+svg.align-left,
 video.align-left,
+div.align-left,
 object.align-left {
   clear: left;
   float: left;
@@ -512,7 +534,9 @@ object.align-left {
 }
 figure.align-right,
 img.align-right,
+svg.align-right,
 video.align-right,
+div.align-right,
 object.align-right {
   clear: right;
   float: right;
@@ -564,15 +588,6 @@ pre.code .name.builtin, code .name.builtin { color: #352B84 }
 pre.code .deleted, code .deleted { background-color: #DEB0A1}
 pre.code .inserted, code .inserted { background-color: #A3D289}
 
-/* Math */
-/* for math-output=MathML (for math-output=HTML, see math.css) */
-math .boldsymbol {
-  font-weight: bold;
-}
-mstyle.mathscr, mi.mathscr {
-  font-family: STIX, XITSMathJax_Script, rsfs10,
-               "Asana Math", Garamond, cursive;
-}
 
 /* Epigraph           */
 /* Highlights         */
@@ -608,7 +623,7 @@ a { text-decoration: none; }
 <h1 class="title">Database Test 7 (DBT-7) User's Guide</h1>
 
 <nav class="contents" id="table-of-contents" role="doc-toc">
-<p class="topic-title">Table of Contents</p>
+<p class="topic-title"><a class="reference internal" href="#top">Table of Contents</a></p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#introduction" id="toc-entry-1">Introduction</a></p></li>
 <li><p><a class="reference internal" href="#installing-dbt-7" id="toc-entry-2">Installing DBT-7</a></p>
@@ -644,6 +659,7 @@ a { text-decoration: none; }
 <li><p><a class="reference internal" href="#developer-s-guide" id="toc-entry-14">Developer's Guide</a></p>
 <ul>
 <li><p><a class="reference internal" href="#creating-custom-query-templates" id="toc-entry-15">Creating Custom Query Templates</a></p></li>
+<li><p><a class="reference internal" href="#testing-individual-queries" id="toc-entry-16">Testing Individual Queries</a></p></li>
 </ul>
 </li>
 </ul>
@@ -672,7 +688,7 @@ by the tester:
 <p>In addition to the database management system software, the following is also
 required:</p>
 <ul class="simple">
-<li><p>cc</p></li>
+<li><p>gcc</p></li>
 <li><p>SQLite <a class="reference external" href="https://www.sqlite.org/index.html">https://www.sqlite.org/index.html</a></p></li>
 <li><p>lex</p></li>
 <li><p>make</p></li>
@@ -683,6 +699,7 @@ required:</p>
 <h4><a class="toc-backref" href="#toc-entry-4" role="doc-backlink">Supported Database Systems</a></h4>
 <p>These are the currently supported database systems:</p>
 <ul class="simple">
+<li><p>Greenplum</p></li>
 <li><p>PostgreSQL</p></li>
 </ul>
 </section>
@@ -691,10 +708,8 @@ required:</p>
 <ul class="simple">
 <li><p>Docutils - <strong>rst2html5</strong> is used to generate HTML from the reStructuredText
 reports.</p></li>
-<li><p><strong>sar</strong>, <strong>pidstat</strong> - While the scripts assume this particular version of
-<strong>sar</strong> and <strong>pidstat</strong> for Linux, it is possible to run on non-Linux based
-operating systems with some modifications to the kit.</p></li>
-<li><p>gnuplot - Used for generating plots for the HTML report</p></li>
+<li><p><strong>sar</strong>, <strong>pidstat</strong> - Used for collecting system and per process statistics.</p></li>
+<li><p>gnuplot - Used for generating plots for the HTML report.</p></li>
 <li><p>pandoc - Used only to generated PDF files from the HTML reports.</p></li>
 </ul>
 </section>
@@ -706,16 +721,19 @@ operating systems with some modifications to the kit.</p></li>
 <h3><a class="toc-backref" href="#toc-entry-7" role="doc-backlink">Building TPC-DS Tools</a></h3>
 <p>DBT-7 provides the script <cite>dbt7-build-dsgen</cite> to apply patches and compile the
 TPC-DS Tools.  The patches that are applied are minor code changes and query
-templates to make the TPC-DS Tools work with the databases supposed by DBT-7.</p>
+templates to make the TPC-DS Tools work with the databases supposed by DBT-7.
+These patches are in the <cite>patches</cite> subdirectory.</p>
 <p>For example, to build the TPC-DS Tools, unzip the TPC-DS Tools zip file and run
 <cite>dbt7-build-dbgen</cite> against the resulting directory:</p>
 <pre class="literal-block">unzip *-tpc-ds-tool.zip
-dbt7-build-dsgen DSGen-software-code-3.2.0rc1</pre>
+dbt7-build-dsgen DSGen-software-code-4.0.0_final</pre>
+<p>For brevity, future references to the location of the TPC-DS tools will be
+<cite>$DSHOME</cite>.</p>
 <section id="quick-start">
 <h4><a class="toc-backref" href="#toc-entry-8" role="doc-backlink">Quick Start</a></h4>
 <p>Once the TPC-DS Tools is built, only one command needs to be issued to run a
 complete test:</p>
-<pre class="literal-block">dbt7-run --tpchtools=&quot;TPC-DS V3.0.1&quot; pgsql /tmp/results</pre>
+<pre class="literal-block">dbt7-run --tpchtools=$DSHOME pgsql /tmp/results</pre>
 <p>This will run the generate the data files for a 1 GB scale factor database
 load, power and throughput test, with 2 streams, against PostgreSQL and save
 the results of the test in <cite>/tmp/results</cite>.</p>
@@ -732,10 +750,10 @@ throughput test streams.</p>
 </section>
 <section id="advanced-usage">
 <h4><a class="toc-backref" href="#toc-entry-10" role="doc-backlink">Advanced Usage</a></h4>
-<p>The <em>dbt7-run</em> script can be used to run any combination of a load test, power
-test, and throughput tests combined with the data maintenance tests.  But be
-aware that a load test must be run in order to create the database before a
-power or throughput tests can be run individually.</p>
+<p>The <em>dbt7-run</em> script can be used to run any combination of a Load Test, Power
+Test, and Throughput Test combined with the Data Maintenance Test.  But be
+aware that a Load Test must be run in order to create the database before a
+Power or Throughput Tests can be run individually.</p>
 </section>
 </section>
 </section>
@@ -745,22 +763,21 @@ power or throughput tests can be run individually.</p>
 <h3><a class="toc-backref" href="#toc-entry-12" role="doc-backlink">PostgreSQL</a></h3>
 <p>There are additional dialects for PostgreSQL that are provided to collect query
 plans and <cite>EXPLAIN ANALYZE</cite> output, as shown in the examples below.  The
-<cite>DBT7DMPREFIX</cite> environment variable can be used to inject SQL into the data
-maintenance such that <cite>EXPLAIN</cite> output can be captures in those tests.
+<cite>DBT7DMPREFIX</cite> environment variable must be used to inject SQL into the data
+maintenance such that <cite>EXPLAIN</cite> output can be captures in those specific tests.
 Otherwise only the 99 queries will have <cite>EXPLAIN</cite> output.</p>
 <p>Run a 1GB test (with <cite>DBT7DMPREFIX</cite> unset):</p>
-<pre class="literal-block">dbt7-run psql /tmp/results</pre>
+<pre class="literal-block">dbt7-run --tpcdstools=$DSHOME psql /tmp/results</pre>
 <p>Run a 1GB test and capture <cite>EXPLAIN</cite> output query results:</p>
 <pre class="literal-block">export DBT7DMPREFIX=&quot;LOAD 'auto_explain'; SET auto_explain.log_min_duration TO 0; SET auto_explain.log_level TO notice;&quot;
-dbt7-run -d postgresqle pgsql /tmp/results</pre>
+dbt7-run --tpcdstools=$DSHOME -d pgsqle pgsql /tmp/results</pre>
 <p>Run a 1GB test and capture <cite>EXPLAIN ANALYZE</cite> output query:</p>
-<pre class="literal-block">export DBT7DMPREFIX=&quot;LOAD 'auto_explain'; SET auto_explain.log_min_duration TO 0; SET auto_explain.log_analyze TO on; SET auto_explain.log_level TO notice;&quot;
-dbt7-run -d postgresqlea \
-        pgsql /tmp/results</pre>
+<pre class="literal-block">export DBT7DMPREFIX=&quot;LOAD 'auto_explain'; SET auto_explain.log_min_duration TO 0; SET auto_explain.log_analyze TO on; SET auto_explain.log_buffers TO on; SET auto_explain.log_verbose TO on; SET auto_explain.log_level TO notice;&quot;
+dbt7-run --tpcdstools=$DSHOME -d pgsqlea pgsql /tmp/results</pre>
 <section id="advanced-postgresql-usage">
 <h4><a class="toc-backref" href="#toc-entry-13" role="doc-backlink">Advanced PostgreSQL Usage</a></h4>
 <p>See <cite>examples/dbt7_pgsql_profile</cite> for the environment variables to set when not
-using the <cite>dbt7-run</cite> script, in other words for advanced users.</p>
+using the <cite>dbt7-run</cite> script, in other words, tips for advanced users.</p>
 <p>One example of advanced usage, requiring more user setup and configuration, is
 to run this against a PostgreSQL database on a remote system.</p>
 <p>Since this kit provides scripts that are potentially destructive, it relies on
@@ -778,14 +795,53 @@ damage to a database that the user may be connecting to by default.</p>
 use in DBT-7 requires up to 3 steps:</p>
 <ol class="arabic simple">
 <li><p>Create a list of the 99 query templates to be executed, e.g.
-<cite>templates-postgresql.tpl</cite></p></li>
+<cite>templates-pgsql.tpl</cite></p></li>
 <li><p>Create new query template file for any modification needed from the official
 templates.  e.g. Copy <cite>query23.tpl</cite> to <cite>query23postgresql.tpl</cite>.  It is
 important to keep the query number in the filename for proper recording and
 analysis with the DBT-7 kit.</p></li>
 <li><p>Create a new dialect file that contains proper syntax for transaction
-control statements, and limit handling.  e.g. <cite>postgresql.tpl</cite></p></li>
+control statements, and limit handling.  e.g. <cite>pgsql.tpl</cite></p></li>
 </ol>
+</section>
+<section id="testing-individual-queries">
+<h3><a class="toc-backref" href="#toc-entry-16" role="doc-backlink">Testing Individual Queries</a></h3>
+<p>Running the individual parts of the benchmark, i.e. the Power Test of the
+Throughput Test, much less the entire benchmark, don't lend it itself to making
+it easy to evaluate individual query performance.  There may be times when the
+developer wants to focus on an individual query to evaluate the effects of a
+different index, or database system parameters.</p>
+<p>The <em>run-query</em> script is intended to allow a developer to generate and execute
+1 query at a time.</p>
+<p>A database needs to be created first, but only needs to be loaded once if
+testing individual queries.  This can be done with the run script using the
+<cite>--load</cite> flag.  A PostgreSQL example:</p>
+<pre class="literal-block">dbt7 run --tpchtools=$DSHOME --load pgsql load-results</pre>
+<p>Then any query can be tested.  For example running Query 4:</p>
+<pre class="literal-block">dbt7 run-query --tpchtools=$DSHOME 55 pgsql</pre>
+<p>Here is an example of the output query output, the results, and the execution
+time:</p>
+<pre class="literal-block">select  i_brand_id brand_id, i_brand brand,
+         sum(ss_ext_sales_price) ext_price
+ from date_dim, store_sales, item
+ where d_date_sk = ss_sold_date_sk
+         and ss_item_sk = i_item_sk
+         and i_manager_id=36
+         and d_moy=12
+         and d_year=2001
+ group by i_brand, i_brand_id
+ order by ext_price desc, i_brand_id
+limit 100 ;
+ brand_id |                       brand                        |     ext_price
+----------+----------------------------------------------------+--------------------
+  3002002 | importoexporti #2                                  |           94269.68
+...
+
+(68 rows)
+
+Query 55 executed in 0.155 second(s).</pre>
+<p>Additional flags can be used to capture system statistics (<cite>--stats</cite>), software
+profiles (<cite>--profile</cite>), or explain plans (<cite>--explain</cite>).</p>
 </section>
 </section>
 </main>
