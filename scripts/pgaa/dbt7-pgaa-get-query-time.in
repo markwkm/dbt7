@@ -1,0 +1,59 @@
+#!/bin/sh
+@SHELLOPTIONS@
+#
+# This file is released under the terms of the Artistic License.
+# Please see the file LICENSE, included in this package, for details.
+#
+# Copyright The DBT-7 Authors
+
+usage()
+{
+	cat << EOF
+$(basename "${0}") is the Database Test 7 (DBT-7) EDB PGAA Query Time Exporter
+
+Usage:
+  $(basename "${0}") [OPTION]
+
+Options:
+  -o OPTIONS       psql options
+  -?, --help       show this help, then exit
+EOF
+}
+
+ARGS=""
+
+while [ "${#}" -gt 0 ] ; do
+	case "${1}" in
+	(-o)
+		shift
+		ARGS="-o ${1}/time_statistics.csv"
+		;;
+	(-\? | --help)
+		usage
+		exit 0
+		;;
+	(--* | -*)
+		echo "$(basename "${0}"): invalid option -- '${1}'"
+		echo "try \"$(basename "${0}") --help\" for more information."
+		exit 1
+		;;
+	(*)
+		break
+		;;
+	esac
+	shift
+done
+
+if [ -z "${DBT7DBNAME}" ]; then
+	echo "Error: DBT7DBNAME environment variable not defined"
+	exit 1
+fi
+
+eval "psql -X -A -F, -t -q -d ${DBT7DBNAME} ${ARGS}" << __EOF__
+SELECT stream, query, template,
+       to_char(s_time, 'YYYY-MM-DD HH24:MI:SS') AS s_time,
+       to_char(e_time, 'YYYY-MM-DD HH24:MI:SS') AS e_time,
+       e_time - s_time AS elapsed_time,
+       extract(EPOCH FROM (e_time - s_time)) AS diff_time
+FROM time_statistics
+__EOF__

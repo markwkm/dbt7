@@ -1,4 +1,5 @@
 add_subdirectory (gp)
+add_subdirectory (pgaa)
 add_subdirectory (pgsql)
 
 set (SCRIPTS "")

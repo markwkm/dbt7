@@ -70,6 +70,7 @@ Options:
 
 DBMS options:
   gp               Greenplum
+  pgaa             Analytics Accelerator
   pgsql            PostgreSQL
 
 DIRECTORY is the path to save test results.
