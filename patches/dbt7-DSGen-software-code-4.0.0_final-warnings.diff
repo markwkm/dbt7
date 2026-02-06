@@ -135,14 +135,32 @@ Index: dbt7/DSGen-software-code-4.0.0_final/tools/join.c
 ===================================================================
 --- dbt7.orig/DSGen-software-code-4.0.0_final/tools/join.c
 +++ dbt7/DSGen-software-code-4.0.0_final/tools/join.c
-@@ -305,9 +305,9 @@ web_join(int col, ds_key_t join_key)
+@@ -301,13 +301,13 @@ web_join(int col, ds_key_t join_key)
+ 	{
+ 		dSiteClose = strtodate(WEB_END_DATE);
+ 		nSiteDuration = dSiteClose->julian;
+-		free(dSiteClose);
  		nConcurrentSites = (int)get_rowcount(CONCURRENT_WEB_SITES);
  		dSiteOpen = strtodate(WEB_START_DATE);
  		nSiteDuration -= dSiteOpen->julian;
 -		free(dSiteOpen);
  		nSiteDuration *= nConcurrentSites;
  		nOffset = (dSiteClose->julian - dSiteOpen->julian) / (2 * nSiteDuration) ;
++		free(dSiteClose);
 +		free(dSiteOpen);
  		init = 1;
  	}
  	
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/print.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/print.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/print.c
+@@ -201,7 +201,7 @@ print_delete (int * val)
+       exit(-1);
+ 	}
+    if (is_set("TERMINATE"))
+-	   fprintf(fpDeleteFile, get_str("DELIMITER"));
++	   fprintf(fpDeleteFile, "%s", get_str("DELIMITER"));
+    fprintf(fpDeleteFile, "\n");
+    
+    return;
