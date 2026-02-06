@@ -22,6 +22,9 @@ add_subdirectory (man)
 add_subdirectory (patches)
 add_subdirectory (scripts)
 
+enable_testing ()
+add_subdirectory (tests)
+
 # CPack rules for creating distribution files.
 
 include (InstallRequiredSystemLibraries)

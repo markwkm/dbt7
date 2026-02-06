@@ -1,0 +1,112 @@
+#!/bin/sh
+@SHELLOPTIONS@
+
+DSGEN=${DSGEN:-@CMAKE_SOURCE_DIR@/DSGen-software-code-4.0.0_final}
+if [ ! -d "${DSGEN}" ]; then
+	echo "ERROR: DSGEN directory does not exist: ${DSGEN}"
+	exit 1
+fi
+
+if [ -n "$1" ]; then
+	TMPDIR=$1
+	CLEANUP=0
+else
+	TMPDIR=$(mktemp -d)
+	CLEANUP=1
+fi
+
+CHUNKS=${CHUNKS:-2}
+SCALE=${SCALE:-1}
+
+# shellcheck disable=SC2317
+cleanup() {
+	if [ "${CLEANUP}" -eq 1 ]; then
+		rm -rf "${TMPDIR}"
+	fi
+}
+trap cleanup EXIT
+
+set -e
+
+# Check if data directories already exist
+SKIP_GENERATE=0
+if [ -d "${TMPDIR}/sf${SCALE}.0" ]; then
+	SKIP_GENERATE=1
+	CHUNK=1
+	while [ "${CHUNK}" -le "${CHUNKS}" ]; do
+		if [ ! -d "${TMPDIR}/sf${SCALE}.${CHUNK}" ]; then
+			SKIP_GENERATE=0
+			break
+		fi
+		CHUNK=$((CHUNK + 1))
+	done
+fi
+
+if [ "${SKIP_GENERATE}" -eq 1 ]; then
+	echo "Data directories already exist, skipping data generation"
+else
+	# Build dsdgen
+	cd "${DSGEN}/tools"
+	make -f makefile
+
+	# Create data directories
+	mkdir -p "${TMPDIR}/sf${SCALE}.0"
+	CHUNK=1
+	while [ "${CHUNK}" -le "${CHUNKS}" ]; do
+		mkdir -p "${TMPDIR}/sf${SCALE}.${CHUNK}"
+		CHUNK=$((CHUNK + 1))
+	done
+
+	# Generate unchunked data
+	./dsdgen -DIR "${TMPDIR}/sf${SCALE}.0" -SCALE "${SCALE}" -TERMINATE N \
+		-RNGSEED 0 &
+
+	# Generate chunked data
+	CHUNK=1
+	while [ "${CHUNK}" -le "${CHUNKS}" ]; do
+		./dsdgen -DIR "${TMPDIR}/sf${SCALE}.${CHUNK}" \
+			-SCALE "${SCALE}" -TERMINATE N -RNGSEED 0 \
+			-PARALLEL "${CHUNKS}" -CHILD "${CHUNK}" &
+		CHUNK=$((CHUNK + 1))
+	done
+
+	wait
+fi
+
+# Compare line counts
+FAILED=0
+
+for FILE in "${TMPDIR}/sf${SCALE}.0"/*.dat; do
+	BASENAME=$(basename "${FILE}" .dat)
+
+	# Skip dbgen_version.dat, it's not table data
+	if [ "${BASENAME}" = "dbgen_version" ]; then
+		continue
+	fi
+
+	# Count lines in unchunked file
+	LINES=$(wc -l < "${FILE}")
+
+	# Count lines in chunked files (pattern: tablename_chunk_chunks.dat)
+	CHUNKED_LINES=0
+	CHUNK=1
+	while [ "${CHUNK}" -le "${CHUNKS}" ]; do
+		PFILE="${TMPDIR}/sf${SCALE}.${CHUNK}"
+		PFILE="${PFILE}/${BASENAME}_${CHUNK}_${CHUNKS}.dat"
+		if [ -f "${PFILE}" ]; then
+			PCOUNT=$(wc -l < "${PFILE}")
+			CHUNKED_LINES=$(( CHUNKED_LINES + PCOUNT ))
+		fi
+		CHUNK=$(( CHUNK + 1 ))
+	done
+
+	if [ "${LINES}" -ne "${CHUNKED_LINES}" ]; then
+		echo "FAIL: ${BASENAME}.dat:" \
+			"single=${LINES} chunked=${CHUNKED_LINES}"
+		FAILED=1
+	else
+		echo "PASS: ${BASENAME}.dat: ${LINES} lines"
+	fi
+done
+
+exit ${FAILED}
