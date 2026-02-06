@@ -1,7 +1,42 @@
 #!/bin/sh
 
-if ! which podman > /dev/null 2>&1; then
-	echo "podman is not in your path"
+usage()
+{
+	echo "usage: $(basename "${0}") [-d]"
+	echo "  -d  use docker instead of podman"
+}
+
+CONTAINER_CMD=""
+USE_DOCKER=0
+
+while getopts "dh" opt; do
+	case ${opt} in
+	d)
+		USE_DOCKER=1
+		;;
+	h)
+		usage
+		exit 0
+		;;
+	*)
+		usage
+		exit 1
+		;;
+	esac
+done
+
+if [ ${USE_DOCKER} -eq 1 ]; then
+	if ! command -v docker > /dev/null 2>&1; then
+		echo "docker is not in your path"
+		exit 1
+	fi
+	CONTAINER_CMD="docker"
+elif command -v podman > /dev/null 2>&1; then
+	CONTAINER_CMD="podman"
+elif command -v docker > /dev/null 2>&1; then
+	CONTAINER_CMD="docker"
+else
+	echo "podman or docker is not in your path"
 	exit 1
 fi
 
@@ -14,9 +49,14 @@ if [ "${ARCH}" = "arm64" ]; then
 	ARCH="aarch64"
 fi
 
-cd "$CONTAINER_DIR/.." && \
-		podman build \
-				--isolation=chroot \
+ISOLATION_FLAG=""
+if [ "${CONTAINER_CMD}" = "podman" ]; then
+	ISOLATION_FLAG="--isolation=chroot"
+fi
+
+cd "${CONTAINER_DIR}/.." && \
+		eval ${CONTAINER_CMD} build \
+				${ISOLATION_FLAG} \
 				--build-arg ARCH="${ARCH}" \
 				-t $CONTAINER_TAG \
 				-f Containerfile.appimage \

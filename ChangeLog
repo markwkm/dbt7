@@ -9,6 +9,7 @@ vX.Y.Z (YYYY-MM-DD)
   in item.dst
 - Add a series of patches to quiet address sanitizer and remaining dsgen
   compiler warnings
+- Update container scripts to use docker if podman is not found
 
 v0.7.5 (2026-01-28)
 

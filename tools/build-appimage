@@ -1,7 +1,42 @@
 #!/bin/sh
 
-if ! which podman > /dev/null 2>&1; then
-	echo "podman is not in your path"
+usage()
+{
+	echo "usage: $(basename "${0}") [-d]"
+	echo "  -d  use docker instead of podman"
+}
+
+CONTAINER_CMD=""
+USE_DOCKER=0
+
+while getopts "dh" opt; do
+	case ${opt} in
+	d)
+		USE_DOCKER=1
+		;;
+	h)
+		usage
+		exit 0
+		;;
+	*)
+		usage
+		exit 1
+		;;
+	esac
+done
+
+if [ ${USE_DOCKER} -eq 1 ]; then
+	if ! command -v docker > /dev/null 2>&1; then
+		echo "docker is not in your path"
+		exit 1
+	fi
+	CONTAINER_CMD="docker"
+elif command -v podman > /dev/null 2>&1; then
+	CONTAINER_CMD="podman"
+elif command -v docker > /dev/null 2>&1; then
+	CONTAINER_CMD="docker"
+else
+	echo "podman or docker is not in your path"
 	exit 1
 fi
 
@@ -9,10 +44,14 @@ CONTAINER_DIR=$(readlink -f "$(dirname "$0")")
 CONTAINER_TAG="dbt7-appimage"
 TARGET="appimage"
 
-# Use the return code from `podman inspect` to determine if the container image
-# needs to be created.
-if ! podman inspect $CONTAINER_TAG > /dev/null 2>&1; then
-	"${CONTAINER_DIR}/build-appimage-container" || exit 1
+# Use the return code from `$CONTAINER_CMD inspect` to determine if the container
+# image needs to be created.
+if ! ${CONTAINER_CMD} inspect ${CONTAINER_TAG} > /dev/null 2>&1; then
+	DOCKER_FLAG=""
+	if [ "${CONTAINER_CMD}" = "docker" ]; then
+		DOCKER_FLAG="-d"
+	fi
+	"${CONTAINER_DIR}/build-appimage-container" ${DOCKER_FLAG} || exit 1
 fi
 
 if [ "$ARCH" = "" ]; then
@@ -20,7 +59,7 @@ if [ "$ARCH" = "" ]; then
 fi
 
 # Apply patches for successful builds on the old CentOS 7 container image
-podman run \
+eval ${CONTAINER_CMD} run \
 		--rm \
 		-v "${CONTAINER_DIR}/..:/usr/local/src/dbt7:rw,Z" \
 		--env PKG_CONFIG_PATH="/usr/lib/pkgconfig" \
@@ -30,12 +69,13 @@ podman run \
 		$CONTAINER_TAG \
 		make DBMS="${DBMS}" -f Makefile.cmake "${TARGET}"
 
-# I wonder if there is a better way to make sure the artifacts are all owned by
-# the user running this.
-podman run \
-		--rm \
-		-v "${CONTAINER_DIR}/..:/usr/local/src/dbt7:rw,Z" \
-		-w /usr/local/src/dbt7 \
-		-u root \
-		$CONTAINER_TAG \
-		chown -R root:root builds/appimage/
+# With docker, files are created as root. Fix ownership to match the host user.
+# Podman rootless already maps container root to the host user.
+if [ "${CONTAINER_CMD}" = "docker" ]; then
+	${CONTAINER_CMD} run \
+			--rm \
+			-v "${CONTAINER_DIR}/..:/usr/local/src/dbt7:rw,Z" \
+			-w /usr/local/src/dbt7 \
+			${CONTAINER_TAG} \
+			chown -R "$(id -u):$(id -g)" builds/AppDir builds/appimage/
+fi
