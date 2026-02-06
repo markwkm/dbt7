@@ -1,0 +1,26 @@
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/dbgen_version.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/dbgen_version.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/dbgen_version.c
+@@ -85,7 +85,7 @@ mk_dbgen_version(void *pDest, ds_key_t k
+ 	time( &ltime );                 /* Get time in seconds */
+ 	pTimeStamp = localtime( &ltime );  /* Convert time to struct */
+ 	
+-	snprintf(r->szDate, 11, "%4d-%02d-%02d", pTimeStamp->tm_year + 1900, pTimeStamp->tm_mon + 1, pTimeStamp->tm_mday);
++	snprintf(r->szDate, 11, "%04hd-%02hhd-%02hhd", (short)(pTimeStamp->tm_year + 1900), (signed char)(pTimeStamp->tm_mon + 1), (signed char)pTimeStamp->tm_mday);
+ 	snprintf(r->szTime, 9, "%02d:%02d:%02d", pTimeStamp->tm_hour, pTimeStamp->tm_min, pTimeStamp->tm_sec);
+ 	snprintf (r->szVersion, RS_VERSION_LENGTH, "%d.%d.%d%s", VERSION, RELEASE, MODIFICATION, PATCH);
+ 	strcpy(r->szCmdLineArgs, g_szCommandLine);
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/s_zip_to_gmt.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/s_zip_to_gmt.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/s_zip_to_gmt.c
+@@ -149,7 +149,7 @@ mk_s_zip(void *pDest, ds_key_t kIndex)
+ 	pMap = &arGMTOffset[0];
+ 	while (kIndex > pMap->nMax)
+ 		pMap += 1;
+-	snprintf(r->szZip, sizeof(r->szZip), "%05" PRId64, kIndex);
++	snprintf(r->szZip, sizeof(r->szZip), "%05d", (int)kIndex);
+ 	r->nGMTOffset = pMap->nOffset;
+ 	
+ 	return(r->nGMTOffset == -99?1:0);

@@ -3,6 +3,12 @@ dbt7-DSGen-software-code-4.0.0_final-warnings.diff
 dbt7-DSGen-software-code-4.0.0_final-fread-fix.diff
 dbt7-DSGen-software-code-4.0.0_final-ftime-deprecation.diff
 dbt7-DSGen-software-code-4.0.0_final-item.diff
+dbt7-DSGen-software-code-4.0.0_final-address-sanitizer.diff
+dbt7-DSGen-software-code-4.0.0_final-unused-but-set-variable.diff
+dbt7-DSGen-software-code-4.0.0_final-misleading-indentation.diff
+dbt7-DSGen-software-code-4.0.0_final-format-truncation.diff
+dbt7-DSGen-software-code-4.0.0_final-format-overflow.diff
+dbt7-DSGen-software-code-4.0.0_final-unused-function.diff
 dbt7-DSGen-software-code-4.0.0_final-postgresql-queries.diff
 dbt7-DSGen-software-code-4.0.0_final-postgresql-queries-test.diff
 dbt7-DSGen-software-code-4.0.0_final-greenplum-queries.diff

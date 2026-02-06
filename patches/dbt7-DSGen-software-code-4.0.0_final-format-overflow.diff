@@ -1,0 +1,25 @@
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/date.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/date.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/date.c
+@@ -355,9 +355,9 @@ date_t_op(date_t *dest, int op, date_t *
+ 		break;
+ 	case OP_SAME_LY:
+ 		if (is_leap(d1->year) && (d1->month == 2) && (d1->day == 29))
+-			sprintf(tString, "%d-02-28", d1->year - 1);
++			sprintf(tString, "%04hd-02-28", (short)(d1->year - 1));
+ 		else
+-			sprintf(tString, "%4d-%02d-%02d", d1->year - 1, d1->month, d1->day);
++			sprintf(tString, "%04hd-%02hhd-%02hhd", (short)(d1->year - 1), (signed char)d1->month, (signed char)d1->day);
+ 		strtodt(dest, tString);
+ 		break;
+ 	case OP_SAME_LQ:
+@@ -368,7 +368,7 @@ date_t_op(date_t *dest, int op, date_t *
+ 			sprintf(tString, "%4d-%s", d1->year, qtr_start[1]);
+ 			strtodt(&tDate, tString);
+ 			tJulian = d1->julian - tDate.julian;
+-			sprintf(tString, "%4d-%s", d1->year - 1, qtr_start[4]);
++			sprintf(tString, "%04hd-%s", (short)(d1->year - 1), qtr_start[4]);
+ 			strtodt(&tDate, tString);
+ 			tJulian += tDate.julian;
+ 			jtodt(dest, tJulian);

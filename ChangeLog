@@ -7,6 +7,8 @@ vX.Y.Z (YYYY-MM-DD)
 - Add item.diff patch: fix a bug where an overflowing strncpy() corrupted
   i_manager_id, such that the resulting ID's were outside of the range defined
   in item.dst
+- Add a series of patches to quiet address sanitizer and remaining dsgen
+  compiler warnings
 
 v0.7.5 (2026-01-28)
 

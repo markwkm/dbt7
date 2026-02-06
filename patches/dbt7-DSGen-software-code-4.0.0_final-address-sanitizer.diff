@@ -1,0 +1,320 @@
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/s_catalog_order.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/s_catalog_order.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/s_catalog_order.c
+@@ -53,7 +53,7 @@
+ struct S_CATALOG_ORDER_TBL g_s_catalog_order;
+ struct S_CATALOG_ORDER_LINEITEM_TBL g_s_catalog_order_lineitem;
+ struct S_CATALOG_RETURNS_TBL	g_s_catalog_return;
+-int nItemIndex;
++int nItemIndexCO;
+ 
+ /*
+ * Routine: 
+@@ -133,7 +133,7 @@ mk_s_catalog_order(void *pDest, ds_key_t
+    int i;
+ 
+    mk_master(pDest, kIndex);
+-   genrand_integer(&nItemIndex, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_CLIN_ITEM_ID);
++   genrand_integer(&nItemIndexCO, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_CLIN_ITEM_ID);
+ 	for (i=1; i <= 9; i++)
+ 	{
+       mk_detail(&g_s_catalog_order_lineitem, i, 1);
+@@ -219,7 +219,7 @@ vld_s_catalog_order(int nTable, ds_key_t
+ 
+    mk_master(NULL, kRow);
+    genrand_integer(&nLineitem, DIST_UNIFORM, 1, 9, 0, S_CLIN_LINE_NUMBER);
+-   genrand_integer(&nItemIndex, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_CLIN_ITEM_ID);
++   genrand_integer(&nItemIndexCO, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_CLIN_ITEM_ID);
+    for (i=1; i < nLineitem; i++)
+       mk_detail(&g_s_catalog_order_lineitem, i, 0);
+    print_start(S_CATALOG_ORDER_LINEITEM);
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/s_catalog_order_lineitem.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/s_catalog_order_lineitem.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/s_catalog_order_lineitem.c
+@@ -53,7 +53,7 @@
+ 
+ extern struct S_CATALOG_ORDER_LINEITEM_TBL g_s_catalog_order_lineitem;
+ extern struct S_CATALOG_ORDER_TBL g_s_catalog_order;
+-extern int nItemIndex;
++extern int nItemIndexCO;
+ 
+ /*
+ * Routine: 
+@@ -97,14 +97,14 @@ mk_s_catalog_order_lineitem(void *pDest,
+ 	
+ 	r->kOrderID = g_s_catalog_order.kID;
+ 	r->kLineNumber = kIndex;
+-   nItemIndex += 1;
+-   if (nItemIndex > getIDCount(ITEM))
+-      nItemIndex = 1;
++   nItemIndexCO += 1;
++   if (nItemIndexCO > getIDCount(ITEM))
++      nItemIndexCO = 1;
+ 
+    /*
+     * select a unique item, and then map to the appropriate business key
+ 	*/
+-	r->kItemID = getPermutationEntry(pItemPermutation, nItemIndex);
++	r->kItemID = getPermutationEntry(pItemPermutation, nItemIndexCO);
+ 	r->kItemID = getFirstSK(r->kItemID);
+ 
+ 	r->kPromotionID = mk_join(S_CLIN_PROMOTION_ID, PROMOTION, 1);
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/s_pline.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/s_pline.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/s_pline.c
+@@ -51,7 +51,7 @@
+ 
+ struct S_PURCHASE_LINEITEM_TBL g_s_pline;
+ extern struct S_PURCHASE_TBL g_s_purchase;
+-extern int nItemIndex;
++extern int nItemIndexP;
+ 
+ /*
+ * Routine: 
+@@ -99,15 +99,15 @@ mk_s_pline(void *pDest, ds_key_t kIndex)
+ 	
+ 	r->kPurchaseID = g_s_purchase.kID;
+ 	r->kLineNumber = kIndex;
+-   nItemIndex += 1;
+-   if (nItemIndex > nItemIDCount)
+-      nItemIndex = 1;
++   nItemIndexP += 1;
++   if (nItemIndexP > nItemIDCount)
++      nItemIndexP = 1;
+ 
+ 	/*
+     * pick the next entry in the permutation, to assure uniqueness within order
+     * shift to SK value to align with printID() expectations
+     */
+-   r->kItemID = getPermutationEntry(pItemPermutation, nItemIndex);
++   r->kItemID = getPermutationEntry(pItemPermutation, nItemIndexP);
+    r->kItemID = getFirstSK(r->kItemID);
+ 
+ 	r->kPromotionID = mk_join(S_PLINE_PROMOTION_ID, PROMOTION, 1);
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/s_purchase.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/s_purchase.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/s_purchase.c
+@@ -52,7 +52,7 @@
+ struct S_PURCHASE_TBL g_s_purchase;
+ struct S_PURCHASE_LINEITEM_TBL g_s_purchase_lineitem;
+ struct S_STORE_RETURNS_TBL g_s_store_return;
+-extern int nItemIndex;
++int nItemIndexP;
+ 
+ /*
+ * Routine: 
+@@ -165,7 +165,7 @@ mk_s_purchase(void *pDest, ds_key_t kInd
+    int i;
+ 
+    mk_master(pDest, kIndex);
+-   genrand_integer(&nItemIndex, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_PLINE_ITEM_ID);
++   genrand_integer(&nItemIndexP, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_PLINE_ITEM_ID);
+ 	for (i=1; i <= 12; i++)
+ 	{
+       mk_detail(i, 1);
+@@ -213,7 +213,7 @@ vld_s_purchase(int nTable, ds_key_t kRow
+ 
+    mk_master(NULL, kRow);
+    genrand_integer(&nLineitem, DIST_UNIFORM, 1, 12, 0, S_PLINE_NUMBER);
+-   genrand_integer(&nItemIndex, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_PLINE_ITEM_ID);
++   genrand_integer(&nItemIndexP, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_PLINE_ITEM_ID);
+    for (i=1; i < nLineitem; i++)
+       mk_detail(i, 0);
+    print_start(S_PURCHASE_LINEITEM);
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/s_catalog_page.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/s_catalog_page.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/s_catalog_page.c
+@@ -48,7 +48,7 @@
+ #include "validate.h"
+ #include "parallel.h"
+ 
+-struct CATALOG_PAGE_TBL g_w_catalog_page;
++struct CATALOG_PAGE_TBL g_s_catalog_page;
+ 
+ int
+ mk_s_catalog_page(void *pDest, ds_key_t kRow)
+@@ -79,7 +79,7 @@ pr_s_catalog_page(void *pSrc)
+ 	struct CATALOG_PAGE_TBL *r;
+ 	
+ 	if (pSrc == NULL)
+-		r = &g_w_catalog_page;
++		r = &g_s_catalog_page;
+ 	else
+ 		r = pSrc;
+ 	
+@@ -117,7 +117,7 @@ ld_s_catalog_page(void *pSrc)
+ 	struct CATALOG_PAGE_TBL *r;
+ 		
+ 	if (pSrc == NULL)
+-		r = &g_w_catalog_page;
++		r = &g_s_catalog_page;
+ 	else
+ 		r = pSrc;
+ 	
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/s_warehouse.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/s_warehouse.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/s_warehouse.c
+@@ -48,7 +48,7 @@
+ #include "permute.h"
+ #include "scaling.h"
+ 
+-struct W_WAREHOUSE_TBL g_w_warehouse;
++struct W_WAREHOUSE_TBL g_s_warehouse;
+ 
+ /*
+ * Routine: 
+@@ -103,7 +103,7 @@ pr_s_warehouse(void *pSrc)
+ 	struct W_WAREHOUSE_TBL *r;
+ 
+    if (pSrc == NULL)
+-		r = &g_w_warehouse;
++		r = &g_s_warehouse;
+ 	else
+ 		r = pSrc;
+ 	
+@@ -136,7 +136,7 @@ ld_s_warehouse(void *pSrc)
+ 	struct W_WAREHOUSE_TBL *r;
+ 		
+ 	if (pSrc == NULL)
+-		r = &g_w_warehouse;
++		r = &g_s_warehouse;
+ 	else
+ 		r = pSrc;
+ 	
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/s_web_site.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/s_web_site.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/s_web_site.c
+@@ -48,7 +48,7 @@
+ #include "permute.h"
+ #include "scd.h"
+ 
+-struct W_WEB_SITE_TBL g_w_web_site;
++struct W_WEB_SITE_TBL g_s_web_site;
+ 
+ 
+ /*
+@@ -105,7 +105,7 @@ pr_s_web_site(void *pSrc)
+ 	struct W_WEB_SITE_TBL *r;
+ 
+ 	if (pSrc == NULL)
+-		r = &g_w_web_site;
++		r = &g_s_web_site;
+ 	else
+ 		r = pSrc;
+ 	
+@@ -142,7 +142,7 @@ ld_s_web_site(void *pSrc)
+ 	struct W_WEB_SITE_TBL *r;
+ 		
+ 	if (pSrc == NULL)
+-		r = &g_w_web_site;
++		r = &g_s_web_site;
+ 	else
+ 		r = pSrc;
+ 	
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/s_web_order.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/s_web_order.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/s_web_order.c
+@@ -53,7 +53,7 @@
+ struct S_WEB_ORDER_TBL g_s_web_order;
+ struct S_WEB_ORDER_LINEITEM_TBL g_s_web_order_lineitem;
+ struct S_WEB_RETURNS_TBL g_s_web_return;
+-extern int nItemIndex;
++int nItemIndexWO;
+ 
+ 	/* now build/print the lineitems for this order */
+ 	/* for each lineitem, randomly determine if it is to be returned */
+@@ -137,7 +137,7 @@ mk_s_web_order(void *pDest, ds_key_t kIn
+    int i;
+ 
+    mk_master(pDest, kIndex);
+-   genrand_integer(&nItemIndex, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_WLIN_ITEM_ID);
++   genrand_integer(&nItemIndexWO, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_WLIN_ITEM_ID);
+ 	for (i=1; i <= 12; i++)
+ 	{
+       mk_detail(i, 1);
+@@ -225,7 +225,7 @@ vld_s_web_order(int nTable, ds_key_t kRo
+ 
+    mk_master(NULL, kRow);
+    genrand_integer(&nLineitem, DIST_UNIFORM, 1, 12, 0, S_WLIN_LINE_NUMBER);
+-   genrand_integer(&nItemIndex, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_WLIN_ITEM_ID);
++   genrand_integer(&nItemIndexWO, DIST_UNIFORM, 1, (int)getIDCount(ITEM), 0, S_WLIN_ITEM_ID);
+    for (i=1; i < nLineitem; i++)
+       mk_detail(i, 0);
+    print_start(S_WEB_ORDER_LINEITEM);
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/s_web_order_lineitem.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/s_web_order_lineitem.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/s_web_order_lineitem.c
+@@ -53,7 +53,7 @@
+ 
+ extern struct S_WEB_ORDER_LINEITEM_TBL g_s_web_order_lineitem;
+ extern struct S_WEB_ORDER_TBL g_s_web_order;
+-extern int nItemIndex;
++extern int nItemIndexWO;
+ 
+ /*
+ * Routine: 
+@@ -99,13 +99,13 @@ mk_s_web_order_lineitem(void *pDest, ds_
+ 	
+ 	r->kOrderID = g_s_web_order.kID;
+ 	r->kLineNumber = kIndex;
+-   if (++nItemIndex  > nItemCount)
+-      nItemIndex += 1;
++   if (++nItemIndexWO  > nItemCount)
++      nItemIndexWO += 1;
+ 
+    /*
+     * select a unique item, and then map to the appropriate business key
+ 	*/
+-	r->kItemID = getPermutationEntry(pItemPermutation, nItemIndex);
++	r->kItemID = getPermutationEntry(pItemPermutation, nItemIndexWO);
+ 	r->kItemID = getFirstSK(r->kItemID);
+ 
+ 	r->kPromotionID = mk_join(S_WLIN_PROMOTION_ID, PROMOTION, 1);
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/w_catalog_page.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/w_catalog_page.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/w_catalog_page.c
+@@ -49,7 +49,7 @@
+ #include "nulls.h"
+ #include "tdefs.h"
+ 
+-extern struct CATALOG_PAGE_TBL g_w_catalog_page;
++struct CATALOG_PAGE_TBL g_w_catalog_page;
+ 
+ /*
+ * Routine: mk_catalog_page()
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/w_warehouse.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/w_warehouse.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/w_warehouse.c
+@@ -50,7 +50,7 @@
+ #include "nulls.h"
+ #include "tdefs.h"
+ 
+-extern struct W_WAREHOUSE_TBL g_w_warehouse;
++struct W_WAREHOUSE_TBL g_w_warehouse;
+ 
+ /*
+ * mk_warehouse
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/w_web_site.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/w_web_site.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/w_web_site.c
+@@ -56,7 +56,7 @@
+ #include "tdefs.h"
+ #include "scd.h"
+ 
+-extern struct W_WEB_SITE_TBL g_w_web_site;
++struct W_WEB_SITE_TBL g_w_web_site;
+ static struct W_WEB_SITE_TBL g_OldValues;
+ 
+ /*
