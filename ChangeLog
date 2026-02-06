@@ -4,6 +4,9 @@ vX.Y.Z (YYYY-MM-DD)
 - Update warnings.diff patch: there was an additional free() on dSiteClose
   before it was done being used, and fprintf() could use a format string for
   printing the DELMITER
+- Add item.diff patch: fix a bug where an overflowing strncpy() corrupted
+  i_manager_id, such that the resulting ID's were outside of the range defined
+  in item.dst
 
 v0.7.5 (2026-01-28)
 
@@ -12,9 +15,6 @@ v0.7.5 (2026-01-28)
 - Bump touchstone tools version from v0.9.2 to v0.10.0
 - pgsql: naively add indexes on all columns used in DISTINCT, WHERE and ORDER
   BY clauses
-- Update warnings.diff patch: there was an additional free() on dSiteClose
-  before it was done being used, and fprintf() could use a format string for
-  printing the DELMITER
 
 v0.7.4 (2026-01-05)
 
