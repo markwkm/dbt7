@@ -1,0 +1,104 @@
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/r_params.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/r_params.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/r_params.c
+@@ -46,7 +46,7 @@
+ #include "tdefs.h"
+ #include "release.h"
+ 
+-#define PARAM_MAX_LEN	80
++#define PARAM_MAX_LEN	4096
+ 
+ #ifndef TEST
+ extern option_t options[];
+@@ -131,7 +131,10 @@ set_flg(char *flag)
+ 	init_params();
+ 	nParam = fnd_param(flag);
+ 	if (nParam >= 0)
+-		strcpy(params[options[nParam].index], "Y");
++	{
++		strncpy(params[options[nParam].index], "Y", PARAM_MAX_LEN - 1);
++		params[options[nParam].index][PARAM_MAX_LEN - 1] = '\0';
++	}
+ 
+ 	return;
+ }
+@@ -158,7 +161,10 @@ clr_flg(char *flag)
+ 	init_params();
+ 	nParam = fnd_param(flag);
+ 	if (nParam >= 0)
+-		strcpy(params[options[nParam].index], "N");
++	{
++		strncpy(params[options[nParam].index], "N", PARAM_MAX_LEN - 1);
++		params[options[nParam].index][PARAM_MAX_LEN - 1] = '\0';
++	}
+ 	return;
+ }
+ 
+@@ -219,7 +225,8 @@ set_int(char *var, char *val)
+ 	nParam = fnd_param(var);
+ 	if (nParam >= 0)
+ 	{
+-		strcpy(params[options[nParam].index], val);
++		strncpy(params[options[nParam].index], val, PARAM_MAX_LEN - 1);
++		params[options[nParam].index][PARAM_MAX_LEN - 1] = '\0';
+ 		options[nParam].flags |= OPT_SET;
+ 	}
+ 	return;
+@@ -275,7 +282,8 @@ set_str(char *var, char *val)
+ 	nParam = fnd_param(var);
+ 	if (nParam >= 0)
+ 	{
+-		strcpy(params[options[nParam].index], val);
++		strncpy(params[options[nParam].index], val, PARAM_MAX_LEN - 1);
++		params[options[nParam].index][PARAM_MAX_LEN - 1] = '\0';
+ 		options[nParam].flags |= OPT_SET;
+ 	}
+ 
+@@ -880,7 +888,10 @@ load_param(int nParam, char *szValue)
+ 	if (options[nParam].flags & OPT_SET)		/* already set from the command line */
+ 		return(0);
+ 	else
+-		strcpy(params[options[nParam].index], szValue);
++	{
++		strncpy(params[options[nParam].index], szValue, PARAM_MAX_LEN - 1);
++		params[options[nParam].index][PARAM_MAX_LEN - 1] = '\0';
++	}
+ 
+ 	return(0);
+ }
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/dbgen_version.h
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/dbgen_version.h
++++ dbt7/DSGen-software-code-4.0.0_final/tools/dbgen_version.h
+@@ -37,7 +37,7 @@
+ #define DBGEN_VERSION_H
+ 
+ #define RS_VERSION_LENGTH	100
+-#define RS_CMDLINARGS_LENGTH	200
++#define RS_CMDLINARGS_LENGTH	4096
+ 
+ struct DBGEN_VERSION_TBL {
+ 	char		szVersion[RS_VERSION_LENGTH + 1];
+Index: dbt7/DSGen-software-code-4.0.0_final/tools/driver.c
+===================================================================
+--- dbt7.orig/DSGen-software-code-4.0.0_final/tools/driver.c
++++ dbt7/DSGen-software-code-4.0.0_final/tools/driver.c
+@@ -74,7 +74,7 @@
+ extern int optind, opterr;
+ extern char *optarg;
+ /* extern tdef w_tdefs[], s_tdefs[]; */
+-char g_szCommandLine[201];
++char g_szCommandLine[4097];
+ file_ref_t CurrentFile;
+ file_ref_t *pCurrentFile;
+ 
+@@ -411,7 +411,7 @@ main (int ac, char **av)
+ 	for (i=1; i < ac; i++)
+ 	{
+ 		nArgLength = strlen(av[i]) + 1;
+-		if ((nCommandLineLength + nArgLength) >= 200)
++		if ((nCommandLineLength + nArgLength) >= 4096)
+ 		{
+ 			ReportError(QERR_CMDLINE_TOO_LONG, NULL, 0);
+ 			break;
