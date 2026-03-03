@@ -11,6 +11,7 @@ appimage:
 	if [ "$(DSGEN)" = "" ]; then \
 		cd builds/appimage && make DBMS= appimage; \
 	else \
+		rm -rf builds/AppDir/opt/dsgen; \
 		mkdir -p builds/AppDir/opt; \
 		unzip -d builds/AppDir/opt "$(DSGEN)"; \
 		mv builds/AppDir/opt/DSGen* builds/AppDir/opt/dsgen; \
