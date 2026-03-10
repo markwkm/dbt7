@@ -42,7 +42,7 @@ DBMS options:
   gp               Greenplum
   pgsql            PostgreSQL
 
-DIRECTORY is the path to save flat files.
+DIRECTORY is the path to save query files.
 
 @HOMEPAGE@
 EOF
