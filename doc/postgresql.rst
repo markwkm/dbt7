@@ -2,10 +2,11 @@ PostgreSQL
 ==========
 
 There are additional dialects for PostgreSQL that are provided to collect query
-plans and `EXPLAIN ANALYZE` output, as shown in the examples below.  The
-`DBT7DMPREFIX` environment variable must be used to inject SQL into the data
-maintenance such that `EXPLAIN` output can be captures in those specific tests.
-Otherwise only the 99 queries will have `EXPLAIN` output.
+plans and `EXPLAIN ANALYZE` output, as shown in the examples below.  These
+files simply help from having to edit a single dialect file for the desired
+usage.  The `DBT7DMPREFIX` environment variable must be used to inject SQL into
+the data maintenance such that `EXPLAIN` output can be captures in those
+specific tests. Otherwise only the 99 queries will have `EXPLAIN` output.
 
 Run a 1GB test (with `DBT7DMPREFIX` unset)::
 
@@ -25,7 +26,7 @@ Advanced PostgreSQL Usage
 -------------------------
 
 See `examples/dbt7_pgsql_profile` for the environment variables to set when not
-using the `dbt7-run` script, in other words, tips for advanced users.
+using the `dbt7-run` script.
 
 One example of advanced usage, requiring more user setup and configuration, is
 to run this against a PostgreSQL database on a remote system.
