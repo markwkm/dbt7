@@ -12,6 +12,7 @@ vX.Y.Z (YYYY-MM-DD)
 - Update container scripts to use docker if podman is not found
 - Add addition additional TPC-DS Tools patch (param-handling) to allow handling
   of command line arguments greater than 80 characters
+- Fix use of custom template list with Power Test and Throughput Test scripts
 
 v0.7.5 (2026-01-28)
 

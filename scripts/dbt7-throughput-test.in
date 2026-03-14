@@ -110,7 +110,7 @@ while [ "${#}" -gt 0 ] ; do
 		;;
 	(-i)
 		shift
-		INPUT_ARG="-INPUT ${1}"
+		INPUT_ARG="--input=${1}"
 		;;
 	(-o)
 		shift
@@ -215,6 +215,7 @@ dbt7-generate-queries \
 		--scale-factor="${SCALE}" \
 		--streams=${TOTAL_STREAMS} \
 		--seed="${SEED}" \
+		"${INPUT_ARG}" \
 		"${DATABASE}" \
 		"${OUTPUT_DIR}" || exit 1
 
