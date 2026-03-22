@@ -13,6 +13,7 @@ vX.Y.Z (YYYY-MM-DD)
 - Add addition additional TPC-DS Tools patch (param-handling) to allow handling
   of command line arguments greater than 80 characters
 - Fix use of custom template list with Power Test and Throughput Test scripts
+- Add PostgreSQL pg_plan_advice specific templates as a TPC-DS Tools patch
 
 v0.7.5 (2026-01-28)
 

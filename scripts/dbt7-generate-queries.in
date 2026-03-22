@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 @SHELLOPTIONS@
 #
 # This file is released under the terms of the Artistic License.
@@ -68,7 +68,9 @@ while [ "${#}" -gt 0 ] ; do
 		;;
 	(--input=?*)
 		INPUT="${1#*--input=}"
-		INPUT="${INPUT/\~/${HOME}/}"
+		case "${INPUT}" in
+			"~"*) INPUT="${HOME}${INPUT#\~}" ;;
+		esac
 		;;
 	(-s | --scale-factor)
 		shift
@@ -100,7 +102,9 @@ while [ "${#}" -gt 0 ] ; do
 		;;
    (--tpcdstools=?*)
 		DSHOME="${1#*--tpcdstools=}"
-		DSHOME="${DSHOME/\~/${HOME}/}"
+		case "${DSHOME}" in
+			"~"*) DSHOME="${HOME}${DSHOME#\~}" ;;
+		esac
 		;;
 	(-V | --version)
 		echo "$(basename "${0}") (Database Test 7) v@PROJECT_VERSION@"
