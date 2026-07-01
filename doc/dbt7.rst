@@ -94,6 +94,8 @@ system, which can be done with the aid of this script::
 For brevity, future references to the location of the TPC-DS tools will be
 `$DSHOME`.
 
+.. include:: container.rst
+
 Quick Start
 ===========
 
