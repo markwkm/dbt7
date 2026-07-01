@@ -14,7 +14,7 @@ killall sar sadc pidstat ts-${DATABASE}-stat > /dev/null 2>&1' TERM
 PARALLEL_ARG=""
 COMMENT=""
 DIALECT_ARG=""
-DSHOME=""
+DSHOME="${DSHOME:-}"
 INPUT_ARG=""
 PRIVILEGED=0
 PRIVILEGED_ARG="-U"
@@ -91,10 +91,6 @@ if [ -n "$DEFAULT_LOAD_PARAMETERS" ]; then
 fi
 if [ -n "$DEFAULT_PERF_PARAMETERS" ]; then
 	PERF_PARAMETERS="$DEFAULT_PERF_PARAMETERS"
-fi
-
-if [ ! "${APPDIR}" = "" ]; then
-    DSHOME="${APPDIR}/opt/dsgen"
 fi
 
 # Custom argument handling for hopefully most portability.
