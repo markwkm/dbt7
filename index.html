@@ -638,28 +638,37 @@ a { text-decoration: none; }
 </li>
 <li><p><a class="reference internal" href="#user-s-guide" id="toc-entry-6">User's Guide</a></p>
 <ul>
-<li><p><a class="reference internal" href="#building-tpc-ds-tools" id="toc-entry-7">Building TPC-DS Tools</a></p>
+<li><p><a class="reference internal" href="#before-getting-started-building-tpc-ds-tools" id="toc-entry-7">Before getting started: Building TPC-DS Tools</a></p></li>
+<li><p><a class="reference internal" href="#container" id="toc-entry-8">Container</a></p>
 <ul>
-<li><p><a class="reference internal" href="#quick-start" id="toc-entry-8">Quick Start</a></p></li>
-<li><p><a class="reference internal" href="#reports" id="toc-entry-9">Reports</a></p></li>
-<li><p><a class="reference internal" href="#advanced-usage" id="toc-entry-10">Advanced Usage</a></p></li>
+<li><p><a class="reference internal" href="#building-the-container" id="toc-entry-9">Building the Container</a></p></li>
+<li><p><a class="reference internal" href="#persisting-results" id="toc-entry-10">Persisting Results</a></p></li>
+<li><p><a class="reference internal" href="#running-a-test" id="toc-entry-11">Running a Test</a></p></li>
+<li><p><a class="reference internal" href="#directory-layout" id="toc-entry-12">Directory Layout</a></p></li>
+<li><p><a class="reference internal" href="#mounting-storage" id="toc-entry-13">Mounting Storage</a></p></li>
+<li><p><a class="reference internal" href="#notes" id="toc-entry-14">Notes</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#quick-start" id="toc-entry-15">Quick Start</a></p></li>
+<li><p><a class="reference internal" href="#reports" id="toc-entry-16">Reports</a></p></li>
+<li><p><a class="reference internal" href="#advanced-usage" id="toc-entry-17">Advanced Usage</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#database-management-system-specific-notes" id="toc-entry-18">Database Management System Specific Notes</a></p>
+<ul>
+<li><p><a class="reference internal" href="#postgresql" id="toc-entry-19">PostgreSQL</a></p>
+<ul>
+<li><p><a class="reference internal" href="#advanced-postgresql-usage" id="toc-entry-20">Advanced PostgreSQL Usage</a></p></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#database-management-system-specific-notes" id="toc-entry-11">Database Management System Specific Notes</a></p>
+<li><p><a class="reference internal" href="#developer-s-guide" id="toc-entry-21">Developer's Guide</a></p>
 <ul>
-<li><p><a class="reference internal" href="#postgresql" id="toc-entry-12">PostgreSQL</a></p>
-<ul>
-<li><p><a class="reference internal" href="#advanced-postgresql-usage" id="toc-entry-13">Advanced PostgreSQL Usage</a></p></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#developer-s-guide" id="toc-entry-14">Developer's Guide</a></p>
-<ul>
-<li><p><a class="reference internal" href="#creating-custom-query-templates" id="toc-entry-15">Creating Custom Query Templates</a></p></li>
-<li><p><a class="reference internal" href="#testing-individual-queries" id="toc-entry-16">Testing Individual Queries</a></p></li>
+<li><p><a class="reference internal" href="#creating-custom-query-templates" id="toc-entry-22">Creating Custom Query Templates</a></p></li>
+<li><p><a class="reference internal" href="#generating-data-files" id="toc-entry-23">Generating Data Files</a></p></li>
+<li><p><a class="reference internal" href="#generating-query-files" id="toc-entry-24">Generating Query Files</a></p></li>
+<li><p><a class="reference internal" href="#testing-individual-queries" id="toc-entry-25">Testing Individual Queries</a></p></li>
 </ul>
 </li>
 </ul>
@@ -675,6 +684,9 @@ Both tests needs to be run together to constitute a complete test run.  A
 calculated from the results of both the load and performance test.</p>
 <p>The performance test is composed of several additional tests: a power test, two
 data maintenance test, and two throughput tests.</p>
+<p>While this kit is primarily intended to execute the TPC-DS workload as close to
+its specification as possible, there are additional tools and scripts provided
+to aid in testing and development.</p>
 </section>
 <section id="installing-dbt-7">
 <h2><a class="toc-backref" href="#toc-entry-2" role="doc-backlink">Installing DBT-7</a></h2>
@@ -686,13 +698,13 @@ by the tester:
 <section id="required-software">
 <h3><a class="toc-backref" href="#toc-entry-3" role="doc-backlink">Required Software</a></h3>
 <p>In addition to the database management system software, the following is also
-required:</p>
+required for using the DBT-7 scripts and building the TPC-DS Tools:</p>
 <ul class="simple">
 <li><p>gcc</p></li>
-<li><p>SQLite <a class="reference external" href="https://www.sqlite.org/index.html">https://www.sqlite.org/index.html</a></p></li>
 <li><p>lex</p></li>
 <li><p>make</p></li>
 <li><p>patch</p></li>
+<li><p>SQLite <a class="reference external" href="https://www.sqlite.org/index.html">https://www.sqlite.org/index.html</a></p></li>
 <li><p>yacc</p></li>
 </ul>
 <section id="supported-database-systems">
@@ -717,20 +729,111 @@ reports.</p></li>
 </section>
 <section id="user-s-guide">
 <h2><a class="toc-backref" href="#toc-entry-6" role="doc-backlink">User's Guide</a></h2>
-<section id="building-tpc-ds-tools">
-<h3><a class="toc-backref" href="#toc-entry-7" role="doc-backlink">Building TPC-DS Tools</a></h3>
+<section id="before-getting-started-building-tpc-ds-tools">
+<h3><a class="toc-backref" href="#toc-entry-7" role="doc-backlink">Before getting started: Building TPC-DS Tools</a></h3>
+<p>The TPC-DS Tools source code (dsgen) is available as a git submodule from
+<a class="reference external" href="https://github.com/osdldbt/dsgen">https://github.com/osdldbt/dsgen</a> per TPC EULA v2.2 clause 9.d.  To clone the
+repository with the submodule populated:</p>
+<pre class="literal-block">git clone --recurse-submodules https://github.com/osdldbt/dbt7.git</pre>
+<p>If the repository was already cloned without the submodule:</p>
+<pre class="literal-block">git submodule update --init</pre>
 <p>DBT-7 provides the script <cite>dbt7-build-dsgen</cite> to apply patches and compile the
-TPC-DS Tools.  The patches that are applied are minor code changes and query
-templates to make the TPC-DS Tools work with the databases supposed by DBT-7.
-These patches are in the <cite>patches</cite> subdirectory.</p>
-<p>For example, to build the TPC-DS Tools, unzip the TPC-DS Tools zip file and run
-<cite>dbt7-build-dbgen</cite> against the resulting directory:</p>
-<pre class="literal-block">unzip *-tpc-ds-tool.zip
-dbt7-build-dsgen DSGen-software-code-4.0.0_final</pre>
+TPC-DS Tools.  The patches that are applied are minor code changes, bug fixes,
+and query templates to make the TPC-DS Tools work with the databases supported
+by DBT-7. These patches are in the <cite>patches</cite> subdirectory in compliance with
+the respective licences and thus needs to be built outside of the DBT-7 build
+system, which can be done with the aid of this script:</p>
+<pre class="literal-block">dbt7-build-dsgen --patch-dir=patches dsgen</pre>
 <p>For brevity, future references to the location of the TPC-DS tools will be
 <cite>$DSHOME</cite>.</p>
+</section>
+<section id="container">
+<h3><a class="toc-backref" href="#toc-entry-8" role="doc-backlink">Container</a></h3>
+<p>A <em>Containerfile</em> is provided for building a Docker image that can run DBT-7
+against an external database management system.</p>
+<p>The container image includes the TPC-DS Tools, and all dependencies needed to
+generate data, execute queries, and produce reports.  The database must be
+managed separately outside the container.</p>
+<p>Read through all of the sections to determine which flags you need to use with
+Docker.</p>
+<section id="building-the-container">
+<h4><a class="toc-backref" href="#toc-entry-9" role="doc-backlink">Building the Container</a></h4>
+<p>From the top of the repository, create a container image named <cite>dbt7</cite>:</p>
+<pre class="literal-block">docker build -t dbt7 -f Containerfile .</pre>
+</section>
+<section id="persisting-results">
+<h4><a class="toc-backref" href="#toc-entry-10" role="doc-backlink">Persisting Results</a></h4>
+<p>Mount a host directory to the <cite>/results</cite> directory in the container to save
+results, which may need the use of the <cite>--user</cite> flag to set the ownership of
+the results to your user:</p>
+<pre class="literal-block">docker run --rm \
+    -v ./results:/results \
+    dbt7 run --scale-factor=1 pgsql /results/0</pre>
+</section>
+<section id="running-a-test">
+<h4><a class="toc-backref" href="#toc-entry-11" role="doc-backlink">Running a Test</a></h4>
+<p>The entrypoint is the <cite>dbt7</cite> command.  Pass arguments to <cite>dbt7</cite> via <cite>docker
+run</cite>.  Use <cite>PGHOST</cite> and <cite>PGPORT</cite> to point to the external database:</p>
+<pre class="literal-block">docker run --rm \
+    -e PGHOST=dbserver \
+            -e PGPORT=5432 \
+    --user $(id -u):$(id -g) \
+    -v ./results:/results \
+    dbt7 run --scale-factor=1 pgsql /results/0</pre>
+</section>
+<section id="directory-layout">
+<h4><a class="toc-backref" href="#toc-entry-12" role="doc-backlink">Directory Layout</a></h4>
+<p>The container uses two directories for runtime data:</p>
+<dl class="simple">
+<dt><cite>/scratch</cite></dt>
+<dd><p>Temporary working space including generated flat files
+(<cite>/scratch/dbt7data</cite>).</p>
+</dd>
+<dt><cite>/results</cite></dt>
+<dd><dl class="simple">
+<dt>Intended for saving test results.  Mount this to the host to save test</dt>
+<dd><p>results.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+<section id="mounting-storage">
+<h4><a class="toc-backref" href="#toc-entry-13" role="doc-backlink">Mounting Storage</a></h4>
+<p>The <cite>/scratch</cite> directory within the container is used for generating flat files
+from <cite>dsdgen</cite>, which can be very large depending on the scale factor. Mount it
+to a location with sufficient disk space to save and reuse the data files:</p>
+<pre class="literal-block">docker run --rm \
+    -e PGHOST=dbserver \
+    --user $(id -u):$(id -g) \
+    -v /data/scratch:/scratch \
+    -v /data/results:/results \
+    dbt7 run --scale-factor=1 pgsql /results</pre>
+<p>As a rough guide, a scale factor of 1 generates approximately 1 GB of flat
+files.  Plan storage for <cite>/scratch</cite> accordingly when using larger scale
+factors.</p>
+</section>
+<section id="notes">
+<h4><a class="toc-backref" href="#toc-entry-14" role="doc-backlink">Notes</a></h4>
+<ul>
+<li><p>The container runs as a non-root <cite>dbt</cite> user.</p></li>
+<li><p>The container does not for running a PostgreSQL instance.</p></li>
+<li><p>To connect to a database running on the same host, use
+<cite>--network host</cite> so the container shares the host's network
+namespace:</p>
+<pre class="literal-block">docker run --rm \
+    --network host \
+    -v /data/scratch:/scratch \
+    -v /data/results:/results \
+    dbt7 run --scale-factor=1 pgsql /results</pre>
+</li>
+<li><p>System statistics collected by <cite>sar</cite> inside the container reflect
+only the container's cgroup, not the host.</p></li>
+</ul>
+</section>
+</section>
 <section id="quick-start">
-<h4><a class="toc-backref" href="#toc-entry-8" role="doc-backlink">Quick Start</a></h4>
+<h3><a class="toc-backref" href="#toc-entry-15" role="doc-backlink">Quick Start</a></h3>
 <p>Once the TPC-DS Tools is built, only one command needs to be issued to run a
 complete test:</p>
 <pre class="literal-block">dbt7-run --tpchtools=$DSHOME pgsql /tmp/results</pre>
@@ -741,31 +844,34 @@ the results of the test in <cite>/tmp/results</cite>.</p>
 will be shown when the test completes.</p>
 </section>
 <section id="reports">
-<h4><a class="toc-backref" href="#toc-entry-9" role="doc-backlink">Reports</a></h4>
+<h3><a class="toc-backref" href="#toc-entry-16" role="doc-backlink">Reports</a></h3>
 <p>The <em>dbt7-run</em> script will generate a <em>summary.rst</em> text file can be reviewed
 for the execution times for each of the tests, query times for each of the
 queries in the power test, and the aggregates of the query times from the
 throughput test streams.</p>
-<p>If system and database stats are collected, the <em>dbt7-report</em> script can be run</p>
+<p>If system and database stats are collected with the <cite>--stats</cite> flag, the
+<em>dbt7-report</em> script will also summarize the system, database, and per process
+statistics.</p>
 </section>
 <section id="advanced-usage">
-<h4><a class="toc-backref" href="#toc-entry-10" role="doc-backlink">Advanced Usage</a></h4>
+<h3><a class="toc-backref" href="#toc-entry-17" role="doc-backlink">Advanced Usage</a></h3>
 <p>The <em>dbt7-run</em> script can be used to run any combination of a Load Test, Power
 Test, and Throughput Test combined with the Data Maintenance Test.  But be
 aware that a Load Test must be run in order to create the database before a
-Power or Throughput Tests can be run individually.</p>
-</section>
+Power or Throughput Tests can be run individually.  Other use cases are
+described in the <strong>Developer's Guide</strong> section.</p>
 </section>
 </section>
 <section id="database-management-system-specific-notes">
-<h2><a class="toc-backref" href="#toc-entry-11" role="doc-backlink">Database Management System Specific Notes</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-18" role="doc-backlink">Database Management System Specific Notes</a></h2>
 <section id="postgresql">
-<h3><a class="toc-backref" href="#toc-entry-12" role="doc-backlink">PostgreSQL</a></h3>
+<h3><a class="toc-backref" href="#toc-entry-19" role="doc-backlink">PostgreSQL</a></h3>
 <p>There are additional dialects for PostgreSQL that are provided to collect query
-plans and <cite>EXPLAIN ANALYZE</cite> output, as shown in the examples below.  The
-<cite>DBT7DMPREFIX</cite> environment variable must be used to inject SQL into the data
-maintenance such that <cite>EXPLAIN</cite> output can be captures in those specific tests.
-Otherwise only the 99 queries will have <cite>EXPLAIN</cite> output.</p>
+plans and <cite>EXPLAIN ANALYZE</cite> output, as shown in the examples below.  These
+files simply help from having to edit a single dialect file for the desired
+usage.  The <cite>DBT7DMPREFIX</cite> environment variable must be used to inject SQL into
+the data maintenance such that <cite>EXPLAIN</cite> output can be captures in those
+specific tests. Otherwise only the 99 queries will have <cite>EXPLAIN</cite> output.</p>
 <p>Run a 1GB test (with <cite>DBT7DMPREFIX</cite> unset):</p>
 <pre class="literal-block">dbt7-run --tpcdstools=$DSHOME psql /tmp/results</pre>
 <p>Run a 1GB test and capture <cite>EXPLAIN</cite> output query results:</p>
@@ -775,9 +881,9 @@ dbt7-run --tpcdstools=$DSHOME -d pgsqle pgsql /tmp/results</pre>
 <pre class="literal-block">export DBT7DMPREFIX=&quot;LOAD 'auto_explain'; SET auto_explain.log_min_duration TO 0; SET auto_explain.log_analyze TO on; SET auto_explain.log_buffers TO on; SET auto_explain.log_verbose TO on; SET auto_explain.log_level TO notice;&quot;
 dbt7-run --tpcdstools=$DSHOME -d pgsqlea pgsql /tmp/results</pre>
 <section id="advanced-postgresql-usage">
-<h4><a class="toc-backref" href="#toc-entry-13" role="doc-backlink">Advanced PostgreSQL Usage</a></h4>
+<h4><a class="toc-backref" href="#toc-entry-20" role="doc-backlink">Advanced PostgreSQL Usage</a></h4>
 <p>See <cite>examples/dbt7_pgsql_profile</cite> for the environment variables to set when not
-using the <cite>dbt7-run</cite> script, in other words, tips for advanced users.</p>
+using the <cite>dbt7-run</cite> script.</p>
 <p>One example of advanced usage, requiring more user setup and configuration, is
 to run this against a PostgreSQL database on a remote system.</p>
 <p>Since this kit provides scripts that are potentially destructive, it relies on
@@ -787,37 +893,61 @@ damage to a database that the user may be connecting to by default.</p>
 </section>
 </section>
 <section id="developer-s-guide">
-<h2><a class="toc-backref" href="#toc-entry-14" role="doc-backlink">Developer's Guide</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-21" role="doc-backlink">Developer's Guide</a></h2>
 <section id="creating-custom-query-templates">
-<h3><a class="toc-backref" href="#toc-entry-15" role="doc-backlink">Creating Custom Query Templates</a></h3>
-<p>The TPC-DS Tools contain the official set of query templates in the
-<cite>query_templates</cite> subdirectory.  Adding support for additional databases for
-use in DBT-7 requires up to 3 steps:</p>
+<h3><a class="toc-backref" href="#toc-entry-22" role="doc-backlink">Creating Custom Query Templates</a></h3>
+<p>The TPC-DS Tools provide the official set of query templates in the
+<cite>query_templates</cite> and variants in <cite>query_variants</cite> subdirectories.  Adding
+support for additional databases for use in DBT-7 requires up to 3 sets of
+changes:</p>
 <ol class="arabic simple">
 <li><p>Create a list of the 99 query templates to be executed, e.g.
 <cite>templates-pgsql.tpl</cite></p></li>
-<li><p>Create new query template file for any modification needed from the official
-templates.  e.g. Copy <cite>query23.tpl</cite> to <cite>query23postgresql.tpl</cite>.  It is
-important to keep the query number in the filename for proper recording and
-analysis with the DBT-7 kit.</p></li>
-<li><p>Create a new dialect file that contains proper syntax for transaction
-control statements, and limit handling.  e.g. <cite>pgsql.tpl</cite></p></li>
+<li><p>Create a new query template file for any modification needed from the
+official templates.  e.g. Copy <cite>query23.tpl</cite> to <cite>query23postgresql.tpl</cite>.
+While not required, it is important to keep the query number in the filename
+for proper recording and analysis with the DBT-7 kit.</p></li>
+<li><p>Create a new dialect file that contains the appropriate syntax for
+transaction control statements, limit handling, and any additional
+statements to run before and after each query such as recording the query
+start and end times. e.g. <cite>pgsql.tpl</cite></p></li>
 </ol>
 </section>
+<section id="generating-data-files">
+<h3><a class="toc-backref" href="#toc-entry-23" role="doc-backlink">Generating Data Files</a></h3>
+<p>Database files can be created outside of the execution of the Load Test with
+the use of the <em>dbt7-generate-data</em> script.  It's primarily intended to test
+any changes or bug fixes to <strong>dsdgen</strong>, so any finer use of <strong>dsdgen</strong> needs to
+be done by directly executing it without the aid of this script.</p>
+<p>For example, this script may be helpful in generating more than 1 chunk of data
+in parallel as opposed to typing that by hand for each chunk.</p>
+</section>
+<section id="generating-query-files">
+<h3><a class="toc-backref" href="#toc-entry-24" role="doc-backlink">Generating Query Files</a></h3>
+<p>Queries files can be created outside of the execution of the Power Test and
+Throughput Test with the use of the <em>dbt7-generate-queries</em> script.  It is
+primarily intended to be able to review queries generated by <strong>dsqgen</strong> without
+having to run a Power Test of Throughout Test first.</p>
+<p>Any finer use of <strong>dsqgen</strong> needs to be done by executing it directly, but the
+<em>dbt7-generate-queries</em> script does aid in generating a file per query, if so
+desired.</p>
+</section>
 <section id="testing-individual-queries">
-<h3><a class="toc-backref" href="#toc-entry-16" role="doc-backlink">Testing Individual Queries</a></h3>
+<h3><a class="toc-backref" href="#toc-entry-25" role="doc-backlink">Testing Individual Queries</a></h3>
 <p>Running the individual parts of the benchmark, i.e. the Power Test of the
 Throughput Test, much less the entire benchmark, don't lend it itself to making
 it easy to evaluate individual query performance.  There may be times when the
 developer wants to focus on an individual query to evaluate the effects of a
 different index, or database system parameters.</p>
 <p>The <em>run-query</em> script is intended to allow a developer to generate and execute
-1 query at a time.</p>
+one query at a time.  The <em>dbt7-generate-queries</em> script can be used to
+generate a query file to be executed manually, but <em>run_query</em> will also
+executed the query generated.</p>
 <p>A database needs to be created first, but only needs to be loaded once if
 testing individual queries.  This can be done with the run script using the
 <cite>--load</cite> flag.  A PostgreSQL example:</p>
-<pre class="literal-block">dbt7 run --tpchtools=$DSHOME --load pgsql load-results</pre>
-<p>Then any query can be tested.  For example running Query 4:</p>
+<pre class="literal-block">dbt7 run --tpchtools=$DSHOME --load pgsql /tmp/load-results</pre>
+<p>Then any query can be tested.  For example running Query 55:</p>
 <pre class="literal-block">dbt7 run-query --tpchtools=$DSHOME 55 pgsql</pre>
 <p>Here is an example of the output query output, the results, and the execution
 time:</p>
