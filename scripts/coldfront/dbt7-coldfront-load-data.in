@@ -1,0 +1,253 @@
+#!/bin/sh
+@SHELLOPTIONS@
+#
+# This file is released under the terms of the Artistic License.
+# Please see the file LICENSE, included in this package, for details.
+#
+# Copyright The DBT-7 Authors
+
+usage()
+{
+	cat << EOF
+$(basename "${0}") is the Database Test 7 (DBT-7) ColdFront data loader
+
+Usage:
+  $(basename "${0}") [OPTION]
+
+Options:
+  -s SCALE_FACTOR, --scale-factor=SCALE_FACTOR
+                   set the scale factor
+  --parallel CHUNKS
+                   parallelize the staging load into CHUNKS parts
+  -?, --help       show this help, then exit
+
+Requires a "compactor" binary (github.com/pgedge/coldfront cmd/compactor)
+on PATH: each table is compacted right after it loads, using the same
+COLDFRONT_* variables as the rest of the coldfront backend (see
+doc/coldfront.rst) to build its connection config.
+EOF
+}
+
+CHUNKS=""
+CPUS=1
+PSQL="psql -v ON_ERROR_STOP=1 -X -d ${DBT7DBNAME}"
+
+if [ -z "${DSTOOLS}" ]; then
+	echo "DSTOOLS env var is not set"
+	exit 1
+fi
+if [ ! -d "${DSTOOLS}" ]; then
+	echo "DSTOOLS dir does not exist: ${DSTOOLS}"
+	exit 2
+fi
+
+# Load one table: parallel COPY into the staging table, then a single
+# INSERT ... SELECT into the ColdFront Iceberg view, then truncate staging.
+# COPY is not supported directly on ColdFront views; the staging table is a
+# regular PG table that serves as a transfer buffer.
+load_table()
+{
+	TABLE=$1
+
+	echo "loading table: ${TABLE}"
+
+	FILENAME="${DS_DATA}/${TABLE}.dat"
+	TOTAL_ROWS="$(wc -l "${FILENAME}" | cut -d " " -f 1)"
+	if [ "${TOTAL_ROWS}" -lt "${CPUS}" ]; then
+		ROWS_PER_COMMIT=${TOTAL_ROWS}
+	else
+		ROWS_PER_COMMIT=$(( TOTAL_ROWS / CPUS ))
+	fi
+	N=$(( (TOTAL_ROWS + ROWS_PER_COMMIT - 1) / ROWS_PER_COMMIT ))
+
+	T="public.staging_${TABLE}"
+	${PSQL} -c "ALTER TABLE ${T} \
+SET (autovacuum_enabled = false, toast.autovacuum_enabled = false);"
+
+	for I in $(seq 1 "${N}"); do
+		PROG="split -n l/${I}/${N} ${FILENAME}"
+		${PSQL} << __EOF__ &
+\COPY ${T} FROM PROGRAM '${PROG}' WITH (DELIMITER '|', NULL '');
+__EOF__
+	done
+	wait
+
+	${PSQL} -c "INSERT INTO public.${TABLE} SELECT * FROM ${T};"
+	${PSQL} -c "TRUNCATE ${T};"
+	${PSQL} -c "ALTER TABLE ${T} \
+SET (autovacuum_enabled = true, toast.autovacuum_enabled = true);"
+
+	compact_table "${TABLE}"
+}
+
+# Requires a compactor binary (github.com/pgedge/coldfront cmd/compactor)
+# on PATH: builds its YAML config once from the same COLDFRONT_* variables
+# dbt7-coldfront-create-db uses, so compact_table can run it per table.
+# compactor missing from PATH fails the load; a missing/invalid COLDFRONT_*
+# variable only disables compaction, since those already have their own
+# required-variable checks elsewhere in the coldfront backend.
+COMPACTOR_BIN=""
+setup_compactor()
+{
+	if ! command -v compactor > /dev/null 2>&1; then
+		echo "Error: compactor not found on PATH"
+		echo "build it from the coldfront repo: cd cmd/compactor && make compactor"
+		exit 1
+	fi
+	if [ -z "${COLDFRONT_LK_ENDPOINT}" ] || [ -z "${COLDFRONT_WAREHOUSE}" ]; then
+		echo "COLDFRONT_LK_ENDPOINT/COLDFRONT_WAREHOUSE not set," \
+			"skipping post-load compaction"
+		return
+	fi
+
+	BACKEND="${COLDFRONT_BACKEND:-s3}"
+	if [ "${BACKEND}" = "azure" ]; then
+		if [ -z "${COLDFRONT_AZURE_CONN}" ]; then
+			echo "COLDFRONT_AZURE_CONN not set, skipping post-load compaction"
+			return
+		fi
+		COLD_STORE_YAML="azure:
+  connection_string: \"${COLDFRONT_AZURE_CONN}\""
+	elif [ "${BACKEND}" = "gcs" ]; then
+		if [ -z "${COLDFRONT_ACCESS_KEY}" ] || [ -z "${COLDFRONT_SECRET_KEY}" ]; then
+			echo "COLDFRONT_ACCESS_KEY/COLDFRONT_SECRET_KEY not set," \
+				"skipping post-load compaction"
+			return
+		fi
+		COLD_STORE_YAML="s3:
+  endpoint: \"storage.googleapis.com\"
+  region: \"us-east-1\"
+  access_key: \"${COLDFRONT_ACCESS_KEY}\"
+  secret_key: \"${COLDFRONT_SECRET_KEY}\"
+  use_ssl: true"
+	elif [ "${BACKEND}" = "aws" ]; then
+		if [ -z "${COLDFRONT_ACCESS_KEY}" ] || [ -z "${COLDFRONT_SECRET_KEY}" ] || \
+				[ -z "${COLDFRONT_AWS_REGION}" ]; then
+			echo "COLDFRONT_ACCESS_KEY/COLDFRONT_SECRET_KEY/COLDFRONT_AWS_REGION" \
+				"not set, skipping post-load compaction"
+			return
+		fi
+		COLD_STORE_YAML="s3:
+  region: \"${COLDFRONT_AWS_REGION}\"
+  access_key: \"${COLDFRONT_ACCESS_KEY}\"
+  secret_key: \"${COLDFRONT_SECRET_KEY}\"
+  use_ssl: true"
+	else
+		# s3 (default)
+		if [ -z "${COLDFRONT_S3_ENDPOINT}" ] || [ -z "${COLDFRONT_ACCESS_KEY}" ] || \
+				[ -z "${COLDFRONT_SECRET_KEY}" ]; then
+			echo "COLDFRONT_S3_ENDPOINT/COLDFRONT_ACCESS_KEY/COLDFRONT_SECRET_KEY" \
+				"not set, skipping post-load compaction"
+			return
+		fi
+		COLD_STORE_YAML="s3:
+  endpoint: \"${COLDFRONT_S3_ENDPOINT}\"
+  access_key: \"${COLDFRONT_ACCESS_KEY}\"
+  secret_key: \"${COLDFRONT_SECRET_KEY}\"
+  use_ssl: false
+  url_style: \"path\""
+	fi
+
+	COMPACTOR_CONFIG=$(mktemp)
+	trap 'rm -f "${COMPACTOR_CONFIG}"' EXIT
+	cat > "${COMPACTOR_CONFIG}" << __EOF__
+postgres:
+  dsn: "host=${PGHOST} port=${PGPORT:-5432} dbname=${DBT7DBNAME} user=${PGUSER} password=${PGPASSWORD} sslmode=disable"
+
+iceberg:
+  warehouse: "${COLDFRONT_WAREHOUSE}"
+  lakekeeper_endpoint: "${COLDFRONT_LK_ENDPOINT}"
+
+${COLD_STORE_YAML}
+__EOF__
+
+	COMPACTOR_BIN="compactor"
+}
+
+# Compact one table: bin-pack small Parquet files and, since a dbt7 load
+# happens on benchmark timescales, expire/reclaim immediately rather than
+# using the compactor's production-tuned age thresholds (168h/72h), which
+# would leave everything from this run pinned as "not old enough yet".
+compact_table()
+{
+	[ -n "${COMPACTOR_BIN}" ] || return
+	"${COMPACTOR_BIN}" --config "${COMPACTOR_CONFIG}" --table "$1" \
+		--expire-snapshots --expire-older-than 0s \
+		--orphans --orphan-age 5m
+}
+
+# Custom argument handling for hopefully most portability.
+while [ "${#}" -gt 0 ] ; do
+	case "${1}" in
+	(-s | --scale-factor)
+		shift
+		SCALE="${1}"
+		;;
+	(--parallel)
+		shift
+		CHUNKS="${1}"
+		;;
+	(--parallel=?*)
+		CHUNKS="${1#*--parallel=}"
+		;;
+	(--scale-factor=?*)
+		SCALE="${1#*--scale-factor=}"
+		;;
+	(--tablespaces)
+		# NOOP
+		;;
+	(-U)
+		# NOOP
+		;;
+	(-\? | --help)
+		usage
+		exit 0
+		;;
+	(--* | -*)
+		echo "$(basename "${0}"): invalid option -- '${1}'"
+		echo "try \"$(basename "${0}") --help\" for more information."
+		exit 1
+		;;
+	(*)
+		break
+		;;
+	esac
+	shift
+done
+
+if [ -z "${DBT7DBNAME}" ]; then
+	echo "Error: DBT7DBNAME environment variable not defined"
+	exit 1
+fi
+
+if [ -z "${SCALE}" ]; then
+	echo "SCALE must be set with -s"
+	exit 3
+fi
+
+if [ "${CHUNKS}" = "" ]; then
+	if command -v nproc > /dev/null 2>&1; then
+		CPUS=$(nproc)
+		echo "detected ${CPUS} logical processors for parallel loading"
+	else
+		echo "could not detect number of processors, parallelizing for ${CPUS}"
+	fi
+else
+	CPUS=${CHUNKS}
+fi
+
+setup_compactor
+
+dbt7-coldfront-time-statistics -s -n TABLE
+for T in store_sales store_returns catalog_sales catalog_returns web_sales \
+		web_returns inventory store call_center catalog_page web_site web_page \
+		warehouse customer customer_address customer_demographics date_dim \
+		household_demographics item income_band promotion reason ship_mode \
+		time_dim; do
+	load_table ${T}
+done
+dbt7-coldfront-time-statistics -e -n TABLE
+
+dbt7-coldfront-time-statistics -s -n INDEX
+dbt7-coldfront-create-indexes
+dbt7-coldfront-time-statistics -e -n INDEX

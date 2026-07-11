@@ -36,6 +36,7 @@ Options:
   -?, --help       show this help, then exit
 
 DBMS options:
+  coldfront        ColdFront (PostgreSQL + Apache Iceberg, decoupled mode)
   gp               Greenplum
   pgsql            PostgreSQL
 
@@ -121,6 +122,11 @@ if [ "${DATABASE}" = "" ]; then
 	exit 1
 fi
 
+STAT_DATABASE=${DATABASE}
+case "${STAT_DATABASE}" in
+(coldfront) STAT_DATABASE=pgsql ;;
+esac
+
 if [ "${OUTPUT_DIR}" = "" ]; then
 	echo "Error: Specify results directory with -o flag"
 	usage
@@ -193,7 +199,7 @@ dbt7-"${DATABASE}"-create-tables ${TABLESPACES_ARG} \
 
 if [ "${STATS}" -eq 1 ]; then
 	# Collect database statistics
-	ts "${DATABASE}-stat" -d "${DBT7DBNAME}" -o "${OUTPUT_DIR}/dbstat"
+	ts "${STAT_DATABASE}-stat" -d "${DBT7DBNAME}" -o "${OUTPUT_DIR}/dbstat"
 fi
 
 if [ $PROFILE -eq 1 ]; then
@@ -216,7 +222,7 @@ echo "**$(date) load test completed  ($DIFF_TIME seconds)**"
 
 if [ "${STATS}" -eq 1 ]; then
 	ts sysstat -o "${OUTPUT_DIR}/sysstat" -s
-	ts "${DATABASE}-stat" -o "${OUTPUT_DIR}/dbstat" -s
+	ts "${STAT_DATABASE}-stat" -o "${OUTPUT_DIR}/dbstat" -s
 fi
 
 dbt7-"${DATABASE}"-get-query-time -o "$OUTPUT_DIR"

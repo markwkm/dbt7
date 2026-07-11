@@ -1,0 +1,129 @@
+#!/bin/sh
+@SHELLOPTIONS@
+#
+# This file is released under the terms of the Artistic License.
+# Please see the file LICENSE, included in this package, for details.
+#
+# Copyright The DBT-7 Authors
+
+usage()
+{
+	cat << EOF
+$(basename "${0}") is the DBT-7 ColdFront database setup script
+
+Usage:
+  $(basename "${0}") [OPTION]
+
+Options:
+  -V, --version    output version information, then exit
+  -?, --help       show this help, then exit
+
+ColdFront environment variables:
+  COLDFRONT_S3_ENDPOINT   S3 endpoint host:port (required for s3 backend)
+  COLDFRONT_LK_ENDPOINT   Lakekeeper REST catalog URL (required)
+  COLDFRONT_WAREHOUSE     Iceberg warehouse name (default: wh)
+  COLDFRONT_NAMESPACE     Iceberg namespace (default: default)
+  COLDFRONT_ACCESS_KEY    S3 access key (required for s3/gcs/aws backend)
+  COLDFRONT_SECRET_KEY    S3 secret key (required for s3/gcs/aws backend)
+  COLDFRONT_BACKEND       Storage backend: s3|azure|gcs|aws (default: s3)
+  COLDFRONT_AZURE_CONN    Azure connection string (required for azure backend)
+  COLDFRONT_AWS_REGION    AWS region (required for aws backend)
+
+@HOMEPAGE@
+EOF
+}
+
+# Accept but ignore flags that don't apply to externally-managed ColdFront.
+while [ "${#}" -gt 0 ] ; do
+	case "${1}" in
+	(-o | -p)
+		shift
+		# NOOP
+		;;
+	(-U)
+		# NOOP
+		;;
+	(-V | --version)
+		echo "$(basename "${0}") (Database Test 7) v@PROJECT_VERSION@"
+		;;
+	(-\? | --help)
+		usage
+		exit 0
+		;;
+	(--* | -*)
+		echo "$(basename "${0}"): invalid option -- '${1}'"
+		echo "try \"$(basename "${0}") --help\" for more information."
+		exit 1
+		;;
+	(*)
+		break
+		;;
+	esac
+	shift
+done
+
+if [ -z "${DBT7DBNAME}" ]; then
+	echo "Error: DBT7DBNAME environment variable not defined"
+	exit 1
+fi
+
+BACKEND="${COLDFRONT_BACKEND:-s3}"
+
+# Build the set_storage_secret call for the configured backend.
+if [ "${BACKEND}" = "azure" ]; then
+	if [ -z "${COLDFRONT_AZURE_CONN}" ]; then
+		echo "Error: COLDFRONT_AZURE_CONN required for azure backend"
+		exit 1
+	fi
+	STORAGE_SECRET_SQL="SELECT coldfront.set_storage_secret_azure(\
+'${COLDFRONT_AZURE_CONN}');"
+elif [ "${BACKEND}" = "gcs" ]; then
+	if [ -z "${COLDFRONT_ACCESS_KEY}" ] || \
+			[ -z "${COLDFRONT_SECRET_KEY}" ]; then
+		echo "Error: COLDFRONT_ACCESS_KEY and COLDFRONT_SECRET_KEY" \
+			" required for gcs backend"
+		exit 1
+	fi
+	STORAGE_SECRET_SQL="SELECT coldfront.set_storage_secret(\
+'${COLDFRONT_ACCESS_KEY}','${COLDFRONT_SECRET_KEY}',\
+'storage.googleapis.com','us-east-1','path',true);"
+elif [ "${BACKEND}" = "aws" ]; then
+	if [ -z "${COLDFRONT_ACCESS_KEY}" ] || \
+			[ -z "${COLDFRONT_SECRET_KEY}" ] || \
+			[ -z "${COLDFRONT_AWS_REGION}" ]; then
+		echo "Error: COLDFRONT_ACCESS_KEY, COLDFRONT_SECRET_KEY," \
+			" and COLDFRONT_AWS_REGION required for aws backend"
+		exit 1
+	fi
+	STORAGE_SECRET_SQL="SELECT coldfront.set_storage_secret(\
+'${COLDFRONT_ACCESS_KEY}','${COLDFRONT_SECRET_KEY}',\
+NULL,'${COLDFRONT_AWS_REGION}');"
+else
+	# s3 (default)
+	if [ -z "${COLDFRONT_S3_ENDPOINT}" ] || \
+			[ -z "${COLDFRONT_ACCESS_KEY}" ] || \
+			[ -z "${COLDFRONT_SECRET_KEY}" ]; then
+		echo "Error: COLDFRONT_S3_ENDPOINT, COLDFRONT_ACCESS_KEY," \
+			" and COLDFRONT_SECRET_KEY required for s3 backend"
+		exit 1
+	fi
+	STORAGE_SECRET_SQL="SELECT coldfront.set_storage_secret(\
+'${COLDFRONT_ACCESS_KEY}','${COLDFRONT_SECRET_KEY}',\
+'${COLDFRONT_S3_ENDPOINT}');"
+fi
+
+# Create the database if it doesn't exist.
+DBEXISTS=$(psql -Xlt | cut -d "|" -f 1 | grep -c "\<${DBT7DBNAME}\>")
+if [ "${DBEXISTS}" -ne 1 ]; then
+	echo "Creating database ${DBT7DBNAME}..."
+	psql -X -d template1 -c "CREATE DATABASE ${DBT7DBNAME};" || exit 1
+fi
+
+# Install extensions and configure the cold-tier storage secret.
+psql -v ON_ERROR_STOP=1 -X -d "${DBT7DBNAME}" << __EOF__ || exit 1
+CREATE EXTENSION IF NOT EXISTS pg_duckdb;
+CREATE EXTENSION IF NOT EXISTS coldfront;
+${STORAGE_SECRET_SQL}
+__EOF__
+
+echo "ColdFront database ${DBT7DBNAME} ready."

@@ -1,0 +1,177 @@
+Index: dbt7/dsgen/query_duckdb/query90.tpl
+===================================================================
+--- /dev/null
++++ dbt7/dsgen/query_duckdb/query90.tpl
+@@ -0,0 +1,58 @@
++--
++-- Legal Notice 
++-- 
++-- This document and associated source code (the "Work") is a part of a 
++-- benchmark specification maintained by the TPC. 
++-- 
++-- The TPC reserves all right, title, and interest to the Work as provided 
++-- under U.S. and international laws, including without limitation all patent 
++-- and trademark rights therein. 
++-- 
++-- No Warranty 
++-- 
++-- 1.1 TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE INFORMATION 
++--     CONTAINED HEREIN IS PROVIDED "AS IS" AND WITH ALL FAULTS, AND THE 
++--     AUTHORS AND DEVELOPERS OF THE WORK HEREBY DISCLAIM ALL OTHER 
++--     WARRANTIES AND CONDITIONS, EITHER EXPRESS, IMPLIED OR STATUTORY, 
++--     INCLUDING, BUT NOT LIMITED TO, ANY (IF ANY) IMPLIED WARRANTIES, 
++--     DUTIES OR CONDITIONS OF MERCHANTABILITY, OF FITNESS FOR A PARTICULAR 
++--     PURPOSE, OF ACCURACY OR COMPLETENESS OF RESPONSES, OF RESULTS, OF 
++--     WORKMANLIKE EFFORT, OF LACK OF VIRUSES, AND OF LACK OF NEGLIGENCE. 
++--     ALSO, THERE IS NO WARRANTY OR CONDITION OF TITLE, QUIET ENJOYMENT, 
++--     QUIET POSSESSION, CORRESPONDENCE TO DESCRIPTION OR NON-INFRINGEMENT 
++--     WITH REGARD TO THE WORK. 
++-- 1.2 IN NO EVENT WILL ANY AUTHOR OR DEVELOPER OF THE WORK BE LIABLE TO 
++--     ANY OTHER PARTY FOR ANY DAMAGES, INCLUDING BUT NOT LIMITED TO THE 
++--     COST OF PROCURING SUBSTITUTE GOODS OR SERVICES, LOST PROFITS, LOSS 
++--     OF USE, LOSS OF DATA, OR ANY INCIDENTAL, CONSEQUENTIAL, DIRECT, 
++--     INDIRECT, OR SPECIAL DAMAGES WHETHER UNDER CONTRACT, TORT, WARRANTY,
++--     OR OTHERWISE, ARISING IN ANY WAY OUT OF THIS OR ANY OTHER AGREEMENT 
++--     RELATING TO THE WORK, WHETHER OR NOT SUCH AUTHOR OR DEVELOPER HAD 
++--     ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES. 
++-- 
++-- Contributors:
++-- 
++ define DEPCNT=random(0,9,uniform);
++ define HOUR_AM = random(6,12,uniform);
++ define HOUR_PM = random(13,21,uniform);
++ define _LIMIT=100;
++ 
++ [_LIMITA] select [_LIMITB] cast(amc as decimal(15,4))/cast(pmc as decimal(15,4)) am_pm_ratio
++ from ( select count(*) amc
++       from web_sales, household_demographics , time_dim, web_page
++       where ws_sold_time_sk = time_dim.t_time_sk
++         and ws_ship_hdemo_sk = household_demographics.hd_demo_sk
++         and ws_web_page_sk = web_page.wp_web_page_sk
++         and time_dim.t_hour between [HOUR_AM] and [HOUR_AM]+1
++         and household_demographics.hd_dep_count = [DEPCNT]
++         and web_page.wp_char_count between 5000 and 5200) at_,
++      ( select count(*) pmc
++       from web_sales, household_demographics , time_dim, web_page
++       where ws_sold_time_sk = time_dim.t_time_sk
++         and ws_ship_hdemo_sk = household_demographics.hd_demo_sk
++         and ws_web_page_sk = web_page.wp_web_page_sk
++         and time_dim.t_hour between [HOUR_PM] and [HOUR_PM]+1
++         and household_demographics.hd_dep_count = [DEPCNT]
++         and web_page.wp_char_count between 5000 and 5200) pt
++ order by am_pm_ratio
++ [_LIMITC];
+Index: dbt7/dsgen/query_templates/templates-coldfront.lst
+===================================================================
+--- /dev/null
++++ dbt7/dsgen/query_templates/templates-coldfront.lst
+@@ -0,0 +1,99 @@
++query1.tpl
++../query_postgresql/query2.tpl
++query3.tpl
++query4.tpl
++../query_postgresql/query5.tpl
++query6.tpl
++query7.tpl
++query8.tpl
++query9.tpl
++query10.tpl
++query11.tpl
++../query_postgresql/query12.tpl
++query13.tpl
++../query_postgresql/query14.tpl
++query15.tpl
++../query_postgresql/query16.tpl
++query17.tpl
++query18.tpl
++query19.tpl
++../query_postgresql/query20.tpl
++../query_postgresql/query21.tpl
++query22.tpl
++../query_postgresql/query23.tpl
++query24.tpl
++query25.tpl
++query26.tpl
++query27.tpl
++query28.tpl
++query29.tpl
++query30.tpl
++query31.tpl
++../query_postgresql/query32.tpl
++query33.tpl
++query34.tpl
++query35.tpl
++../query_variants/query36a.tpl
++../query_postgresql/query37.tpl
++query38.tpl
++query39.tpl
++../query_postgresql/query40.tpl
++query41.tpl
++query42.tpl
++query43.tpl
++query44.tpl
++query45.tpl
++query46.tpl
++query47.tpl
++query48.tpl
++../query_postgresql/query49.tpl
++query50.tpl
++query51.tpl
++query52.tpl
++query53.tpl
++query54.tpl
++query55.tpl
++query56.tpl
++query57.tpl
++query58.tpl
++query59.tpl
++query60.tpl
++query61.tpl
++query62.tpl
++query63.tpl
++query64.tpl
++query65.tpl
++query66.tpl
++query67.tpl
++query68.tpl
++query69.tpl
++../query_postgresql/query70.tpl
++query71.tpl
++query72.tpl
++query73.tpl
++query74.tpl
++query75.tpl
++query76.tpl
++../query_postgresql/query77.tpl
++query78.tpl
++query79.tpl
++../query_postgresql/query80.tpl
++query81.tpl
++../query_postgresql/query82.tpl
++query83.tpl
++query84.tpl
++query85.tpl
++../query_postgresql/query86.tpl
++query87.tpl
++query88.tpl
++query89.tpl
++../query_duckdb/query90.tpl
++query91.tpl
++../query_postgresql/query92.tpl
++query93.tpl
++../query_postgresql/query94.tpl
++../query_postgresql/query95.tpl
++query96.tpl
++query97.tpl
++../query_postgresql/query98.tpl
++query99.tpl
+Index: dbt7/dsgen/query_templates/coldfront.tpl
+===================================================================
+--- /dev/null
++++ dbt7/dsgen/query_templates/coldfront.tpl
+@@ -0,0 +1,5 @@
++define __LIMITA = "";
++define __LIMITB = "";
++define __LIMITC = "limit %d";
++define _BEGIN = "INSERT INTO time_statistics (template, s_time, stream, query, seed) VALUES ('"+ [_TEMPLATE] + "', TRANSACTION_TIMESTAMP(), " + [_STREAM] + ", " + [_QUERY] + ", " + [_SEED] + ");";
++define _END = "UPDATE time_statistics SET e_time = TRANSACTION_TIMESTAMP() WHERE template = '" + [_TEMPLATE] + "' AND stream = " + [_STREAM] + ";";

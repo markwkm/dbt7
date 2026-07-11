@@ -1,0 +1,86 @@
+#!/bin/sh
+@SHELLOPTIONS@
+#
+# This file is released under the terms of the Artistic License.
+# Please see the file LICENSE, included in this package, for details.
+#
+# Copyright The DBT-7 Authors
+
+if [ -z "${DBT7DBNAME}" ]; then
+	echo "Error: DBT7DBNAME environment variable not defined"
+	exit 1
+fi
+
+PSQL="psql -v ON_ERROR_STOP=1 -X -d ${DBT7DBNAME}"
+
+# Drop each Iceberg (decoupled) table through coldfront.drop_iceberg_table(),
+# the sanctioned drop path: it unregisters the view, drops it, and drops the
+# Iceberg table with PURGE_REQUESTED so the Parquet/manifest files are removed
+# from object storage too. A hand-rolled "DROP VIEW; duckdb.raw_query('DROP
+# TABLE ...')" is not equivalent — duckdb-iceberg's purge flag is set on the
+# DuckDB ATTACH, not the statement, and coldfront's long-lived 'ice' attachment
+# is never purge-armed, so that path drops the catalog entry but leaves the
+# data behind. Guarded by an existence check so this stays safe to run against
+# tables that were never created.
+drop_iceberg_table()
+{
+	TABLE=$1
+	${PSQL} << __EOF__
+DO \$\$
+BEGIN
+	IF EXISTS (SELECT 1 FROM coldfront.tiered_views
+			WHERE schema_name = 'public' AND relname = '${TABLE}') THEN
+		PERFORM coldfront.drop_iceberg_table('public', '${TABLE}', true);
+	END IF;
+END
+\$\$;
+__EOF__
+}
+
+for T in store_sales store_returns catalog_sales catalog_returns web_sales \
+		web_returns inventory store call_center catalog_page web_site web_page \
+		warehouse customer customer_address customer_demographics date_dim \
+		household_demographics item income_band promotion reason ship_mode \
+		time_dim; do
+	drop_iceberg_table "${T}"
+done
+
+# Drop staging tables (regular PG tables in public schema, not Iceberg).
+${PSQL} << __EOF__
+DROP TABLE IF EXISTS public.staging_store_sales;
+DROP TABLE IF EXISTS public.staging_store_returns;
+DROP TABLE IF EXISTS public.staging_catalog_sales;
+DROP TABLE IF EXISTS public.staging_catalog_returns;
+DROP TABLE IF EXISTS public.staging_web_sales;
+DROP TABLE IF EXISTS public.staging_web_returns;
+DROP TABLE IF EXISTS public.staging_inventory;
+DROP TABLE IF EXISTS public.staging_store;
+DROP TABLE IF EXISTS public.staging_call_center;
+DROP TABLE IF EXISTS public.staging_catalog_page;
+DROP TABLE IF EXISTS public.staging_web_site;
+DROP TABLE IF EXISTS public.staging_web_page;
+DROP TABLE IF EXISTS public.staging_warehouse;
+DROP TABLE IF EXISTS public.staging_customer;
+DROP TABLE IF EXISTS public.staging_customer_address;
+DROP TABLE IF EXISTS public.staging_customer_demographics;
+DROP TABLE IF EXISTS public.staging_date_dim;
+DROP TABLE IF EXISTS public.staging_household_demographics;
+DROP TABLE IF EXISTS public.staging_item;
+DROP TABLE IF EXISTS public.staging_income_band;
+DROP TABLE IF EXISTS public.staging_promotion;
+DROP TABLE IF EXISTS public.staging_reason;
+DROP TABLE IF EXISTS public.staging_ship_mode;
+DROP TABLE IF EXISTS public.staging_time_dim;
+DROP TABLE IF EXISTS public.s_purchase_lineitem;
+DROP TABLE IF EXISTS public.s_purchase;
+DROP TABLE IF EXISTS public.s_catalog_order;
+DROP TABLE IF EXISTS public.s_web_order;
+DROP TABLE IF EXISTS public.s_catalog_order_lineitem;
+DROP TABLE IF EXISTS public.s_web_order_lineitem;
+DROP TABLE IF EXISTS public.s_store_returns;
+DROP TABLE IF EXISTS public.s_catalog_returns;
+DROP TABLE IF EXISTS public.s_web_returns;
+DROP TABLE IF EXISTS public.s_inventory;
+DROP TABLE IF EXISTS time_statistics;
+DROP SEQUENCE IF EXISTS dataset;
+__EOF__

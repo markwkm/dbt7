@@ -1,0 +1,1184 @@
+#!/bin/sh
+@SHELLOPTIONS@
+#
+# This file is released under the terms of the Artistic License.
+# Please see the file LICENSE, included in this package, for details.
+#
+# Copyright The DBT-7 Authors
+
+# Custom argument handling for hopefully most portability.
+while [ "${#}" -gt 0 ]; do
+	case "${1}" in
+	(--tablespaces)
+		# NOOP
+		;;
+	esac
+	shift
+done
+
+if [ -z "${DBT7DBNAME}" ]; then
+	echo "Error: DBT7DBNAME environment variable not defined"
+	exit 1
+fi
+
+PSQL="psql -v ON_ERROR_STOP=1 -X -d ${DBT7DBNAME}"
+
+# Create each TPC-DS primary table as a ColdFront Iceberg (decoupled) table,
+# and a matching regular PG table (staging_<name> in public) for bulk COPY.
+# Staging tables live in public so that DuckDB's pglocal connection can find
+# them when ColdFront rewrites INSERT ... SELECT into an Iceberg write.
+
+${PSQL} << '__EOF__' || exit 1
+
+SELECT coldfront.create_iceberg_table('public', 'store_sales', '[
+  {"name":"ss_sold_date_sk","type":"bigint"},
+  {"name":"ss_sold_time_sk","type":"bigint"},
+  {"name":"ss_item_sk","type":"bigint"},
+  {"name":"ss_customer_sk","type":"bigint"},
+  {"name":"ss_cdemo_sk","type":"bigint"},
+  {"name":"ss_hdemo_sk","type":"bigint"},
+  {"name":"ss_addr_sk","type":"bigint"},
+  {"name":"ss_store_sk","type":"bigint"},
+  {"name":"ss_promo_sk","type":"bigint"},
+  {"name":"ss_ticket_number","type":"bigint"},
+  {"name":"ss_quantity","type":"integer"},
+  {"name":"ss_wholesale_cost","type":"double precision"},
+  {"name":"ss_list_price","type":"double precision"},
+  {"name":"ss_sales_price","type":"double precision"},
+  {"name":"ss_ext_discount_amt","type":"double precision"},
+  {"name":"ss_ext_sales_price","type":"double precision"},
+  {"name":"ss_ext_wholesale_cost","type":"double precision"},
+  {"name":"ss_ext_list_price","type":"double precision"},
+  {"name":"ss_ext_tax","type":"double precision"},
+  {"name":"ss_coupon_amt","type":"double precision"},
+  {"name":"ss_net_paid","type":"double precision"},
+  {"name":"ss_net_paid_inc_tax","type":"double precision"},
+  {"name":"ss_net_profit","type":"double precision"}
+]'::jsonb);
+
+CREATE TABLE public.staging_store_sales (
+    ss_sold_date_sk BIGINT,
+    ss_sold_time_sk BIGINT,
+    ss_item_sk BIGINT,
+    ss_customer_sk BIGINT,
+    ss_cdemo_sk BIGINT,
+    ss_hdemo_sk BIGINT,
+    ss_addr_sk BIGINT,
+    ss_store_sk BIGINT,
+    ss_promo_sk BIGINT,
+    ss_ticket_number BIGINT,
+    ss_quantity INTEGER,
+    ss_wholesale_cost DOUBLE PRECISION,
+    ss_list_price DOUBLE PRECISION,
+    ss_sales_price DOUBLE PRECISION,
+    ss_ext_discount_amt DOUBLE PRECISION,
+    ss_ext_sales_price DOUBLE PRECISION,
+    ss_ext_wholesale_cost DOUBLE PRECISION,
+    ss_ext_list_price DOUBLE PRECISION,
+    ss_ext_tax DOUBLE PRECISION,
+    ss_coupon_amt DOUBLE PRECISION,
+    ss_net_paid DOUBLE PRECISION,
+    ss_net_paid_inc_tax DOUBLE PRECISION,
+    ss_net_profit DOUBLE PRECISION
+);
+
+SELECT coldfront.create_iceberg_table('public', 'store_returns', '[
+  {"name":"sr_returned_date_sk","type":"bigint"},
+  {"name":"sr_return_time_sk","type":"bigint"},
+  {"name":"sr_item_sk","type":"bigint"},
+  {"name":"sr_customer_sk","type":"bigint"},
+  {"name":"sr_cdemo_sk","type":"bigint"},
+  {"name":"sr_hdemo_sk","type":"bigint"},
+  {"name":"sr_addr_sk","type":"bigint"},
+  {"name":"sr_store_sk","type":"bigint"},
+  {"name":"sr_reason_sk","type":"bigint"},
+  {"name":"sr_ticket_number","type":"bigint"},
+  {"name":"sr_return_quantity","type":"integer"},
+  {"name":"sr_return_amt","type":"double precision"},
+  {"name":"sr_return_tax","type":"double precision"},
+  {"name":"sr_return_amt_inc_tax","type":"double precision"},
+  {"name":"sr_fee","type":"double precision"},
+  {"name":"sr_return_ship_cost","type":"double precision"},
+  {"name":"sr_refunded_cash","type":"double precision"},
+  {"name":"sr_reversed_charge","type":"double precision"},
+  {"name":"sr_store_credit","type":"double precision"},
+  {"name":"sr_net_loss","type":"double precision"}
+]'::jsonb);
+
+CREATE TABLE public.staging_store_returns (
+    sr_returned_date_sk BIGINT,
+    sr_return_time_sk BIGINT,
+    sr_item_sk BIGINT,
+    sr_customer_sk BIGINT,
+    sr_cdemo_sk BIGINT,
+    sr_hdemo_sk BIGINT,
+    sr_addr_sk BIGINT,
+    sr_store_sk BIGINT,
+    sr_reason_sk BIGINT,
+    sr_ticket_number BIGINT,
+    sr_return_quantity INTEGER,
+    sr_return_amt DOUBLE PRECISION,
+    sr_return_tax DOUBLE PRECISION,
+    sr_return_amt_inc_tax DOUBLE PRECISION,
+    sr_fee DOUBLE PRECISION,
+    sr_return_ship_cost DOUBLE PRECISION,
+    sr_refunded_cash DOUBLE PRECISION,
+    sr_reversed_charge DOUBLE PRECISION,
+    sr_store_credit DOUBLE PRECISION,
+    sr_net_loss DOUBLE PRECISION
+);
+
+SELECT coldfront.create_iceberg_table('public', 'catalog_sales', '[
+  {"name":"cs_sold_date_sk","type":"bigint"},
+  {"name":"cs_sold_time_sk","type":"bigint"},
+  {"name":"cs_ship_date_sk","type":"bigint"},
+  {"name":"cs_bill_customer_sk","type":"bigint"},
+  {"name":"cs_bill_cdemo_sk","type":"bigint"},
+  {"name":"cs_bill_hdemo_sk","type":"bigint"},
+  {"name":"cs_bill_addr_sk","type":"bigint"},
+  {"name":"cs_ship_customer_sk","type":"bigint"},
+  {"name":"cs_ship_cdemo_sk","type":"bigint"},
+  {"name":"cs_ship_hdemo_sk","type":"bigint"},
+  {"name":"cs_ship_addr_sk","type":"bigint"},
+  {"name":"cs_call_center_sk","type":"bigint"},
+  {"name":"cs_catalog_page_sk","type":"bigint"},
+  {"name":"cs_ship_mode_sk","type":"bigint"},
+  {"name":"cs_warehouse_sk","type":"bigint"},
+  {"name":"cs_item_sk","type":"bigint"},
+  {"name":"cs_promo_sk","type":"bigint"},
+  {"name":"cs_order_number","type":"bigint"},
+  {"name":"cs_quantity","type":"integer"},
+  {"name":"cs_wholesale_cost","type":"double precision"},
+  {"name":"cs_list_price","type":"double precision"},
+  {"name":"cs_sales_price","type":"double precision"},
+  {"name":"cs_ext_discount_amt","type":"double precision"},
+  {"name":"cs_ext_sales_price","type":"double precision"},
+  {"name":"cs_ext_wholesale_cost","type":"double precision"},
+  {"name":"cs_ext_list_price","type":"double precision"},
+  {"name":"cs_ext_tax","type":"double precision"},
+  {"name":"cs_coupon_amt","type":"double precision"},
+  {"name":"cs_ext_ship_cost","type":"double precision"},
+  {"name":"cs_net_paid","type":"double precision"},
+  {"name":"cs_net_paid_inc_tax","type":"double precision"},
+  {"name":"cs_net_paid_inc_ship","type":"double precision"},
+  {"name":"cs_net_paid_inc_ship_tax","type":"double precision"},
+  {"name":"cs_net_profit","type":"double precision"}
+]'::jsonb);
+
+CREATE TABLE public.staging_catalog_sales (
+    cs_sold_date_sk BIGINT,
+    cs_sold_time_sk BIGINT,
+    cs_ship_date_sk BIGINT,
+    cs_bill_customer_sk BIGINT,
+    cs_bill_cdemo_sk BIGINT,
+    cs_bill_hdemo_sk BIGINT,
+    cs_bill_addr_sk BIGINT,
+    cs_ship_customer_sk BIGINT,
+    cs_ship_cdemo_sk BIGINT,
+    cs_ship_hdemo_sk BIGINT,
+    cs_ship_addr_sk BIGINT,
+    cs_call_center_sk BIGINT,
+    cs_catalog_page_sk BIGINT,
+    cs_ship_mode_sk BIGINT,
+    cs_warehouse_sk BIGINT,
+    cs_item_sk BIGINT,
+    cs_promo_sk BIGINT,
+    cs_order_number BIGINT,
+    cs_quantity INTEGER,
+    cs_wholesale_cost DOUBLE PRECISION,
+    cs_list_price DOUBLE PRECISION,
+    cs_sales_price DOUBLE PRECISION,
+    cs_ext_discount_amt DOUBLE PRECISION,
+    cs_ext_sales_price DOUBLE PRECISION,
+    cs_ext_wholesale_cost DOUBLE PRECISION,
+    cs_ext_list_price DOUBLE PRECISION,
+    cs_ext_tax DOUBLE PRECISION,
+    cs_coupon_amt DOUBLE PRECISION,
+    cs_ext_ship_cost DOUBLE PRECISION,
+    cs_net_paid DOUBLE PRECISION,
+    cs_net_paid_inc_tax DOUBLE PRECISION,
+    cs_net_paid_inc_ship DOUBLE PRECISION,
+    cs_net_paid_inc_ship_tax DOUBLE PRECISION,
+    cs_net_profit DOUBLE PRECISION
+);
+
+SELECT coldfront.create_iceberg_table('public', 'catalog_returns', '[
+  {"name":"cr_returned_date_sk","type":"bigint"},
+  {"name":"cr_returned_time_sk","type":"bigint"},
+  {"name":"cr_item_sk","type":"bigint"},
+  {"name":"cr_refunded_customer_sk","type":"bigint"},
+  {"name":"cr_refunded_cdemo_sk","type":"bigint"},
+  {"name":"cr_refunded_hdemo_sk","type":"bigint"},
+  {"name":"cr_refunded_addr_sk","type":"bigint"},
+  {"name":"cr_returning_customer_sk","type":"bigint"},
+  {"name":"cr_returning_cdemo_sk","type":"bigint"},
+  {"name":"cr_returning_hdemo_sk","type":"bigint"},
+  {"name":"cr_returning_addr_sk","type":"bigint"},
+  {"name":"cr_call_center_sk","type":"bigint"},
+  {"name":"cr_catalog_page_sk","type":"bigint"},
+  {"name":"cr_ship_mode_sk","type":"bigint"},
+  {"name":"cr_warehouse_sk","type":"bigint"},
+  {"name":"cr_reason_sk","type":"bigint"},
+  {"name":"cr_order_number","type":"bigint"},
+  {"name":"cr_return_quantity","type":"integer"},
+  {"name":"cr_return_amount","type":"double precision"},
+  {"name":"cr_return_tax","type":"double precision"},
+  {"name":"cr_return_amt_inc_tax","type":"double precision"},
+  {"name":"cr_fee","type":"double precision"},
+  {"name":"cr_return_ship_cost","type":"double precision"},
+  {"name":"cr_refunded_cash","type":"double precision"},
+  {"name":"cr_reversed_charge","type":"double precision"},
+  {"name":"cr_store_credit","type":"double precision"},
+  {"name":"cr_net_loss","type":"double precision"}
+]'::jsonb);
+
+CREATE TABLE public.staging_catalog_returns (
+    cr_returned_date_sk BIGINT,
+    cr_returned_time_sk BIGINT,
+    cr_item_sk BIGINT,
+    cr_refunded_customer_sk BIGINT,
+    cr_refunded_cdemo_sk BIGINT,
+    cr_refunded_hdemo_sk BIGINT,
+    cr_refunded_addr_sk BIGINT,
+    cr_returning_customer_sk BIGINT,
+    cr_returning_cdemo_sk BIGINT,
+    cr_returning_hdemo_sk BIGINT,
+    cr_returning_addr_sk BIGINT,
+    cr_call_center_sk BIGINT,
+    cr_catalog_page_sk BIGINT,
+    cr_ship_mode_sk BIGINT,
+    cr_warehouse_sk BIGINT,
+    cr_reason_sk BIGINT,
+    cr_order_number BIGINT,
+    cr_return_quantity INTEGER,
+    cr_return_amount DOUBLE PRECISION,
+    cr_return_tax DOUBLE PRECISION,
+    cr_return_amt_inc_tax DOUBLE PRECISION,
+    cr_fee DOUBLE PRECISION,
+    cr_return_ship_cost DOUBLE PRECISION,
+    cr_refunded_cash DOUBLE PRECISION,
+    cr_reversed_charge DOUBLE PRECISION,
+    cr_store_credit DOUBLE PRECISION,
+    cr_net_loss DOUBLE PRECISION
+);
+
+SELECT coldfront.create_iceberg_table('public', 'web_sales', '[
+  {"name":"ws_sold_date_sk","type":"bigint"},
+  {"name":"ws_sold_time_sk","type":"bigint"},
+  {"name":"ws_ship_date_sk","type":"bigint"},
+  {"name":"ws_item_sk","type":"bigint"},
+  {"name":"ws_bill_customer_sk","type":"bigint"},
+  {"name":"ws_bill_cdemo_sk","type":"bigint"},
+  {"name":"ws_bill_hdemo_sk","type":"bigint"},
+  {"name":"ws_bill_addr_sk","type":"bigint"},
+  {"name":"ws_ship_customer_sk","type":"bigint"},
+  {"name":"ws_ship_cdemo_sk","type":"bigint"},
+  {"name":"ws_ship_hdemo_sk","type":"bigint"},
+  {"name":"ws_ship_addr_sk","type":"bigint"},
+  {"name":"ws_web_page_sk","type":"bigint"},
+  {"name":"ws_web_site_sk","type":"bigint"},
+  {"name":"ws_ship_mode_sk","type":"bigint"},
+  {"name":"ws_warehouse_sk","type":"bigint"},
+  {"name":"ws_promo_sk","type":"bigint"},
+  {"name":"ws_order_number","type":"bigint"},
+  {"name":"ws_quantity","type":"integer"},
+  {"name":"ws_wholesale_cost","type":"double precision"},
+  {"name":"ws_list_price","type":"double precision"},
+  {"name":"ws_sales_price","type":"double precision"},
+  {"name":"ws_ext_discount_amt","type":"double precision"},
+  {"name":"ws_ext_sales_price","type":"double precision"},
+  {"name":"ws_ext_wholesale_cost","type":"double precision"},
+  {"name":"ws_ext_list_price","type":"double precision"},
+  {"name":"ws_ext_tax","type":"double precision"},
+  {"name":"ws_coupon_amt","type":"double precision"},
+  {"name":"ws_ext_ship_cost","type":"double precision"},
+  {"name":"ws_net_paid","type":"double precision"},
+  {"name":"ws_net_paid_inc_tax","type":"double precision"},
+  {"name":"ws_net_paid_inc_ship","type":"double precision"},
+  {"name":"ws_net_paid_inc_ship_tax","type":"double precision"},
+  {"name":"ws_net_profit","type":"double precision"}
+]'::jsonb);
+
+CREATE TABLE public.staging_web_sales (
+    ws_sold_date_sk BIGINT,
+    ws_sold_time_sk BIGINT,
+    ws_ship_date_sk BIGINT,
+    ws_item_sk BIGINT,
+    ws_bill_customer_sk BIGINT,
+    ws_bill_cdemo_sk BIGINT,
+    ws_bill_hdemo_sk BIGINT,
+    ws_bill_addr_sk BIGINT,
+    ws_ship_customer_sk BIGINT,
+    ws_ship_cdemo_sk BIGINT,
+    ws_ship_hdemo_sk BIGINT,
+    ws_ship_addr_sk BIGINT,
+    ws_web_page_sk BIGINT,
+    ws_web_site_sk BIGINT,
+    ws_ship_mode_sk BIGINT,
+    ws_warehouse_sk BIGINT,
+    ws_promo_sk BIGINT,
+    ws_order_number BIGINT,
+    ws_quantity INTEGER,
+    ws_wholesale_cost DOUBLE PRECISION,
+    ws_list_price DOUBLE PRECISION,
+    ws_sales_price DOUBLE PRECISION,
+    ws_ext_discount_amt DOUBLE PRECISION,
+    ws_ext_sales_price DOUBLE PRECISION,
+    ws_ext_wholesale_cost DOUBLE PRECISION,
+    ws_ext_list_price DOUBLE PRECISION,
+    ws_ext_tax DOUBLE PRECISION,
+    ws_coupon_amt DOUBLE PRECISION,
+    ws_ext_ship_cost DOUBLE PRECISION,
+    ws_net_paid DOUBLE PRECISION,
+    ws_net_paid_inc_tax DOUBLE PRECISION,
+    ws_net_paid_inc_ship DOUBLE PRECISION,
+    ws_net_paid_inc_ship_tax DOUBLE PRECISION,
+    ws_net_profit DOUBLE PRECISION
+);
+
+SELECT coldfront.create_iceberg_table('public', 'web_returns', '[
+  {"name":"wr_returned_date_sk","type":"bigint"},
+  {"name":"wr_returned_time_sk","type":"bigint"},
+  {"name":"wr_item_sk","type":"bigint"},
+  {"name":"wr_refunded_customer_sk","type":"bigint"},
+  {"name":"wr_refunded_cdemo_sk","type":"bigint"},
+  {"name":"wr_refunded_hdemo_sk","type":"bigint"},
+  {"name":"wr_refunded_addr_sk","type":"bigint"},
+  {"name":"wr_returning_customer_sk","type":"bigint"},
+  {"name":"wr_returning_cdemo_sk","type":"bigint"},
+  {"name":"wr_returning_hdemo_sk","type":"bigint"},
+  {"name":"wr_returning_addr_sk","type":"bigint"},
+  {"name":"wr_web_page_sk","type":"bigint"},
+  {"name":"wr_reason_sk","type":"bigint"},
+  {"name":"wr_order_number","type":"bigint"},
+  {"name":"wr_return_quantity","type":"integer"},
+  {"name":"wr_return_amt","type":"double precision"},
+  {"name":"wr_return_tax","type":"double precision"},
+  {"name":"wr_return_amt_inc_tax","type":"double precision"},
+  {"name":"wr_fee","type":"double precision"},
+  {"name":"wr_return_ship_cost","type":"double precision"},
+  {"name":"wr_refunded_cash","type":"double precision"},
+  {"name":"wr_reversed_charge","type":"double precision"},
+  {"name":"wr_account_credit","type":"double precision"},
+  {"name":"wr_net_loss","type":"double precision"}
+]'::jsonb);
+
+CREATE TABLE public.staging_web_returns (
+    wr_returned_date_sk BIGINT,
+    wr_returned_time_sk BIGINT,
+    wr_item_sk BIGINT,
+    wr_refunded_customer_sk BIGINT,
+    wr_refunded_cdemo_sk BIGINT,
+    wr_refunded_hdemo_sk BIGINT,
+    wr_refunded_addr_sk BIGINT,
+    wr_returning_customer_sk BIGINT,
+    wr_returning_cdemo_sk BIGINT,
+    wr_returning_hdemo_sk BIGINT,
+    wr_returning_addr_sk BIGINT,
+    wr_web_page_sk BIGINT,
+    wr_reason_sk BIGINT,
+    wr_order_number BIGINT,
+    wr_return_quantity INTEGER,
+    wr_return_amt DOUBLE PRECISION,
+    wr_return_tax DOUBLE PRECISION,
+    wr_return_amt_inc_tax DOUBLE PRECISION,
+    wr_fee DOUBLE PRECISION,
+    wr_return_ship_cost DOUBLE PRECISION,
+    wr_refunded_cash DOUBLE PRECISION,
+    wr_reversed_charge DOUBLE PRECISION,
+    wr_account_credit DOUBLE PRECISION,
+    wr_net_loss DOUBLE PRECISION
+);
+
+SELECT coldfront.create_iceberg_table('public', 'inventory', '[
+  {"name":"inv_date_sk","type":"bigint"},
+  {"name":"inv_item_sk","type":"bigint"},
+  {"name":"inv_warehouse_sk","type":"bigint"},
+  {"name":"inv_quantity_on_hand","type":"integer"}
+]'::jsonb);
+
+CREATE TABLE public.staging_inventory (
+    inv_date_sk BIGINT,
+    inv_item_sk BIGINT,
+    inv_warehouse_sk BIGINT,
+    inv_quantity_on_hand INTEGER
+);
+
+SELECT coldfront.create_iceberg_table('public', 'store', '[
+  {"name":"s_store_sk","type":"bigint"},
+  {"name":"s_store_id","type":"char(16)"},
+  {"name":"s_rec_start_date","type":"date"},
+  {"name":"s_rec_end_date","type":"date"},
+  {"name":"s_closed_date_sk","type":"bigint"},
+  {"name":"s_store_name","type":"varchar(50)"},
+  {"name":"s_number_employees","type":"integer"},
+  {"name":"s_floor_space","type":"integer"},
+  {"name":"s_hours","type":"char(20)"},
+  {"name":"s_manager","type":"varchar(40)"},
+  {"name":"s_market_id","type":"integer"},
+  {"name":"s_geography_class","type":"varchar(100)"},
+  {"name":"s_market_desc","type":"varchar(100)"},
+  {"name":"s_market_manager","type":"varchar(40)"},
+  {"name":"s_division_id","type":"integer"},
+  {"name":"s_division_name","type":"varchar(50)"},
+  {"name":"s_company_id","type":"integer"},
+  {"name":"s_company_name","type":"varchar(50)"},
+  {"name":"s_street_number","type":"varchar(10)"},
+  {"name":"s_street_name","type":"varchar(60)"},
+  {"name":"s_street_type","type":"char(15)"},
+  {"name":"s_suite_number","type":"char(10)"},
+  {"name":"s_city","type":"varchar(60)"},
+  {"name":"s_county","type":"varchar(30)"},
+  {"name":"s_state","type":"char(2)"},
+  {"name":"s_zip","type":"char(10)"},
+  {"name":"s_country","type":"varchar(20)"},
+  {"name":"s_gmt_offset","type":"double precision"},
+  {"name":"s_tax_percentage","type":"double precision"}
+]'::jsonb);
+
+CREATE TABLE public.staging_store (
+    s_store_sk BIGINT,
+    s_store_id CHAR(16),
+    s_rec_start_date DATE,
+    s_rec_end_date DATE,
+    s_closed_date_sk BIGINT,
+    s_store_name VARCHAR(50),
+    s_number_employees INTEGER,
+    s_floor_space INTEGER,
+    s_hours CHAR(20),
+    s_manager VARCHAR(40),
+    s_market_id INTEGER,
+    s_geography_class VARCHAR(100),
+    s_market_desc VARCHAR(100),
+    s_market_manager VARCHAR(40),
+    s_division_id INTEGER,
+    s_division_name VARCHAR(50),
+    s_company_id INTEGER,
+    s_company_name VARCHAR(50),
+    s_street_number VARCHAR(10),
+    s_street_name VARCHAR(60),
+    s_street_type CHAR(15),
+    s_suite_number CHAR(10),
+    s_city VARCHAR(60),
+    s_county VARCHAR(30),
+    s_state CHAR(2),
+    s_zip CHAR(10),
+    s_country VARCHAR(20),
+    s_gmt_offset DOUBLE PRECISION,
+    s_tax_percentage DOUBLE PRECISION
+);
+
+SELECT coldfront.create_iceberg_table('public', 'call_center', '[
+  {"name":"cc_call_center_sk","type":"bigint"},
+  {"name":"cc_call_center_id","type":"char(16)"},
+  {"name":"cc_rec_start_date","type":"date"},
+  {"name":"cc_rec_end_date","type":"date"},
+  {"name":"cc_closed_date_sk","type":"integer"},
+  {"name":"cc_open_date_sk","type":"integer"},
+  {"name":"cc_name","type":"varchar(50)"},
+  {"name":"cc_class","type":"varchar(50)"},
+  {"name":"cc_employees","type":"integer"},
+  {"name":"cc_sq_ft","type":"integer"},
+  {"name":"cc_hours","type":"char(20)"},
+  {"name":"cc_manager","type":"varchar(40)"},
+  {"name":"cc_mkt_id","type":"integer"},
+  {"name":"cc_mkt_class","type":"char(50)"},
+  {"name":"cc_mkt_desc","type":"varchar(100)"},
+  {"name":"cc_market_manager","type":"varchar(40)"},
+  {"name":"cc_division","type":"integer"},
+  {"name":"cc_division_name","type":"varchar(50)"},
+  {"name":"cc_company","type":"integer"},
+  {"name":"cc_company_name","type":"char(50)"},
+  {"name":"cc_street_number","type":"char(10)"},
+  {"name":"cc_street_name","type":"varchar(60)"},
+  {"name":"cc_street_type","type":"char(15)"},
+  {"name":"cc_suite_number","type":"char(10)"},
+  {"name":"cc_city","type":"varchar(60)"},
+  {"name":"cc_county","type":"varchar(30)"},
+  {"name":"cc_state","type":"char(2)"},
+  {"name":"cc_zip","type":"char(10)"},
+  {"name":"cc_country","type":"varchar(20)"},
+  {"name":"cc_gmt_offset","type":"double precision"},
+  {"name":"cc_tax_percentage","type":"double precision"}
+]'::jsonb);
+
+CREATE TABLE public.staging_call_center (
+    cc_call_center_sk BIGINT,
+    cc_call_center_id CHAR(16),
+    cc_rec_start_date DATE,
+    cc_rec_end_date DATE,
+    cc_closed_date_sk INTEGER,
+    cc_open_date_sk INTEGER,
+    cc_name VARCHAR(50),
+    cc_class VARCHAR(50),
+    cc_employees INTEGER,
+    cc_sq_ft INTEGER,
+    cc_hours CHAR(20),
+    cc_manager VARCHAR(40),
+    cc_mkt_id INTEGER,
+    cc_mkt_class CHAR(50),
+    cc_mkt_desc VARCHAR(100),
+    cc_market_manager VARCHAR(40),
+    cc_division INTEGER,
+    cc_division_name VARCHAR(50),
+    cc_company INTEGER,
+    cc_company_name CHAR(50),
+    cc_street_number CHAR(10),
+    cc_street_name VARCHAR(60),
+    cc_street_type CHAR(15),
+    cc_suite_number CHAR(10),
+    cc_city VARCHAR(60),
+    cc_county VARCHAR(30),
+    cc_state CHAR(2),
+    cc_zip CHAR(10),
+    cc_country VARCHAR(20),
+    cc_gmt_offset DOUBLE PRECISION,
+    cc_tax_percentage DOUBLE PRECISION
+);
+
+SELECT coldfront.create_iceberg_table('public', 'catalog_page', '[
+  {"name":"cp_catalog_page_sk","type":"bigint"},
+  {"name":"cp_catalog_page_id","type":"char(16)"},
+  {"name":"cp_start_date_sk","type":"integer"},
+  {"name":"cp_end_date_sk","type":"integer"},
+  {"name":"cp_department","type":"varchar(50)"},
+  {"name":"cp_catalog_number","type":"integer"},
+  {"name":"cp_catalog_page_number","type":"integer"},
+  {"name":"cp_description","type":"varchar(100)"},
+  {"name":"cp_type","type":"varchar(100)"}
+]'::jsonb);
+
+CREATE TABLE public.staging_catalog_page (
+    cp_catalog_page_sk BIGINT,
+    cp_catalog_page_id CHAR(16),
+    cp_start_date_sk INTEGER,
+    cp_end_date_sk INTEGER,
+    cp_department VARCHAR(50),
+    cp_catalog_number INTEGER,
+    cp_catalog_page_number INTEGER,
+    cp_description VARCHAR(100),
+    cp_type VARCHAR(100)
+);
+
+SELECT coldfront.create_iceberg_table('public', 'web_site', '[
+  {"name":"web_site_sk","type":"bigint"},
+  {"name":"web_site_id","type":"char(16)"},
+  {"name":"web_rec_start_date","type":"date"},
+  {"name":"web_rec_end_date","type":"date"},
+  {"name":"web_name","type":"varchar(50)"},
+  {"name":"web_open_date_sk","type":"bigint"},
+  {"name":"web_close_date_sk","type":"bigint"},
+  {"name":"web_class","type":"varchar(50)"},
+  {"name":"web_manager","type":"varchar(40)"},
+  {"name":"web_mkt_id","type":"integer"},
+  {"name":"web_mkt_class","type":"varchar(50)"},
+  {"name":"web_mkt_desc","type":"varchar(100)"},
+  {"name":"web_market_manager","type":"varchar(40)"},
+  {"name":"web_company_id","type":"integer"},
+  {"name":"web_company_name","type":"char(50)"},
+  {"name":"web_street_number","type":"char(10)"},
+  {"name":"web_street_name","type":"varchar(60)"},
+  {"name":"web_street_type","type":"char(15)"},
+  {"name":"web_suite_number","type":"char(10)"},
+  {"name":"web_city","type":"varchar(60)"},
+  {"name":"web_county","type":"varchar(30)"},
+  {"name":"web_state","type":"char(2)"},
+  {"name":"web_zip","type":"char(10)"},
+  {"name":"web_country","type":"varchar(20)"},
+  {"name":"web_gmt_offset","type":"double precision"},
+  {"name":"web_tax_percentage","type":"double precision"}
+]'::jsonb);
+
+CREATE TABLE public.staging_web_site (
+    web_site_sk BIGINT,
+    web_site_id CHAR(16),
+    web_rec_start_date DATE,
+    web_rec_end_date DATE,
+    web_name VARCHAR(50),
+    web_open_date_sk BIGINT,
+    web_close_date_sk BIGINT,
+    web_class VARCHAR(50),
+    web_manager VARCHAR(40),
+    web_mkt_id INTEGER,
+    web_mkt_class VARCHAR(50),
+    web_mkt_desc VARCHAR(100),
+    web_market_manager VARCHAR(40),
+    web_company_id INTEGER,
+    web_company_name CHAR(50),
+    web_street_number CHAR(10),
+    web_street_name VARCHAR(60),
+    web_street_type CHAR(15),
+    web_suite_number CHAR(10),
+    web_city VARCHAR(60),
+    web_county VARCHAR(30),
+    web_state CHAR(2),
+    web_zip CHAR(10),
+    web_country VARCHAR(20),
+    web_gmt_offset DOUBLE PRECISION,
+    web_tax_percentage DOUBLE PRECISION
+);
+
+SELECT coldfront.create_iceberg_table('public', 'web_page', '[
+  {"name":"wp_web_page_sk","type":"bigint"},
+  {"name":"wp_web_page_id","type":"char(16)"},
+  {"name":"wp_rec_start_date","type":"date"},
+  {"name":"wp_rec_end_date","type":"date"},
+  {"name":"wp_creation_date_sk","type":"bigint"},
+  {"name":"wp_access_date_sk","type":"bigint"},
+  {"name":"wp_autogen_flag","type":"char(1)"},
+  {"name":"wp_customer_sk","type":"bigint"},
+  {"name":"wp_url","type":"varchar(100)"},
+  {"name":"wp_type","type":"char(50)"},
+  {"name":"wp_char_count","type":"integer"},
+  {"name":"wp_link_count","type":"integer"},
+  {"name":"wp_image_count","type":"integer"},
+  {"name":"wp_max_ad_count","type":"integer"}
+]'::jsonb);
+
+CREATE TABLE public.staging_web_page (
+    wp_web_page_sk BIGINT,
+    wp_web_page_id CHAR(16),
+    wp_rec_start_date DATE,
+    wp_rec_end_date DATE,
+    wp_creation_date_sk BIGINT,
+    wp_access_date_sk BIGINT,
+    wp_autogen_flag CHAR(1),
+    wp_customer_sk BIGINT,
+    wp_url VARCHAR(100),
+    wp_type CHAR(50),
+    wp_char_count INTEGER,
+    wp_link_count INTEGER,
+    wp_image_count INTEGER,
+    wp_max_ad_count INTEGER
+);
+
+SELECT coldfront.create_iceberg_table('public', 'warehouse', '[
+  {"name":"w_warehouse_sk","type":"bigint"},
+  {"name":"w_warehouse_id","type":"char(16)"},
+  {"name":"w_warehouse_name","type":"varchar(20)"},
+  {"name":"w_warehouse_sq_ft","type":"integer"},
+  {"name":"w_street_number","type":"char(10)"},
+  {"name":"w_street_name","type":"varchar(60)"},
+  {"name":"w_street_type","type":"char(15)"},
+  {"name":"w_suite_number","type":"char(10)"},
+  {"name":"w_city","type":"varchar(60)"},
+  {"name":"w_county","type":"varchar(30)"},
+  {"name":"w_state","type":"char(2)"},
+  {"name":"w_zip","type":"char(10)"},
+  {"name":"w_country","type":"varchar(20)"},
+  {"name":"w_gmt_offset","type":"double precision"}
+]'::jsonb);
+
+CREATE TABLE public.staging_warehouse (
+    w_warehouse_sk BIGINT,
+    w_warehouse_id CHAR(16),
+    w_warehouse_name VARCHAR(20),
+    w_warehouse_sq_ft INTEGER,
+    w_street_number CHAR(10),
+    w_street_name VARCHAR(60),
+    w_street_type CHAR(15),
+    w_suite_number CHAR(10),
+    w_city VARCHAR(60),
+    w_county VARCHAR(30),
+    w_state CHAR(2),
+    w_zip CHAR(10),
+    w_country VARCHAR(20),
+    w_gmt_offset DOUBLE PRECISION
+);
+
+SELECT coldfront.create_iceberg_table('public', 'customer', '[
+  {"name":"c_customer_sk","type":"bigint"},
+  {"name":"c_customer_id","type":"char(16)"},
+  {"name":"c_current_cdemo_sk","type":"bigint"},
+  {"name":"c_current_hdemo_sk","type":"bigint"},
+  {"name":"c_current_addr_sk","type":"bigint"},
+  {"name":"c_first_shipto_date_sk","type":"bigint"},
+  {"name":"c_first_sales_date_sk","type":"bigint"},
+  {"name":"c_salutation","type":"char(10)"},
+  {"name":"c_first_name","type":"char(20)"},
+  {"name":"c_last_name","type":"char(30)"},
+  {"name":"c_preferred_cust_flag","type":"char(1)"},
+  {"name":"c_birth_day","type":"integer"},
+  {"name":"c_birth_month","type":"integer"},
+  {"name":"c_birth_year","type":"integer"},
+  {"name":"c_birth_country","type":"varchar(20)"},
+  {"name":"c_login","type":"char(13)"},
+  {"name":"c_email_address","type":"char(50)"},
+  {"name":"c_last_review_date_sk","type":"bigint"}
+]'::jsonb);
+
+CREATE TABLE public.staging_customer (
+    c_customer_sk BIGINT,
+    c_customer_id CHAR(16),
+    c_current_cdemo_sk BIGINT,
+    c_current_hdemo_sk BIGINT,
+    c_current_addr_sk BIGINT,
+    c_first_shipto_date_sk BIGINT,
+    c_first_sales_date_sk BIGINT,
+    c_salutation CHAR(10),
+    c_first_name CHAR(20),
+    c_last_name CHAR(30),
+    c_preferred_cust_flag CHAR(1),
+    c_birth_day INTEGER,
+    c_birth_month INTEGER,
+    c_birth_year INTEGER,
+    c_birth_country VARCHAR(20),
+    c_login CHAR(13),
+    c_email_address CHAR(50),
+    c_last_review_date_sk BIGINT
+);
+
+SELECT coldfront.create_iceberg_table('public', 'customer_address', '[
+  {"name":"ca_address_sk","type":"bigint"},
+  {"name":"ca_address_id","type":"char(16)"},
+  {"name":"ca_street_number","type":"char(10)"},
+  {"name":"ca_street_name","type":"varchar(60)"},
+  {"name":"ca_street_type","type":"char(15)"},
+  {"name":"ca_suite_number","type":"char(10)"},
+  {"name":"ca_city","type":"varchar(60)"},
+  {"name":"ca_county","type":"varchar(30)"},
+  {"name":"ca_state","type":"char(2)"},
+  {"name":"ca_zip","type":"char(10)"},
+  {"name":"ca_country","type":"varchar(20)"},
+  {"name":"ca_gmt_offset","type":"double precision"},
+  {"name":"ca_location_type","type":"char(20)"}
+]'::jsonb);
+
+CREATE TABLE public.staging_customer_address (
+    ca_address_sk BIGINT,
+    ca_address_id CHAR(16),
+    ca_street_number CHAR(10),
+    ca_street_name VARCHAR(60),
+    ca_street_type CHAR(15),
+    ca_suite_number CHAR(10),
+    ca_city VARCHAR(60),
+    ca_county VARCHAR(30),
+    ca_state CHAR(2),
+    ca_zip CHAR(10),
+    ca_country VARCHAR(20),
+    ca_gmt_offset DOUBLE PRECISION,
+    ca_location_type CHAR(20)
+);
+
+SELECT coldfront.create_iceberg_table('public', 'customer_demographics', '[
+  {"name":"cd_demo_sk","type":"bigint"},
+  {"name":"cd_gender","type":"char(1)"},
+  {"name":"cd_marital_status","type":"char(1)"},
+  {"name":"cd_education_status","type":"char(20)"},
+  {"name":"cd_purchase_estimate","type":"integer"},
+  {"name":"cd_credit_rating","type":"char(10)"},
+  {"name":"cd_dep_count","type":"integer"},
+  {"name":"cd_dep_employed_count","type":"integer"},
+  {"name":"cd_dep_college_count","type":"integer"}
+]'::jsonb);
+
+CREATE TABLE public.staging_customer_demographics (
+    cd_demo_sk BIGINT,
+    cd_gender CHAR(1),
+    cd_marital_status CHAR(1),
+    cd_education_status CHAR(20),
+    cd_purchase_estimate INTEGER,
+    cd_credit_rating CHAR(10),
+    cd_dep_count INTEGER,
+    cd_dep_employed_count INTEGER,
+    cd_dep_college_count INTEGER
+);
+
+SELECT coldfront.create_iceberg_table('public', 'date_dim', '[
+  {"name":"d_date_sk","type":"bigint"},
+  {"name":"d_date_id","type":"char(16)"},
+  {"name":"d_date","type":"date"},
+  {"name":"d_month_seq","type":"integer"},
+  {"name":"d_week_seq","type":"integer"},
+  {"name":"d_quarter_seq","type":"integer"},
+  {"name":"d_year","type":"integer"},
+  {"name":"d_dow","type":"integer"},
+  {"name":"d_moy","type":"integer"},
+  {"name":"d_dom","type":"integer"},
+  {"name":"d_qoy","type":"integer"},
+  {"name":"d_fy_year","type":"integer"},
+  {"name":"d_fy_quarter_seq","type":"integer"},
+  {"name":"d_fy_week_seq","type":"integer"},
+  {"name":"d_day_name","type":"char(9)"},
+  {"name":"d_quarter_name","type":"char(6)"},
+  {"name":"d_holiday","type":"char(1)"},
+  {"name":"d_weekend","type":"char(1)"},
+  {"name":"d_following_holiday","type":"char(1)"},
+  {"name":"d_first_dom","type":"integer"},
+  {"name":"d_last_dom","type":"integer"},
+  {"name":"d_same_day_ly","type":"integer"},
+  {"name":"d_same_day_lq","type":"integer"},
+  {"name":"d_current_day","type":"char(1)"},
+  {"name":"d_current_week","type":"char(1)"},
+  {"name":"d_current_month","type":"char(1)"},
+  {"name":"d_current_quarter","type":"char(1)"},
+  {"name":"d_current_year","type":"char(1)"}
+]'::jsonb);
+
+CREATE TABLE public.staging_date_dim (
+    d_date_sk BIGINT,
+    d_date_id CHAR(16),
+    d_date DATE,
+    d_month_seq INTEGER,
+    d_week_seq INTEGER,
+    d_quarter_seq INTEGER,
+    d_year INTEGER,
+    d_dow INTEGER,
+    d_moy INTEGER,
+    d_dom INTEGER,
+    d_qoy INTEGER,
+    d_fy_year INTEGER,
+    d_fy_quarter_seq INTEGER,
+    d_fy_week_seq INTEGER,
+    d_day_name CHAR(9),
+    d_quarter_name CHAR(6),
+    d_holiday CHAR(1),
+    d_weekend CHAR(1),
+    d_following_holiday CHAR(1),
+    d_first_dom INTEGER,
+    d_last_dom INTEGER,
+    d_same_day_ly INTEGER,
+    d_same_day_lq INTEGER,
+    d_current_day CHAR(1),
+    d_current_week CHAR(1),
+    d_current_month CHAR(1),
+    d_current_quarter CHAR(1),
+    d_current_year CHAR(1)
+);
+
+SELECT coldfront.create_iceberg_table('public', 'household_demographics', '[
+  {"name":"hd_demo_sk","type":"bigint"},
+  {"name":"hd_income_band_sk","type":"bigint"},
+  {"name":"hd_buy_potential","type":"char(15)"},
+  {"name":"hd_dep_count","type":"integer"},
+  {"name":"hd_vehicle_count","type":"integer"}
+]'::jsonb);
+
+CREATE TABLE public.staging_household_demographics (
+    hd_demo_sk BIGINT,
+    hd_income_band_sk BIGINT,
+    hd_buy_potential CHAR(15),
+    hd_dep_count INTEGER,
+    hd_vehicle_count INTEGER
+);
+
+SELECT coldfront.create_iceberg_table('public', 'item', '[
+  {"name":"i_item_sk","type":"bigint"},
+  {"name":"i_item_id","type":"char(16)"},
+  {"name":"i_rec_start_date","type":"date"},
+  {"name":"i_rec_end_date","type":"date"},
+  {"name":"i_item_desc","type":"varchar(200)"},
+  {"name":"i_current_price","type":"double precision"},
+  {"name":"i_wholesale_cost","type":"double precision"},
+  {"name":"i_brand_id","type":"integer"},
+  {"name":"i_brand","type":"char(50)"},
+  {"name":"i_class_id","type":"integer"},
+  {"name":"i_class","type":"char(50)"},
+  {"name":"i_category_id","type":"integer"},
+  {"name":"i_category","type":"char(50)"},
+  {"name":"i_manufact_id","type":"integer"},
+  {"name":"i_manufact","type":"char(50)"},
+  {"name":"i_size","type":"char(20)"},
+  {"name":"i_formulation","type":"char(20)"},
+  {"name":"i_color","type":"char(20)"},
+  {"name":"i_units","type":"char(10)"},
+  {"name":"i_container","type":"char(10)"},
+  {"name":"i_manager_id","type":"integer"},
+  {"name":"i_product_name","type":"char(50)"}
+]'::jsonb);
+
+CREATE TABLE public.staging_item (
+    i_item_sk BIGINT,
+    i_item_id CHAR(16),
+    i_rec_start_date DATE,
+    i_rec_end_date DATE,
+    i_item_desc VARCHAR(200),
+    i_current_price DOUBLE PRECISION,
+    i_wholesale_cost DOUBLE PRECISION,
+    i_brand_id INTEGER,
+    i_brand CHAR(50),
+    i_class_id INTEGER,
+    i_class CHAR(50),
+    i_category_id INTEGER,
+    i_category CHAR(50),
+    i_manufact_id INTEGER,
+    i_manufact CHAR(50),
+    i_size CHAR(20),
+    i_formulation CHAR(20),
+    i_color CHAR(20),
+    i_units CHAR(10),
+    i_container CHAR(10),
+    i_manager_id INTEGER,
+    i_product_name CHAR(50)
+);
+
+SELECT coldfront.create_iceberg_table('public', 'income_band', '[
+  {"name":"ib_income_band_sk","type":"bigint"},
+  {"name":"ib_lower_bound","type":"integer"},
+  {"name":"ib_upper_bound","type":"integer"}
+]'::jsonb);
+
+CREATE TABLE public.staging_income_band (
+    ib_income_band_sk BIGINT,
+    ib_lower_bound INTEGER,
+    ib_upper_bound INTEGER
+);
+
+SELECT coldfront.create_iceberg_table('public', 'promotion', '[
+  {"name":"p_promo_sk","type":"bigint"},
+  {"name":"p_promo_id","type":"char(16)"},
+  {"name":"p_start_date_sk","type":"integer"},
+  {"name":"p_end_date_sk","type":"integer"},
+  {"name":"p_item_sk","type":"integer"},
+  {"name":"p_cost","type":"double precision"},
+  {"name":"p_response_target","type":"integer"},
+  {"name":"p_promo_name","type":"char(50)"},
+  {"name":"p_channel_dmail","type":"char(1)"},
+  {"name":"p_channel_email","type":"char(1)"},
+  {"name":"p_channel_catalog","type":"char(1)"},
+  {"name":"p_channel_tv","type":"char(1)"},
+  {"name":"p_channel_radio","type":"char(1)"},
+  {"name":"p_channel_press","type":"char(1)"},
+  {"name":"p_channel_event","type":"char(1)"},
+  {"name":"p_channel_demo","type":"char(1)"},
+  {"name":"p_channel_details","type":"varchar(100)"},
+  {"name":"p_purpose","type":"char(15)"},
+  {"name":"p_discount_active","type":"char(1)"}
+]'::jsonb);
+
+CREATE TABLE public.staging_promotion (
+    p_promo_sk BIGINT,
+    p_promo_id CHAR(16),
+    p_start_date_sk INTEGER,
+    p_end_date_sk INTEGER,
+    p_item_sk INTEGER,
+    p_cost DOUBLE PRECISION,
+    p_response_target INTEGER,
+    p_promo_name CHAR(50),
+    p_channel_dmail CHAR(1),
+    p_channel_email CHAR(1),
+    p_channel_catalog CHAR(1),
+    p_channel_tv CHAR(1),
+    p_channel_radio CHAR(1),
+    p_channel_press CHAR(1),
+    p_channel_event CHAR(1),
+    p_channel_demo CHAR(1),
+    p_channel_details VARCHAR(100),
+    p_purpose CHAR(15),
+    p_discount_active CHAR(1)
+);
+
+SELECT coldfront.create_iceberg_table('public', 'reason', '[
+  {"name":"r_reason_sk","type":"bigint"},
+  {"name":"r_reason_id","type":"char(16)"},
+  {"name":"r_reason_desc","type":"char(100)"}
+]'::jsonb);
+
+CREATE TABLE public.staging_reason (
+    r_reason_sk BIGINT,
+    r_reason_id CHAR(16),
+    r_reason_desc CHAR(100)
+);
+
+SELECT coldfront.create_iceberg_table('public', 'ship_mode', '[
+  {"name":"sm_ship_mode_sk","type":"bigint"},
+  {"name":"sm_ship_mode_id","type":"char(16)"},
+  {"name":"sm_type","type":"char(30)"},
+  {"name":"sm_code","type":"char(10)"},
+  {"name":"sm_carrier","type":"char(20)"},
+  {"name":"sm_contract","type":"char(20)"}
+]'::jsonb);
+
+CREATE TABLE public.staging_ship_mode (
+    sm_ship_mode_sk BIGINT,
+    sm_ship_mode_id CHAR(16),
+    sm_type CHAR(30),
+    sm_code CHAR(10),
+    sm_carrier CHAR(20),
+    sm_contract CHAR(20)
+);
+
+SELECT coldfront.create_iceberg_table('public', 'time_dim', '[
+  {"name":"t_time_sk","type":"bigint"},
+  {"name":"t_time_id","type":"char(16)"},
+  {"name":"t_time","type":"integer"},
+  {"name":"t_hour","type":"integer"},
+  {"name":"t_minute","type":"integer"},
+  {"name":"t_second","type":"integer"},
+  {"name":"t_am_pm","type":"char(2)"},
+  {"name":"t_shift","type":"char(20)"},
+  {"name":"t_sub_shift","type":"char(20)"},
+  {"name":"t_meal_time","type":"char(20)"}
+]'::jsonb);
+
+CREATE TABLE public.staging_time_dim (
+    t_time_sk BIGINT,
+    t_time_id CHAR(16),
+    t_time INTEGER,
+    t_hour INTEGER,
+    t_minute INTEGER,
+    t_second INTEGER,
+    t_am_pm CHAR(2),
+    t_shift CHAR(20),
+    t_sub_shift CHAR(20),
+    t_meal_time CHAR(20)
+);
+
+-- s_* tables used for data maintenance — regular PG tables (not Iceberg).
+CREATE TABLE public.s_purchase_lineitem (
+    plin_purchase_id BIGINT NOT NULL,
+    plin_line_number INTEGER NOT NULL,
+    plin_item_id CHAR(16),
+    plin_promotion_id CHAR(16),
+    plin_quantity INTEGER,
+    plin_sale_price DOUBLE PRECISION,
+    plin_coupon_amt DOUBLE PRECISION,
+    plin_comment CHAR(100)
+);
+
+CREATE TABLE public.s_purchase (
+    purc_purchase_id BIGINT NOT NULL,
+    purc_store_id CHAR(16),
+    purc_customer_id CHAR(16),
+    purc_purchase_date CHAR(10),
+    purc_purchase_time INTEGER,
+    purc_register_id INTEGER,
+    purc_clerk_id INTEGER,
+    purc_comment CHAR(100)
+);
+
+CREATE TABLE public.s_catalog_order (
+    cord_order_id BIGINT NOT NULL,
+    cord_bill_customer_id CHAR(16),
+    cord_ship_customer_id CHAR(16),
+    cord_order_date CHAR(10),
+    cord_order_time INTEGER,
+    cord_ship_mode_id CHAR(16),
+    cord_call_center_id CHAR(16),
+    cord_order_comments VARCHAR(100)
+);
+
+CREATE TABLE public.s_web_order (
+    word_order_id BIGINT NOT NULL,
+    word_bill_customer_id CHAR(16),
+    word_ship_customer_id CHAR(16),
+    word_order_date CHAR(10),
+    word_order_time INTEGER,
+    word_ship_mode_id CHAR(16),
+    word_web_site_id CHAR(16),
+    word_order_comments CHAR(100)
+);
+
+CREATE TABLE public.s_catalog_order_lineitem (
+    clin_order_id BIGINT NOT NULL,
+    clin_line_number INTEGER,
+    clin_item_id CHAR(16),
+    clin_promotion_id CHAR(16),
+    clin_quantity INTEGER,
+    clin_sales_price DOUBLE PRECISION,
+    clin_coupon_amt DOUBLE PRECISION,
+    clin_warehouse_id CHAR(16),
+    clin_ship_date CHAR(10),
+    clin_catalog_number INTEGER,
+    clin_catalog_page_number INTEGER,
+    clin_ship_cost DOUBLE PRECISION
+);
+
+CREATE TABLE public.s_web_order_lineitem (
+    wlin_order_id BIGINT NOT NULL,
+    wlin_line_number INTEGER NOT NULL,
+    wlin_item_id CHAR(16),
+    wlin_promotion_id CHAR(16),
+    wlin_quantity INTEGER,
+    wlin_sales_price DOUBLE PRECISION,
+    wlin_coupon_amt DOUBLE PRECISION,
+    wlin_warehouse_id CHAR(16),
+    wlin_ship_date CHAR(10),
+    wlin_ship_cost DOUBLE PRECISION,
+    wlin_web_page_id CHAR(16)
+);
+
+CREATE TABLE public.s_store_returns (
+    sret_store_id CHAR(16),
+    sret_purchase_id CHAR(16) NOT NULL,
+    sret_line_number INTEGER NOT NULL,
+    sret_item_id CHAR(16) NOT NULL,
+    sret_customer_id CHAR(16),
+    sret_return_date CHAR(10),
+    sret_return_time CHAR(10),
+    sret_ticket_number CHAR(20),
+    sret_return_qty INTEGER,
+    sret_return_amount DOUBLE PRECISION,
+    sret_return_tax DOUBLE PRECISION,
+    sret_return_fee DOUBLE PRECISION,
+    sret_return_ship_cost DOUBLE PRECISION,
+    sret_refunded_cash DOUBLE PRECISION,
+    sret_reversed_charge DOUBLE PRECISION,
+    sret_store_credit DOUBLE PRECISION,
+    sret_reason_id CHAR(16)
+);
+
+CREATE TABLE public.s_catalog_returns (
+    cret_call_center_id CHAR(16),
+    cret_order_id INTEGER NOT NULL,
+    cret_line_number INTEGER NOT NULL,
+    cret_item_id CHAR(16) NOT NULL,
+    cret_return_customer_id CHAR(16),
+    cret_refund_customer_id CHAR(16),
+    cret_return_date CHAR(10),
+    cret_return_time CHAR(10),
+    cret_return_qty INTEGER,
+    cret_return_amt DOUBLE PRECISION,
+    cret_return_tax DOUBLE PRECISION,
+    cret_return_fee DOUBLE PRECISION,
+    cret_return_ship_cost DOUBLE PRECISION,
+    cret_refunded_cash DOUBLE PRECISION,
+    cret_reversed_charge DOUBLE PRECISION,
+    cret_merchant_credit DOUBLE PRECISION,
+    cret_reason_id CHAR(16),
+    cret_shipmode_id CHAR(16),
+    cret_catalog_page_id CHAR(16),
+    cret_warehouse_id CHAR(16)
+);
+
+CREATE TABLE public.s_web_returns (
+    wret_web_page_id CHAR(16),
+    wret_order_id INTEGER NOT NULL,
+    wret_line_number INTEGER NOT NULL,
+    wret_item_id CHAR(16) NOT NULL,
+    wret_return_customer_id CHAR(16),
+    wret_refund_customer_id CHAR(16),
+    wret_return_date CHAR(10),
+    wret_return_time CHAR(10),
+    wret_return_qty INTEGER,
+    wret_return_amt DOUBLE PRECISION,
+    wret_return_tax DOUBLE PRECISION,
+    wret_return_fee DOUBLE PRECISION,
+    wret_return_ship_cost DOUBLE PRECISION,
+    wret_refunded_cash DOUBLE PRECISION,
+    wret_reversed_charge DOUBLE PRECISION,
+    wret_account_credit DOUBLE PRECISION,
+    wret_reason_id CHAR(16)
+);
+
+CREATE TABLE public.s_inventory (
+    invn_warehouse_id CHAR(16) NOT NULL,
+    invn_item_id CHAR(16) NOT NULL,
+    invn_date CHAR(10) NOT NULL,
+    invn_qty_on_hand INTEGER
+);
+
+-- Internal timing table — regular PG table used by dbt7-*-time-statistics.
+CREATE TABLE time_statistics (
+    stream INTEGER NOT NULL,
+    query INTEGER NOT NULL,
+    template TEXT NOT NULL,
+    seed BIGINT NOT NULL,
+    s_time TIMESTAMP,
+    e_time TIMESTAMP
+);
+
+CREATE SEQUENCE dataset MINVALUE 1 START WITH 1;
+SELECT nextval('dataset');
+
+__EOF__

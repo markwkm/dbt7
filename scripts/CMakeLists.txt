@@ -1,3 +1,4 @@
+add_subdirectory (coldfront)
 add_subdirectory (gp)
 add_subdirectory (pgsql)
 
