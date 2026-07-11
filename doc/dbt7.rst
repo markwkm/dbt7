@@ -153,6 +153,7 @@ described in the **Developer's Guide** section.
 Database Management System Specific Notes
 -----------------------------------------
 
+.. include:: coldfront.rst
 .. include:: postgresql.rst
 
 -----------------

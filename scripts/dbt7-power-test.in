@@ -33,6 +33,7 @@ Options:
   -?, --help       show this help, then exit
 
 DBMS options:
+  coldfront        ColdFront (PostgreSQL + Apache Iceberg, decoupled mode)
   gp               Greenplum
   pgsql            PostgreSQL
 
@@ -122,6 +123,11 @@ if [ "${DIALECT}" = "" ]; then
 	DIALECT=$DATABASE
 fi
 
+STAT_DATABASE=${DATABASE}
+case "${STAT_DATABASE}" in
+(coldfront) STAT_DATABASE=pgsql ;;
+esac
+
 # If this is a scale factor of 1, perform query validation Clause 7.3.
 if [ "${SCALE}" -eq 1 ]; then
 	echo "running power test as query validation test since scale factor is 1"
@@ -175,7 +181,7 @@ if [ "${STATS}" -eq 1 ]; then
 	ts sysstat -o "${OUTPUT_DIR}/sysstat"
 
 	# Collect database statistics
-	ts "${DATABASE}-stat" -d "${DBT7DBNAME}" -o "${OUTPUT_DIR}/dbstat"
+	ts "${STAT_DATABASE}-stat" -d "${DBT7DBNAME}" -o "${OUTPUT_DIR}/dbstat"
 fi
 
 echo "**$(date) power test starting**"
@@ -193,7 +199,7 @@ echo "**$(date) power test completed (${DIFF_TIME} seconds)**"
 if [ "${STATS}" -eq 1 ]; then
 	# Stop collecting system statistics.
 	ts sysstat -o "${OUTPUT_DIR}/sysstat" -s
-	ts "${DATABASE}-stat" -o "${OUTPUT_DIR}/dbstat" -s
+	ts "${STAT_DATABASE}-stat" -o "${OUTPUT_DIR}/dbstat" -s
 fi
 
 dbt7-"${DATABASE}"-get-query-time -o "${OUTPUT_DIR}"
