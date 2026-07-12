@@ -37,7 +37,7 @@ if [ $? -ne 0 ]; then
 fi
 
 docker run --rm --name $DOCKER_NAME --shm-size=256m $DOCKER_TAG \
-		dbt7-run-workload -g -a pgsql -s 1 -d postgresql \
+		dbt7-run-workload -g -a pgsql -s ${SCALE} -d postgresql \
 					-i templates-postgresql.lst -n 3 -o /tmp/results
 if [ $? -ne 0 ]; then
 	usage

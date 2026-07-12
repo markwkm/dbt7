@@ -138,7 +138,6 @@ SEED_FILE="${INPUT_DIR}/seed"
 if [ -f "$SEED_FILE" ]; then
 	read SEED < $SEED_FILE
 	echo "Using generated seed file: $SEED"
-	RNGSEED_ARG="-RNGSEED $SEED"
 fi
 
 # Determine number of processors for parallelism.

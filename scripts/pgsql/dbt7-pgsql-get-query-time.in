@@ -12,6 +12,9 @@ while getopts "o:" OPT; do
 		o)
 			ARGS="-o $OPTARG/time_statistics.csv"
 			;;
+		*)
+			exit 1
+			;;
 	esac
 done
 

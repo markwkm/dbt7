@@ -144,7 +144,6 @@ while [ "${#}" -gt 0 ] ; do
 		;;
 	(-Y)
 		PROFILE=1
-		LINUXPERF_FLAG="-Y"
 		;;
 	(-\? | --help)
 		usage

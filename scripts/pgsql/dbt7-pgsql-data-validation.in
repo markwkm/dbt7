@@ -99,7 +99,7 @@ validate_two_key_table()
 	sort -t "|" -k "${COL1},${COL1}n" -k "${COL2},${COL2}n" -n -u \
 			"${VALFILE}" > "${A}"
 
-	KEYS="$(awk -F "|" "{print \"(\" \$"${COL1}" \",\" \$"${COL2}" \")\"}" "${A}" |
+	KEYS="$(awk -F "|" "{print \"(\" \$${COL1} \",\" \$${COL2} \")\"}" "${A}" |
 			xargs | sed -e "s/ /,/g")"
 
 	eval "${PSQL}" > "${B}" <<- __EOF__

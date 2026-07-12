@@ -87,7 +87,7 @@ while [ "${#}" -gt 0 ]; do
 	case "${1}" in
 	(-i)
 		shift
-		INPUT_DIR="${1}"
+		# NOOP
 		;;
 	(-n)
 		shift
