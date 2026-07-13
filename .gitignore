@@ -9,10 +9,8 @@ CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
 install_manifest.txt
-Makefile
 Testing
 
-!doc/Makefile
 doc/html
 doc/pdf
 

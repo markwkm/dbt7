@@ -66,7 +66,7 @@ eval ${CONTAINER_CMD} run \
 		--env ARCH="$ARCH" \
 		-w /usr/local/src/dbt7 \
 		$CONTAINER_TAG \
-		make DBMS="${DBMS}" -f Makefile.cmake "${TARGET}"
+		make DBMS="${DBMS}" "${TARGET}"
 
 # With docker, files are created as root. Fix ownership to match the host user.
 # Podman rootless already maps container root to the host user.

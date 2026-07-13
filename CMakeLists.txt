@@ -1,4 +1,12 @@
-cmake_minimum_required (VERSION 3.14...3.31)
+cmake_minimum_required (VERSION 3.21...3.31)
+
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+    message (FATAL_ERROR
+        "In-source builds are not allowed. "
+        "Use the top-level Makefile or specify a build directory: "
+        "cmake --preset release")
+endif ()
+
 project (dbt7 NONE)
 
 set (PROJECT_VERSION_MAJOR 0)
