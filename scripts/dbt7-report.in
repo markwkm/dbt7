@@ -177,8 +177,10 @@ KERNEL=`grep ^kernel $CONFIGFILE | cut -d ":" -f2-`
 OS=`grep ^distribution $CONFIGFILE | cut -d ":" -f2-`
 RAM=`grep ^memory $CONFIGFILE | cut -d ":" -f2-`
 
-dbt7-plot-results -i ${INDIR}/power/time_statistics.csv -o ${OUTDIR} \
-		2> /dev/null
+if [ -d "${DIRPOWER}" ]; then
+	dbt7-plot-results -i ${INDIR}/power/time_statistics.csv -o ${OUTDIR} \
+			2> /dev/null
+fi
 
 for DIR in load power throughput; do
 	SARDIR="${OUTDIR}/${DIR}/sysstat/sar"
@@ -215,16 +217,7 @@ wait
 
 SUMMARY="${INDIR}/summary.rst"
 if [ ! -f "$SUMMARY" ]; then
-	if [ -d "$DIRLOAD" ]; then
-		FLAGS="-1 $DIRLOAD"
-	fi
-	if [ -d "$DIRPOWER" ]; then
-		FLAGS="$FLAGS -2 $DIRPOWER"
-	fi
-	if [ -d "$DIRTHROUGHPUT" ]; then
-		FLAGS="$FLAGS -3 $DIRTHROUGHPUT"
-	fi
-	eval "dbt7-post-process ${FLAGS} -o ${INDIR}"
+	dbt7-post-process -i "${INDIR}" -o "${INDIR}"
 fi
 
 README="${DIRPOWER}/dbstat/readme-${DBMS}.txt"
@@ -238,16 +231,49 @@ if [ "x$DBVER" = "x" ]; then
 	fi
 fi
 
-cat << __EOF__ > $REPORT
-$(cat $SUMMARY)
-
-Power Test
+# Build conditional sections for the main report.
+POWER_IMAGE_SECTION=""
+if [ -d "${DIRPOWER}" ]; then
+	POWER_IMAGE_SECTION="Power Test
 ==========
 
 .. image:: power.png
-   :alt: Missing Power Test Query Times
+   :alt: Power Test Query Times
    :width: 100%
+"
+fi
 
+LOAD_SAR_SECTION=""
+if [ -d "${DIRLOAD}" ]; then
+	LOAD_SAR_SECTION="Load Test
+---------
+
+* Charts: $(sar_links load)
+"
+fi
+
+POWER_SAR_SECTION=""
+if [ -d "${DIRPOWER}" ]; then
+	POWER_SAR_SECTION="Power Test
+----------
+
+* Charts: $(sar_links power)
+"
+fi
+
+THROUGHPUT_SAR_SECTION=""
+if [ -d "${DIRTHROUGHPUT}" ]; then
+	THROUGHPUT_SAR_SECTION="Throughput Test
+---------------
+
+* Charts: $(sar_links throughput)
+"
+fi
+
+cat << __EOF__ > $REPORT
+$(cat $SUMMARY)
+
+${POWER_IMAGE_SECTION}
 System Configuration
 ====================
 
@@ -267,21 +293,9 @@ Software Information
 System Statistics
 =================
 
-Load Test
----------
-
-* Charts: $(sar_links load)
-
-Power Test
-----------
-
-* Charts: $(sar_links power)
-
-Throughput Test
----------------
-
-* Charts: $(sar_links throughput)
-
+${LOAD_SAR_SECTION}
+${POWER_SAR_SECTION}
+${THROUGHPUT_SAR_SECTION}
 $(eval "dbt7 ${DBMS}-report -i ${INDIR} ${PLOT_DBSTATS_FLAG}")
 __EOF__
 
@@ -289,7 +303,8 @@ __EOF__
 # Generate Load Test Report
 #
 
-cat << __EOF__ > $REPORTLOAD
+if [ -d "${DIRLOAD}" ]; then
+	cat << __EOF__ > ${REPORTLOAD}
 =========================
 Database Test 7 Load Test
 =========================
@@ -299,45 +314,50 @@ Phase             Start Timestamp      End Timestamp        Elapsed Time
 ================  ===================  ===================  ===============
 __EOF__
 
-grep -v "^stream" "${DIRLOAD}/time_statistics.csv" | while IFS= read -r LINE
-do
-	printf "%16s  %s  %s  %s\n" \
-			"$(echo "${LINE}" | cut -d "," -f 3)" \
-			"$(echo "${LINE}" | cut -d "," -f 4)" \
-			"$(echo "${LINE}" | cut -d "," -f 5)" \
-			"$(echo "${LINE}" | cut -d "," -f 6)" \
-			>> "${REPORTLOAD}"
-done
+	grep -v "^stream" "${DIRLOAD}/time_statistics.csv" | while IFS= read -r LINE
+	do
+		printf "%16s  %s  %s  %s\n" \
+				"$(echo "${LINE}" | cut -d "," -f 3)" \
+				"$(echo "${LINE}" | cut -d "," -f 4)" \
+				"$(echo "${LINE}" | cut -d "," -f 5)" \
+				"$(echo "${LINE}" | cut -d "," -f 6)" \
+				>> "${REPORTLOAD}"
+	done
 
-cat << __EOF__ >> $REPORTLOAD
+	cat << __EOF__ >> ${REPORTLOAD}
 ================  ===================  ===================  ===============
 
 $(write_system_stats load)
 __EOF__
+fi
 
 #
 # Generate Power Test Report
 #
 
-cat << __EOF__ > "${REPORTPOWER}"
+if [ -d "${DIRPOWER}" ]; then
+	cat << __EOF__ > "${REPORTPOWER}"
 ==========================
 Database Test 7 Power Test
 ==========================
 
 $(write_system_stats power)
 __EOF__
+fi
 
 #
 # Generate Throghput Test Report
 #
 
-cat << __EOF__ > "${REPORTTHROUGHPUT}"
+if [ -d "${DIRTHROUGHPUT}" ]; then
+	cat << __EOF__ > "${REPORTTHROUGHPUT}"
 ===============================
 Database Test 7 Throughput Test
 ===============================
 
 $(write_system_stats throughput)
 __EOF__
+fi
 
 echo "Generated text file reports:"
 ls -1v ${OUTDIR}/*.rst

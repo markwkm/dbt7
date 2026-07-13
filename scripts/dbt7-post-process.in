@@ -107,22 +107,29 @@ TMPDIR=$(mktemp -d)
 DBFILE="${TMPDIR}/dbt7.db"
 
 SF=$(grep scale: ${RESULTSDIR}/config.txt | cut -d " " -f 2)
-Q="${Sq}.0 * 99.0"
-TPT="(${POWERTIMEH} * ${Sq}.0 / 3600.0)"
-TTT="((${THROUGHPUTTIMEH1} + ${THROUGHPUTTIMEH2}) / 3600.0)"
-TDM="((${DMTIMEH1} + ${DMTIMEH2}) / 3600.0)"
-TLD="(0.01 * ${Sq}.0 * ${LOADTIMEH})"
 
-QPHFILE="${OUTPUT_DIR}/qph"
-sqlite3 "${DBFILE}" << EOF > "${QPHFILE}"
+# QPH can only be calculated if all tests were run.
+QPH="N/A"
+if [ -n "${Sq}" ] && [ -n "${LOADTIMEH}" ] && [ -n "${POWERTIMEH}" ] && \
+		[ -n "${THROUGHPUTTIMEH1}" ] && [ -n "${THROUGHPUTTIMEH2}" ] && \
+		[ -n "${DMTIMEH1}" ] && [ -n "${DMTIMEH2}" ]; then
+	Q="${Sq}.0 * 99.0"
+	TPT="(${POWERTIMEH} * ${Sq}.0 / 3600.0)"
+	TTT="((${THROUGHPUTTIMEH1} + ${THROUGHPUTTIMEH2}) / 3600.0)"
+	TDM="((${DMTIMEH1} + ${DMTIMEH2}) / 3600.0)"
+	TLD="(0.01 * ${Sq}.0 * ${LOADTIMEH})"
+
+	QPHFILE="${OUTPUT_DIR}/qph"
+	sqlite3 "${DBFILE}" << EOF > "${QPHFILE}"
 SELECT cast((${SF}.0 * ${Q})
      / pow(${TPT} * ${TTT} * ${TDM} * ${TLD}, 1.0 / 4.0) AS INT);
 EOF
-read QPH < "${QPHFILE}"
+	read QPH < "${QPHFILE}"
+fi
 
 SUMMARY="${OUTPUT_DIR}/summary.rst"
 
-cat << __EOF__ > $SUMMARY
+cat << __EOF__ > "${SUMMARY}"
 =======================
 Database Test 7 Results
 =======================
@@ -131,7 +138,15 @@ Database Test 7 Results
 
 * Queries per Hour: $QPH
 * Scale: $SF
+__EOF__
+
+if [ -d "${THROUGHPUTDIR}" ]; then
+	cat << __EOF__ >> ${SUMMARY}
 * Number of Query Streams: $Sq
+__EOF__
+fi
+
+cat << __EOF__ >> ${SUMMARY}
 
 Start and End Times
 ===================
@@ -139,25 +154,42 @@ Start and End Times
 =================  ====================  ====================  ================
 Test               Start Timestamp       End Timestamp         Elapsed Time
 =================  ====================  ====================  ================
+__EOF__
+
+if [ -d "${LOADDIR}" ]; then
+	cat << __EOF__ >> ${SUMMARY}
 Database Load      $LOADSTART   $LOADEND   $LOADTIME
+__EOF__
+fi
+
+if [ -d "${POWERDIR}" ]; then
+	cat << __EOF__ >> ${SUMMARY}
 Power Test         $POWERSTART   $POWEREND   $POWERTIME
+__EOF__
+fi
+
+if [ -d "${THROUGHPUTDIR}" ]; then
+	cat << __EOF__ >> ${SUMMARY}
 Throughput Run 1   $THROUGHPUTSTART1   $THROUGHPUTEND1   $THROUGHPUTTIME1
 Refresh Run 1      $DMSTART1   $DMEND1   $DMTIME1
 Throughput Run 2   $THROUGHPUTSTART2   $THROUGHPUTEND2   $THROUGHPUTTIME2
 Refresh Run 2      $DMSTART2   $DMEND2   $DMTIME2
+__EOF__
+fi
+
+cat << __EOF__ >> ${SUMMARY}
 =================  ====================  ====================  ================
+__EOF__
+
+if [ -d "${THROUGHPUTDIR}" ] && [ -f "${TIMEFILE}" ]; then
+	cat << __EOF__ >> ${SUMMARY}
 
 Timing Intervals (in seconds)
 =============================
 
 __EOF__
 
-if [ ! -f "$TIMEFILE" ]; then
-	echo "time statistics missing for throughput tests" >> $SUMMARY
-	exit 1
-fi
-
-cat << EOF >> "${SUMMARY}"
+	cat << EOF >> "${SUMMARY}"
 ==  =======  =======  =======  ========  =======  =======  =======  ========  =======  =======
  Q       Minimum       25th Percentile        Median        75th Percentile       Maximum
 --  ----------------  -----------------  ----------------  -----------------  ----------------
@@ -165,7 +197,7 @@ cat << EOF >> "${SUMMARY}"
 ==  =======  =======  =======  ========  =======  =======  =======  ========  =======  =======
 EOF
 
-sqlite3 "${DBFILE}" << EOF
+	sqlite3 "${DBFILE}" << EOF
 CREATE TABLE qtime(
     stream INTEGER
   , query INTEGER
@@ -179,132 +211,133 @@ CREATE TABLE qtime(
 .import ${TIMEFILE} qtime
 EOF
 
-for Q in $(seq 1 99); do
-	MIN1="$(sqlite3 "${DBFILE}" <<- EOF
-		SELECT min(diff_time)
-		FROM qtime
-		WHERE template REGEXP '\D${Q}\D'
-		  AND stream <= $Sq
-		;
-	EOF
-	)"
+	for Q in $(seq 1 99); do
+		MIN1="$(sqlite3 "${DBFILE}" <<- EOF
+			SELECT min(diff_time)
+			FROM qtime
+			WHERE template REGEXP '\D${Q}\D'
+			  AND stream <= ${Sq}
+			;
+		EOF
+		)"
 
-	MIN2="$(sqlite3 "${DBFILE}" <<- EOF
-		SELECT min(diff_time)
-		FROM qtime
-		WHERE template REGEXP '\D${Q}\D'
-		  AND stream > $Sq
-		;
-	EOF
-	)"
+		MIN2="$(sqlite3 "${DBFILE}" <<- EOF
+			SELECT min(diff_time)
+			FROM qtime
+			WHERE template REGEXP '\D${Q}\D'
+			  AND stream > ${Sq}
+			;
+		EOF
+		)"
 
-	Q25_1="$(sqlite3 "${DBFILE}" <<- EOF
-		SELECT diff_time
-		FROM qtime
-		WHERE template REGEXP '\D${Q}\D'
-		  AND stream <= $Sq
-		ORDER BY diff_time ASC
-		LIMIT 1
-		OFFSET cast(${Sq}.0 / 4.0 AS INT)
-		;
-	EOF
-	)"
+		Q25_1="$(sqlite3 "${DBFILE}" <<- EOF
+			SELECT diff_time
+			FROM qtime
+			WHERE template REGEXP '\D${Q}\D'
+			  AND stream <= ${Sq}
+			ORDER BY diff_time ASC
+			LIMIT 1
+			OFFSET cast(${Sq}.0 / 4.0 AS INT)
+			;
+		EOF
+		)"
 
-	Q25_2="$(sqlite3 "${DBFILE}" <<- EOF
-		SELECT diff_time
-		FROM qtime
-		WHERE template REGEXP '\D${Q}\D'
-		  AND stream > $Sq
-		ORDER BY diff_time ASC
-		LIMIT 1
-		OFFSET cast(${Sq}.0 / 4.0 AS INT)
-		;
-	EOF
-	)"
+		Q25_2="$(sqlite3 "${DBFILE}" <<- EOF
+			SELECT diff_time
+			FROM qtime
+			WHERE template REGEXP '\D${Q}\D'
+			  AND stream > ${Sq}
+			ORDER BY diff_time ASC
+			LIMIT 1
+			OFFSET cast(${Sq}.0 / 4.0 AS INT)
+			;
+		EOF
+		)"
 
-	MEDIAN1="$(sqlite3 "${DBFILE}" <<- EOF
-		SELECT diff_time
-		FROM qtime
-		WHERE template REGEXP '\D${Q}\D'
-		  AND stream <= $Sq
-		ORDER BY diff_time ASC
-		LIMIT 1
-		OFFSET cast(${Sq}.0 / 2.0 AS INT)
-		;
-	EOF
-	)"
+		MEDIAN1="$(sqlite3 "${DBFILE}" <<- EOF
+			SELECT diff_time
+			FROM qtime
+			WHERE template REGEXP '\D${Q}\D'
+			  AND stream <= ${Sq}
+			ORDER BY diff_time ASC
+			LIMIT 1
+			OFFSET cast(${Sq}.0 / 2.0 AS INT)
+			;
+		EOF
+		)"
 
-	MEDIAN2="$(sqlite3 "${DBFILE}" <<- EOF
-		SELECT diff_time
-		FROM qtime
-		WHERE template REGEXP '\D${Q}\D'
-		  AND stream > $Sq
-		ORDER BY diff_time ASC
-		LIMIT 1
-		OFFSET cast(${Sq}.0 / 2.0 AS INT)
-		;
-	EOF
-	)"
+		MEDIAN2="$(sqlite3 "${DBFILE}" <<- EOF
+			SELECT diff_time
+			FROM qtime
+			WHERE template REGEXP '\D${Q}\D'
+			  AND stream > ${Sq}
+			ORDER BY diff_time ASC
+			LIMIT 1
+			OFFSET cast(${Sq}.0 / 2.0 AS INT)
+			;
+		EOF
+		)"
 
-	Q75_1="$(sqlite3 "${DBFILE}" <<- EOF
-		SELECT diff_time
-		FROM qtime
-		WHERE template REGEXP '\D${Q}\D'
-		  AND stream <= $Sq
-		ORDER BY diff_time ASC
-		LIMIT 1
-		OFFSET cast(${Sq}.0 * 0.75 AS INT)
-		;
-	EOF
-	)"
+		Q75_1="$(sqlite3 "${DBFILE}" <<- EOF
+			SELECT diff_time
+			FROM qtime
+			WHERE template REGEXP '\D${Q}\D'
+			  AND stream <= ${Sq}
+			ORDER BY diff_time ASC
+			LIMIT 1
+			OFFSET cast(${Sq}.0 * 0.75 AS INT)
+			;
+		EOF
+		)"
 
-	Q75_2="$(sqlite3 "${DBFILE}" <<- EOF
-		SELECT diff_time
-		FROM qtime
-		WHERE template REGEXP '\D${Q}\D'
-		  AND stream > $Sq
-		ORDER BY diff_time ASC
-		LIMIT 1
-		OFFSET cast(${Sq}.0 * 0.75 AS INT)
-		;
-	EOF
-	)"
+		Q75_2="$(sqlite3 "${DBFILE}" <<- EOF
+			SELECT diff_time
+			FROM qtime
+			WHERE template REGEXP '\D${Q}\D'
+			  AND stream > ${Sq}
+			ORDER BY diff_time ASC
+			LIMIT 1
+			OFFSET cast(${Sq}.0 * 0.75 AS INT)
+			;
+		EOF
+		)"
 
-	MAX1="$(sqlite3 "${DBFILE}" <<- EOF
-		SELECT max(diff_time)
-		FROM qtime
-		WHERE template REGEXP '\D${Q}\D'
-		  AND stream <= $Sq
-		;
-	EOF
-	)"
+		MAX1="$(sqlite3 "${DBFILE}" <<- EOF
+			SELECT max(diff_time)
+			FROM qtime
+			WHERE template REGEXP '\D${Q}\D'
+			  AND stream <= ${Sq}
+			;
+		EOF
+		)"
 
-	MAX2="$(sqlite3 "${DBFILE}" <<- EOF
-		SELECT max(diff_time)
-		FROM qtime
-		WHERE template REGEXP '\D${Q}\D'
-		  AND stream > $Sq
-		;
-	EOF
-	)"
+		MAX2="$(sqlite3 "${DBFILE}" <<- EOF
+			SELECT max(diff_time)
+			FROM qtime
+			WHERE template REGEXP '\D${Q}\D'
+			  AND stream > ${Sq}
+			;
+		EOF
+		)"
 
-	printf "%2d  %7.1f  %7.1f  %7.1f   %7.1f  %7.1f  %7.1f  %7.1f   %7.1f  %7.1f  %7.1f\n" \
-			${Q} \
-			${MIN1} \
-			${MIN2} \
-			${Q25_1} \
-			${Q25_2} \
-			${MEDIAN1} \
-			${MEDIAN2} \
-			${Q75_1} \
-			${Q75_2} \
-			${MAX1} \
-			${MAX2} \
-			>> "${SUMMARY}"
-done
+		printf "%2d  %7.1f  %7.1f  %7.1f   %7.1f  %7.1f  %7.1f  %7.1f   %7.1f  %7.1f  %7.1f\n" \
+				${Q} \
+				${MIN1} \
+				${MIN2} \
+				${Q25_1} \
+				${Q25_2} \
+				${MEDIAN1} \
+				${MEDIAN2} \
+				${Q75_1} \
+				${Q75_2} \
+				${MAX1} \
+				${MAX2} \
+				>> "${SUMMARY}"
+	done
 
-cat << EOF >> "${SUMMARY}"
+	cat << EOF >> "${SUMMARY}"
 ==  =======  =======  =======  ========  =======  =======  =======  ========  =======  =======
 EOF
+fi
 
 cleanup
