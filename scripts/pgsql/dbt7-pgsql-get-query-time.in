@@ -10,7 +10,7 @@ ARGS=
 while getopts "o:" OPT; do
 	case $OPT in
 		o)
-			ARGS="-o $OPTARG/time_statistics.csv"
+			ARGS="${OPTARG}/time_statistics.csv"
 			;;
 		*)
 			exit 1
@@ -18,12 +18,14 @@ while getopts "o:" OPT; do
 	esac
 done
 
-if [ -z $DBT7DBNAME ]; then
+if [ -z "${DBT7DBNAME}" ]; then
 	echo "Error: DBT7DBNAME environment variable not defined"
 	exit 1
 fi
 
-psql -X -A -F, -t -q -d $DBT7DBNAME $ARGS << __EOF__
+set -- ${ARGS:+-o "${ARGS}"}
+
+psql -X -A -F, -t -q -d "${DBT7DBNAME}" "${@}" << __EOF__
 COPY (
     SELECT stream, query, template,
            to_char(s_time, 'YYYY-MM-DD HH24:MI:SS') AS s_time,

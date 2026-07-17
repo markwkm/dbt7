@@ -8,10 +8,10 @@
 
 usage()
 {
-	echo "`basename $0` is the DBT-7 stream execution script"
+	echo "$(basename "${0}") is the DBT-7 stream execution script"
 	echo ""
 	echo "Usage:"
-	echo "  `basename $0` [OPTION]"
+	echo "  $(basename "${0}") [OPTION]"
 	echo ""
 	echo "Options:"
 	echo "  -o PATH          path to save results"
@@ -36,19 +36,19 @@ while getopts "ho:s:" OPT; do
 	esac
 done
 
-if [ "x$STREAM" = "x" ]; then
+if [ "${STREAM}" = "" ]; then
 	echo "Specify the stream with -s flag"
 	usage
 	exit 1
 fi
 
-if [ "x$OUTPUT_DIR" = "x" ]; then
+if [ "${OUTPUT_DIR}" = "" ]; then
 	echo "Specify results directory with -o flag"
 	usage
 	exit 1
 fi
 
-if [ -z $DBT7DBNAME ]; then
+if [ -z "${DBT7DBNAME}" ]; then
 	echo "Error: DBT7DBNAME environment variable not defined"
 	exit 1
 fi
@@ -58,4 +58,5 @@ RESULTS="${OUTPUT_DIR}/results_${STREAM}.txt"
 
 # psql does not capture output from -a flag when using -o to specify output
 # file; use shell redirection instead.
-psql -X -a -d $DBT7DBNAME -f ${OUTPUT_DIR}/query_${STREAM}.sql > $RESULTS 2>&1
+psql -X -a -d "${DBT7DBNAME}" -f "${OUTPUT_DIR}/query_${STREAM}.sql" > \
+		"${RESULTS}" 2>&1

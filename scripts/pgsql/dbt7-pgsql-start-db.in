@@ -11,10 +11,10 @@ OUTDIR="."
 
 usage()
 {
-	echo "`basename $0` is the DBT-7 PostgreSQL database start script"
+	echo "$(basename "${0}") is the DBT-7 PostgreSQL database start script"
 	echo ""
 	echo "Usage:"
-	echo "  `basename $0` [OPTION]"
+	echo "  $(basename "${0}") [OPTION]"
 	echo ""
 	echo "Options:"
 	echo "  -f               forcibly remove postmaster.pid"
@@ -25,7 +25,7 @@ usage()
 while getopts "fo:p:" OPT; do
 	case $OPT in
 	f)
-		rm -f ${DBT7PGDATA}/postmaster.pid
+		rm -f "${DBT7PGDATA}/postmaster.pid"
 		;;
 	o)
 		OUTDIR=$OPTARG
@@ -40,7 +40,7 @@ while getopts "fo:p:" OPT; do
 	esac
 done
 
-if [ -z $DBT7PGDATA ]; then
+if [ -z "${DBT7PGDATA}" ]; then
 	echo "DBT7PGDATA not defined."
 	exit 1
 fi
@@ -50,14 +50,15 @@ if [ -f "${DBT7PGDATA}/postmaster.pid" ]; then
 	exit 0
 fi
 
-if [ "x${PGPORT}" != "x" ]; then
+if [ "${PGPORT}" != "" ]; then
 	PARAMETERS="$PARAMETERS -p $PGPORT"
 fi
 
-if [ "x${PARAMETERS}" = "x" ]; then
-	pg_ctl start -w -D $DBT7PGDATA -l ${OUTDIR}/${LOGFILE}
+if [ "${PARAMETERS}" = "" ]; then
+	pg_ctl start -w -D "${DBT7PGDATA}" -l "${OUTDIR}/${LOGFILE}"
 else
-	eval pg_ctl start -w -D $DBT7PGDATA -o \"$PARAMETERS\" -l ${OUTDIR}/${LOGFILE}
+	eval pg_ctl start -w -D "${DBT7PGDATA}" -o \""${PARAMETERS}"\" \
+			-l "${OUTDIR}/${LOGFILE}"
 fi
 
 if [ ! -f "${DBT7PGDATA}/postmaster.pid" ]; then
@@ -67,4 +68,4 @@ fi
 
 # Just in case PostgreSQL is not configured to give everyone read permissions to
 # its log file.
-chmod +r ${OUTDIR}/${LOGFILE}
+chmod +r "${OUTDIR}/${LOGFILE}"

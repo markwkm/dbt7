@@ -18,7 +18,7 @@ fi
 CHUNKS=${CHUNKS:-2}
 SCALE=${SCALE:-1}
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 cleanup() {
 	if [ "${CLEANUP}" -eq 1 ]; then
 		rm -rf "${TMPDIR}"

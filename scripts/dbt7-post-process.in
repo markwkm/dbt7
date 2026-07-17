@@ -8,10 +8,10 @@
 
 usage()
 {
-	echo "`basename $0` is the DBT-7 post processing script"
+	echo "$(basename "${0}") is the DBT-7 post processing script"
 	echo ""
 	echo "Usage:"
-	echo "  `basename $0` [OPTIONS]"
+	echo "  $(basename "${0}") [OPTIONS]"
 	echo ""
 	echo "General options:"
 	echo "  -i DIRECTORY     DBT-7 results DIRECTORY"
@@ -34,11 +34,11 @@ get_time()
 	if [ ! -f "$TIMEFILE" ]; then
 		return
 	fi
-	V=`grep "\<${NAME}\>" $TIMEFILE | cut -d "," -f $FIELD`
-	if [ "x${V}" = "x" ]; then
+	V=$(grep "\<${NAME}\>" "${TIMEFILE}" | cut -d "," -f "${FIELD}")
+	if [ "${V}" = "" ]; then
 		V="-1"
 	fi
-	echo $V
+	echo "${V}"
 }
 
 TMPDIR=""
@@ -64,49 +64,49 @@ THROUGHPUTDIR="${RESULTSDIR}/throughput"
 
 if [ -d "$LOADDIR" ]; then
 	TIMEFILE="${LOADDIR}/time_statistics.csv"
-	LOADTIME=`get_time LOADTEST $TIMEFILE 6`
-	LOADTIMEH=`get_time LOADTEST $TIMEFILE 7`
-	LOADSTART=`get_time LOADTEST $TIMEFILE 4`
-	LOADEND=`get_time LOADTEST $TIMEFILE 5`
+	LOADTIME=$(get_time LOADTEST "${TIMEFILE}" 6)
+	LOADTIMEH=$(get_time LOADTEST "${TIMEFILE}" 7)
+	LOADSTART=$(get_time LOADTEST "${TIMEFILE}" 4)
+	LOADEND=$(get_time LOADTEST "${TIMEFILE}" 5)
 fi
 
 if [ -d "$POWERDIR" ]; then
 	TIMEFILE="${POWERDIR}/time_statistics.csv"
-	POWERTIME=`get_time POWER $TIMEFILE 6`
-	POWERTIMEH=`get_time POWER $TIMEFILE 7`
-	POWERSTART=`get_time POWER $TIMEFILE 4`
-	POWEREND=`get_time POWER $TIMEFILE 5`
+	POWERTIME=$(get_time POWER "${TIMEFILE}" 6)
+	POWERTIMEH=$(get_time POWER "${TIMEFILE}" 7)
+	POWERSTART=$(get_time POWER "${TIMEFILE}" 4)
+	POWEREND=$(get_time POWER "${TIMEFILE}" 5)
 fi
 
 TIMEFILE="${THROUGHPUTDIR}/time_statistics.csv"
 if [ -d "$THROUGHPUTDIR" ]; then
 	Sq="$(cat "${THROUGHPUTDIR}/streams")"
 
-	THROUGHPUTTIME1=`get_time THROUGHPUT1 $TIMEFILE 6`
-	THROUGHPUTTIMEH1=`get_time THROUGHPUT1 $TIMEFILE 7`
-	THROUGHPUTSTART1=`get_time THROUGHPUT1 $TIMEFILE 4`
-	THROUGHPUTEND1=`get_time THROUGHPUT1 $TIMEFILE 5`
+	THROUGHPUTTIME1=$(get_time THROUGHPUT1 "${TIMEFILE}" 6)
+	THROUGHPUTTIMEH1=$(get_time THROUGHPUT1 "${TIMEFILE}" 7)
+	THROUGHPUTSTART1=$(get_time THROUGHPUT1 "${TIMEFILE}" 4)
+	THROUGHPUTEND1=$(get_time THROUGHPUT1 "${TIMEFILE}" 5)
 
-	THROUGHPUTTIME2=`get_time THROUGHPUT2 $TIMEFILE 6`
-	THROUGHPUTTIMEH2=`get_time THROUGHPUT2 $TIMEFILE 7`
-	THROUGHPUTSTART2=`get_time THROUGHPUT2 $TIMEFILE 4`
-	THROUGHPUTEND2=`get_time THROUGHPUT2 $TIMEFILE 5`
+	THROUGHPUTTIME2=$(get_time THROUGHPUT2 "${TIMEFILE}" 6)
+	THROUGHPUTTIMEH2=$(get_time THROUGHPUT2 "${TIMEFILE}" 7)
+	THROUGHPUTSTART2=$(get_time THROUGHPUT2 "${TIMEFILE}" 4)
+	THROUGHPUTEND2=$(get_time THROUGHPUT2 "${TIMEFILE}" 5)
 
-	DMTIME1=`get_time DATAMAINT1 $TIMEFILE 6`
-	DMTIMEH1=`get_time DATAMAINT1 $TIMEFILE 7`
-	DMSTART1=`get_time DATAMAINT1 $TIMEFILE 4`
-	DMEND1=`get_time DATAMAINT1 $TIMEFILE 5`
+	DMTIME1=$(get_time DATAMAINT1 "${TIMEFILE}" 6)
+	DMTIMEH1=$(get_time DATAMAINT1 "${TIMEFILE}" 7)
+	DMSTART1=$(get_time DATAMAINT1 "${TIMEFILE}" 4)
+	DMEND1=$(get_time DATAMAINT1 "${TIMEFILE}" 5)
 
-	DMTIME2=`get_time DATAMAINT2 $TIMEFILE 6`
-	DMTIMEH2=`get_time DATAMAINT2 $TIMEFILE 7`
-	DMSTART2=`get_time DATAMAINT2 $TIMEFILE 4`
-	DMEND2=`get_time DATAMAINT2 $TIMEFILE 5`
+	DMTIME2=$(get_time DATAMAINT2 "${TIMEFILE}" 6)
+	DMTIMEH2=$(get_time DATAMAINT2 "${TIMEFILE}" 7)
+	DMSTART2=$(get_time DATAMAINT2 "${TIMEFILE}" 4)
+	DMEND2=$(get_time DATAMAINT2 "${TIMEFILE}" 5)
 fi
 
 TMPDIR=$(mktemp -d)
 DBFILE="${TMPDIR}/dbt7.db"
 
-SF=$(grep scale: ${RESULTSDIR}/config.txt | cut -d " " -f 2)
+SF=$(grep scale: "${RESULTSDIR}"/config.txt | cut -d " " -f 2)
 
 # QPH can only be calculated if all tests were run.
 QPH="N/A"
@@ -124,7 +124,7 @@ if [ -n "${Sq}" ] && [ -n "${LOADTIMEH}" ] && [ -n "${POWERTIMEH}" ] && \
 SELECT cast((${SF}.0 * ${Q})
      / pow(${TPT} * ${TTT} * ${TDM} * ${TLD}, 1.0 / 4.0) AS INT);
 EOF
-	read QPH < "${QPHFILE}"
+	read -r QPH < "${QPHFILE}"
 fi
 
 SUMMARY="${OUTPUT_DIR}/summary.rst"
@@ -141,12 +141,12 @@ Database Test 7 Results
 __EOF__
 
 if [ -d "${THROUGHPUTDIR}" ]; then
-	cat << __EOF__ >> ${SUMMARY}
+	cat << __EOF__ >> "${SUMMARY}"
 * Number of Query Streams: $Sq
 __EOF__
 fi
 
-cat << __EOF__ >> ${SUMMARY}
+cat << __EOF__ >> "${SUMMARY}"
 
 Start and End Times
 ===================
@@ -157,19 +157,19 @@ Test               Start Timestamp       End Timestamp         Elapsed Time
 __EOF__
 
 if [ -d "${LOADDIR}" ]; then
-	cat << __EOF__ >> ${SUMMARY}
+	cat << __EOF__ >> "${SUMMARY}"
 Database Load      $LOADSTART   $LOADEND   $LOADTIME
 __EOF__
 fi
 
 if [ -d "${POWERDIR}" ]; then
-	cat << __EOF__ >> ${SUMMARY}
+	cat << __EOF__ >> "${SUMMARY}"
 Power Test         $POWERSTART   $POWEREND   $POWERTIME
 __EOF__
 fi
 
 if [ -d "${THROUGHPUTDIR}" ]; then
-	cat << __EOF__ >> ${SUMMARY}
+	cat << __EOF__ >> "${SUMMARY}"
 Throughput Run 1   $THROUGHPUTSTART1   $THROUGHPUTEND1   $THROUGHPUTTIME1
 Refresh Run 1      $DMSTART1   $DMEND1   $DMTIME1
 Throughput Run 2   $THROUGHPUTSTART2   $THROUGHPUTEND2   $THROUGHPUTTIME2
@@ -177,12 +177,12 @@ Refresh Run 2      $DMSTART2   $DMEND2   $DMTIME2
 __EOF__
 fi
 
-cat << __EOF__ >> ${SUMMARY}
+cat << __EOF__ >> "${SUMMARY}"
 =================  ====================  ====================  ================
 __EOF__
 
 if [ -d "${THROUGHPUTDIR}" ] && [ -f "${TIMEFILE}" ]; then
-	cat << __EOF__ >> ${SUMMARY}
+	cat << __EOF__ >> "${SUMMARY}"
 
 Timing Intervals (in seconds)
 =============================
@@ -321,17 +321,17 @@ EOF
 		)"
 
 		printf "%2d  %7.1f  %7.1f  %7.1f   %7.1f  %7.1f  %7.1f  %7.1f   %7.1f  %7.1f  %7.1f\n" \
-				${Q} \
-				${MIN1} \
-				${MIN2} \
-				${Q25_1} \
-				${Q25_2} \
-				${MEDIAN1} \
-				${MEDIAN2} \
-				${Q75_1} \
-				${Q75_2} \
-				${MAX1} \
-				${MAX2} \
+				"${Q}" \
+				"${MIN1}" \
+				"${MIN2}" \
+				"${Q25_1}" \
+				"${Q25_2}" \
+				"${MEDIAN1}" \
+				"${MEDIAN2}" \
+				"${Q75_1}" \
+				"${Q75_2}" \
+				"${MAX1}" \
+				"${MAX2}" \
 				>> "${SUMMARY}"
 	done
 

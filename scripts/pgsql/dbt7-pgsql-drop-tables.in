@@ -6,7 +6,7 @@
 #
 # Copyright The DBT-7 Authors
 
-if [ -z $DBT7DBNAME ]; then
+if [ -z "${DBT7DBNAME}" ]; then
 	echo "Error: DBT7DBNAME environment variable not defined"
 	exit 1
 fi

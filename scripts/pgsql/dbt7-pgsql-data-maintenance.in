@@ -17,10 +17,10 @@ PRIVILEGED=1
 
 usage()
 {
-	echo "`basename $0` is the DBT-7 data maintenance script"
+	echo "$(basename "${0}") is the DBT-7 data maintenance script"
 	echo ""
 	echo "Usage:"
-	echo "  `basename $0` [OPTION]"
+	echo "  $(basename "${0}") [OPTION]"
 	echo ""
 	echo "Options:"
 	echo "  -i PATH      path to config file"
@@ -55,7 +55,7 @@ ALTER TABLE $TABLE
 SET (autovacuum_enabled = false, toast.autovacuum_enabled = false);
 __EOF__
 
-	for I in `seq 1 $CPUS`; do
+	for I in $(seq 1 ${CPUS}); do
 		FILENAME="${DS_DATA}/${STREAM}/${TABLE}_${I}_${CPUS}.dat"
 		if [ ! -f "$FILENAME" ]; then
 			# Smaller scale factors may not generate as many data files as there
@@ -105,30 +105,30 @@ while getopts "hi:n:o:s:U" OPT; do
 	esac
 done
 
-if [ "x$STREAM" = "x" ]; then
+if [ "${STREAM}" = "" ]; then
 	echo "Error: Specify stream number with -n flag"
 	usage
 	exit 1
 fi
 
-if [ "x$OUTPUT_DIR" = "x" ]; then
+if [ "${OUTPUT_DIR}" = "" ]; then
 	echo "Error: Specify results directory with -o flag"
 	usage
 	exit 1
 fi
 
-if [ -z $DBT7DBNAME ]; then
+if [ -z "${DBT7DBNAME}" ]; then
 	echo "Error: DBT7DBNAME environment variable not defined"
 	exit 1
 fi
 
 # Clause 5
 
-if [ "x$SCALE" = "x" ]; then
+if [ "${SCALE}" = "" ]; then
 	CONFIGFILE="${INPUT_DIR}/config.txt"
-	SCALE=`grep ^scale $CONFIGFILE | cut -d ":" -f2-`
+	SCALE=$(grep ^scale "${CONFIGFILE}" | cut -d ":" -f2-)
 fi
-if [ "x$SCALE" = "x" ]; then
+if [ "${SCALE}" = "" ]; then
 	echo "Error: scale not found and not defined, use -s to force"
 	exit 1
 fi
@@ -136,14 +136,14 @@ fi
 # If a seed file wasn't provided per spec, then don't specify one.
 SEED_FILE="${INPUT_DIR}/seed"
 if [ -f "$SEED_FILE" ]; then
-	read SEED < $SEED_FILE
+	read -r SEED < "${SEED_FILE}"
 	echo "Using generated seed file: $SEED"
 fi
 
 # Determine number of processors for parallelism.
 if [ -f "/proc/stat" ]; then
-	CPUS=`grep cpu /proc/stat | wc -l`
-	CPUS=$(( $CPUS - 1 ))
+	CPUS=$(grep -c cpu /proc/stat)
+	CPUS=$(( CPUS - 1 ))
 	echo "detected $CPUS processors for parallel data generation and loading"
 fi
 
@@ -158,37 +158,37 @@ done
 # Data Maintenance Function 11 Clause 5.3.11.12
 #
 
-for LINE in `cat ${DS_DATA}/${STREAM}/inventory_delete_${STREAM}.dat`; do
-	DATE1=`echo "$LINE" | cut -d "|" -f 1`
-	DATE2=`echo "$LINE" | cut -d "|" -f 2`
-	delete_method3 inventory inv_date_sk $DATE1 $DATE2
-done
+while IFS= read -r LINE; do
+	DATE1=$(echo "${LINE}" | cut -d "|" -f 1)
+	DATE2=$(echo "${LINE}" | cut -d "|" -f 2)
+	delete_method3 inventory inv_date_sk "${DATE1}" "${DATE2}"
+done < "${DS_DATA}/${STREAM}/inventory_delete_${STREAM}.dat"
 
-for LINE in `cat ${DS_DATA}/${STREAM}/delete_${STREAM}.dat`; do
-	DATE1=`echo "$LINE" | cut -d "|" -f 1`
-	DATE2=`echo "$LINE" | cut -d "|" -f 2`
+while IFS= read -r LINE; do
+	DATE1=$(echo "${LINE}" | cut -d "|" -f 1)
+	DATE2=$(echo "${LINE}" | cut -d "|" -f 2)
 
 	#
 	# Data Maintenance Function 10 Clause 5.3.11.11
 	#
 
-	delete_method3 web_sales ws_sold_date_sk $DATE1 $DATE2
-	delete_method3 web_returns wr_returned_date_sk $DATE1 $DATE2
+	delete_method3 web_sales ws_sold_date_sk "${DATE1}" "${DATE2}"
+	delete_method3 web_returns wr_returned_date_sk "${DATE1}" "${DATE2}"
 
 	#
 	# Data Maintenance Function 9 Clause 5.3.11.9
 	#
 
-	delete_method3 store_sales ss_sold_date_sk $DATE1 $DATE2
-	delete_method3 store_returns sr_returned_date_sk $DATE1 $DATE2
+	delete_method3 store_sales ss_sold_date_sk "${DATE1}" "${DATE2}"
+	delete_method3 store_returns sr_returned_date_sk "${DATE1}" "${DATE2}"
 
 	#
 	# Data Maintenance Function 8 Clause 5.3.11.10
 	#
 
-	delete_method3 catalog_sales cs_sold_date_sk $DATE1 $DATE2
-	delete_method3 catalog_returns cr_returned_date_sk $DATE1 $DATE2
-done
+	delete_method3 catalog_sales cs_sold_date_sk "${DATE1}" "${DATE2}"
+	delete_method3 catalog_returns cr_returned_date_sk "${DATE1}" "${DATE2}"
+done < "${DS_DATA}/${STREAM}/delete_${STREAM}.dat"
 
 #
 # Data Maintenance Function 7 Clause 5.3.11.3

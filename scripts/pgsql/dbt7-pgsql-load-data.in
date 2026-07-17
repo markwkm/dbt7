@@ -30,11 +30,11 @@ CPUS=1
 PSQL="psql -v ON_ERROR_STOP=1 -X -d $DBT7DBNAME"
 PRIVILEGED=1
 
-if [ "x$DSTOOLS" = "x" ]; then
+if [ "${DSTOOLS}" = "" ]; then
 	echo "DSTOOLS env var is not set"
 	exit 1
 fi
-if [ ! -d $DSTOOLS ]; then
+if [ ! -d "${DSTOOLS}" ]; then
 	echo "DSTOOLS dir does not exist: $DSTOOLS"
 	exit 2
 fi
@@ -117,12 +117,12 @@ while [ "${#}" -gt 0 ] ; do
 	shift
 done
 
-if [ -z $DBT7DBNAME ]; then
+if [ -z "${DBT7DBNAME}" ]; then
 	echo "Error: DBT7DBNAME environment variable not defined"
 	exit 1
 fi
 
-if [ "x$SCALE" = "x" ]; then
+if [ "${SCALE}" = "" ]; then
 	echo "SCALE must be set with -s"
 	exit 3
 fi

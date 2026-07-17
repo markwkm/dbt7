@@ -30,7 +30,7 @@ while getopts "cen:s" OPT; do
 	esac
 done
 
-if [ -z $DBT7DBNAME ]; then
+if [ -z "${DBT7DBNAME}" ]; then
 	echo "DBT7DBNAME environment variable not defined"
 	exit 1
 fi

@@ -264,7 +264,7 @@ if [ -d "${OUTPUT_DIR}" ]; then
 	>&2 echo "ERROR: Specify new location, '${OUTPUT_DIR}' already exists"
 	exit 1
 fi
-mkdir -p ${OUTPUT_DIR}
+mkdir -p "${OUTPUT_DIR}"
 
 if [ -n "$LOAD_PARAMETERS" ]; then
 	LOAD_PARAMETERS_ARG="-p \"$LOAD_PARAMETERS\""
@@ -284,8 +284,8 @@ if [ ${RUN_LOAD_TEST} -eq 1 ] && [ ${RUN_POWER_TEST} -eq 1 ] && \
 	RUN_ALL_TESTS=1
 fi
 
-if [ "x${COMMENT}" != "x" ]; then
-	echo "$COMMENT" > ${OUTPUT_DIR}/comment.txt
+if [ "${COMMENT}" != "" ]; then
+	echo "${COMMENT}" > "${OUTPUT_DIR}/comment.txt"
 fi
 
 if [ "${DBT7DBNAME}" = "" ]; then
@@ -314,24 +314,24 @@ if [ $RUN_LOAD_TEST -eq 1 ]; then
 			${PARALLEL_ARG}" \
 			|| exit 1
 elif [ $PRIVILEGED -eq 1 ]; then
-	dbt7-${DATABASE}-start-db -o $OUTPUT_DIR
+	dbt7-"${DATABASE}"-start-db -o "${OUTPUT_DIR}"
 fi
 
 SEED_FILE=${OUTPUT_DIR}/seed
-if [ $SEED -ne 0 ]; then
-	echo $SEED > $SEED_FILE
-	echo "Using seed: `cat $SEED_FILE`"
+if [ "${SEED}" -ne 0 ]; then
+	echo "${SEED}" > "${SEED_FILE}"
+	echo "Using seed: $(cat "${SEED_FILE}")"
 else
 	# generate the initial seed according to Clause 4.3.1
 	# the initial seed is the time stamp of the end of the database load time
 	# expressed in the format mmddhhmmss.
-	date +%-m%d%H%M%S > $SEED_FILE
+	date +%-m%d%H%M%S > "${SEED_FILE}"
 fi
 
 if [ $RUN_POWER_TEST -eq 1 ] || [ $RUN_THROUGHPUT_TEST -eq 1 ]; then
 	# Start time of the Performance Test (Power and Throughput).
-	echo "**`date` performance test starting**"
-	S_TIME=`date +%s`
+	echo "**$(date) performance test starting**"
+	S_TIME=$(date +%s)
 fi
 
 if [ $RUN_POWER_TEST -eq 1 ]; then
@@ -371,14 +371,14 @@ fi
 
 if [ $RUN_POWER_TEST -eq 1 ] || [ $RUN_THROUGHPUT_TEST -eq 1 ]; then
 	# End time of the Performance Test.
-	E_TIME=`date +%s`
-	DIFF_TIME=$(( $E_TIME - $S_TIME ))
-	echo "**`date` performance test completed ($DIFF_TIME seconds)**"
+	E_TIME=$(date +%s)
+	DIFF_TIME=$(( E_TIME - S_TIME ))
+	echo "**$(date) performance test completed (${DIFF_TIME} seconds)**"
 fi
 
 # Stop the database at the end of the test.
 if [ $PRIVILEGED -eq 1 ]; then
-	dbt7-${DATABASE}-stop-db
+	dbt7-"${DATABASE}"-stop-db
 fi
 
 # Don't attempt to calculate the score unless all tests are run.

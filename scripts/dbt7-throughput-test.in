@@ -48,21 +48,21 @@ run_data_maintenance()
 {
 	NUM=$1
 
-	STREAM_START=$(( 1 + ($STREAMS * ($NUM - 1)) ))
-	STREAM_END=$(( $STREAMS * $NUM ))
+	STREAM_START=$(( 1 + (STREAMS * (NUM - 1)) ))
+	STREAM_END=$(( STREAMS * NUM ))
 
-	echo "**`date` data maintenance test $NUM starting**"
-	S_TIME_POWER=`date +%s`
+	echo "**$(date) data maintenance test $NUM starting**"
+	S_TIME_POWER=$(date +%s)
 	eval "dbt7-${DATABASE}-time-statistics -s -n DATAMAINT${NUM}"
-	for I in `seq $STREAM_START $STREAM_END`; do
+	for I in $(seq ${STREAM_START} ${STREAM_END}); do
 	   eval "dbt7-${DATABASE}-data-maintenance -i ${OUTPUT_DIR}/.. \
 				-o ${OUTPUT_DIR} -n $I ${PRIVILEGED_ARG}" \
-				> ${OUTPUT_DIR}/dm_${I}.txt 2>&1
+				> "${OUTPUT_DIR}/dm_${I}".txt 2>&1
 	done
 	eval "dbt7-${DATABASE}-time-statistics -e -n DATAMAINT${NUM}"
-	E_TIME_POWER=`date +%s`
-	DIFF_TIME=$(( $E_TIME_POWER - $S_TIME_POWER ))
-	echo "**`date` data maintenance test $NUM completed ($DIFF_TIME seconds)**"
+	E_TIME_POWER=$(date +%s)
+	DIFF_TIME=$(( E_TIME_POWER - S_TIME_POWER ))
+	echo "**$(date) data maintenance test ${NUM} completed (${DIFF_TIME} seconds)**"
 }
 
 run_queries()
@@ -75,22 +75,22 @@ run_queries()
 		exit 1
 	fi
 
-	STREAM_START=$(( 1 + ($STREAMS * ($NUM - 1)) ))
-	STREAM_END=$(( $STREAMS * $NUM ))
+	STREAM_START=$(( 1 + (STREAMS * (NUM - 1)) ))
+	STREAM_END=$(( STREAMS * NUM ))
 
-	echo "**`date` throughput test $NUM starting**"
-	S_TIME_POWER=`date +%s`
+	echo "**$(date) throughput test ${NUM} starting**"
+	S_TIME_POWER=$(date +%s)
 
-	dbt7-${DATABASE}-time-statistics -s -n THROUGHPUT${NUM} || exit 1
-	for STREAM in `seq $STREAM_START $STREAM_END`; do
-		dbt7-${DATABASE}-run-stream -s $STREAM -o $OUTPUT_DIR &
+	dbt7-"${DATABASE}"-time-statistics -s -n "THROUGHPUT${NUM}" || exit 1
+	for STREAM in $(seq $STREAM_START $STREAM_END); do
+		dbt7-"${DATABASE}"-run-stream -s "$STREAM" -o "$OUTPUT_DIR" &
 	done
 	wait
-	dbt7-${DATABASE}-time-statistics -e -n THROUGHPUT${NUM} || exit 1
-	E_TIME_POWER=`date +%s`
+	dbt7-"${DATABASE}"-time-statistics -e -n "THROUGHPUT${NUM}" || exit 1
+	E_TIME_POWER=$(date +%s)
 
-	DIFF_TIME=$(( $E_TIME_POWER - $S_TIME_POWER ))
-	echo "**`date` throughput test $NUM completed ($DIFF_TIME seconds)**"
+	DIFF_TIME=$(( E_TIME_POWER - S_TIME_POWER ))
+	echo "**$(date) throughput test ${NUM} completed (${DIFF_TIME} seconds)**"
 }
 
 # Custom argument handling for hopefully most portability.
@@ -115,7 +115,7 @@ while [ "${#}" -gt 0 ] ; do
 	(-o)
 		shift
 		OUTPUT_DIR="${1}"
-		mkdir -p $OUTPUT_DIR
+		mkdir -p "${OUTPUT_DIR}"
 		;;
 	(-p)
 		shift
@@ -161,38 +161,38 @@ while [ "${#}" -gt 0 ] ; do
 	shift
 done
 
-if [ "x${DATABASE}" = "x" ]; then
+if [ "${DATABASE}" = "" ]; then
 	echo "Error: Specify database management system with -a flag"
 	exit 1
 fi
 
-if [ "x${STREAMS}" = "x" ]; then
+if [ "${STREAMS}" = "" ]; then
 	echo "Error: Specify the number of streams with -n flag"
 	exit 1
 fi
 
-if [ "x${DSTOOLS}" = "x" ]; then
+if [ "${DSTOOLS}" = "" ]; then
 	echo "Error: DSTOOLS environment variable not set"
 	exit 1
 fi
-if [ ! -d $DSTOOLS ]; then
+if [ ! -d "$DSTOOLS" ]; then
 	echo "Error: DSTOOLS dir does not exist: $DSTOOLS"
 	exit 2
 fi
 
-if [ "x${DIALECT}" = "x" ]; then
+if [ "${DIALECT}" = "" ]; then
 	DIALECT=$DATABASE
 fi
 
-echo $STREAMS > ${OUTPUT_DIR}/streams
+echo "$STREAMS" > "${OUTPUT_DIR}"/streams
 
-echo "**`date` throughput tests prep**"
+echo "**$(date) throughput tests prep**"
 
 # If a seed file wasn't provided per spec, then set to 1 since 0 will generate
 # the same queries between all the streams.
 SEED_FILE="${OUTPUT_DIR}/../seed"
 if [ -f "$SEED_FILE" ]; then
-	read SEED < $SEED_FILE
+	read -r SEED < "${SEED_FILE}"
 	echo "Using generated seed file: $SEED"
 else
 	SEED=1
@@ -206,9 +206,9 @@ eval "${DSTOOLS}/dsdgen \
 		-DIR $OUTPUT_DIR \
 		-SCALE $SCALE \
 		${RNGSEED_ARG}" \
-		> ${OUTPUT_DIR}/dsdgen.txt 2>&1 || exit 1
+		> "${OUTPUT_DIR}/dsdgen.txt" 2>&1 || exit 1
 
-TOTAL_STREAMS=$(( ($STREAMS * 2) + 1 ))
+TOTAL_STREAMS=$(( (STREAMS * 2) + 1 ))
 dbt7-generate-queries \
 		--dialect="${DIALECT}" \
 		--scale-factor="${SCALE}" \
@@ -221,9 +221,9 @@ dbt7-generate-queries \
 # Determine number of processors for parallelism.
 CPUS=1
 if [ -f "/proc/stat" ]; then
-	CPUS=`grep cpu /proc/stat | wc -l`
-	CPUS=$(( $CPUS - 1 ))
-	echo "detected $CPUS processors for parallel data generation and loading"
+	CPUS=$(grep -c cpu /proc/stat)
+	CPUS=$(( CPUS - 1 ))
+	echo "detected ${CPUS} processors for parallel data generation and loading"
 fi
 PARALLEL_ARG=""
 if [ "${CPUS}" -gt 1 ]; then
@@ -231,10 +231,10 @@ if [ "${CPUS}" -gt 1 ]; then
 fi
 
 # Generate refresh data
-for J in `seq 1 $(( $STREAMS * 2 ))`; do
-	for I in `seq 1 $CPUS`; do
+for J in $(seq 1 $(( STREAMS * 2 ))); do
+	for I in $(seq 1 $CPUS); do
 		DMDIR=${DS_DATA}/${J}
-		mkdir -p $DMDIR
+		mkdir -p "${DMDIR}"
 		eval "${DSTOOLS}/dsdgen \
 				-DISTRIBUTIONS ${DSDISTRIBUTIONS} \
 				-DIR $DMDIR \
@@ -251,12 +251,12 @@ done
 wait
 
 if [ $RESTART -eq 1 ] && [ $PRIVILEGED -eq 1 ]; then
-	dbt7-${DATABASE}-stop-db
+	dbt7-"${DATABASE}"-stop-db
 fi
 if [ $PRIVILEGED -eq 1 ]; then
-	eval dbt7-${DATABASE}-start-db -o $OUTPUT_DIR $PARAMETERS_ARG || exit 1
+	eval "dbt7-${DATABASE}-start-db -o ${OUTPUT_DIR} ${PARAMETERS_ARG}" || exit 1
 fi
-dbt7-${DATABASE}-time-statistics -c
+dbt7-"${DATABASE}"-time-statistics -c
 
 if [ "${STATS}" -eq 1 ]; then
 	# Start collecting system statistics.
@@ -282,11 +282,11 @@ if [ "${STATS}" -eq 1 ]; then
 	eval "ts ${DATABASE}-stat -o ${OUTPUT_DIR}/dbstat -s"
 fi
 
-dbt7-${DATABASE}-get-query-time -o $OUTPUT_DIR
+dbt7-"${DATABASE}"-get-query-time -o "${OUTPUT_DIR}"
 
 # Stop the database after the test.
 if [ $RESTART -eq 1 ] && [ $PRIVILEGED -eq 1 ]; then
-	dbt7-${DATABASE}-stop-db || exit 1
+	dbt7-"${DATABASE}"-stop-db || exit 1
 fi
 
 if [ $PROFILE -eq 1 ]; then

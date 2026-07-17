@@ -11,7 +11,7 @@ usage()
 	echo "$(basename "${0}") is the Database Test 7 (DBT-7) configuration capture script"
 	echo ""
 	echo "Usage:"
-	echo "  `basename $0` [OPTIONS]"
+	echo "  $(basename "${0}") [OPTIONS]"
 	echo ""
 	echo "General options:"
 	echo "  -a DBMS          dbms under test (pgsql)"
@@ -54,7 +54,7 @@ while getopts "a:d:hi:n:o:pq:s:" opt; do
 		PERF_PARAM="$OPTARG"
 		;;
 	s)
-		export SCALE=$OPTARG
+		export SCALE="${OPTARG}"
 		;;
 	\?)
 		usage
@@ -63,15 +63,15 @@ while getopts "a:d:hi:n:o:pq:s:" opt; do
 	esac
 done
 
-CPUS=`grep -c '^processor' /proc/cpuinfo`
-DISTRO=`grep PRETTY_NAME /etc/os-release | cut -d "=" -f 2`
-KERNEL=`uname -s -r`
-MEMORY=`grep 'MemTotal' /proc/meminfo | awk -F: '{print $2 $3}'`
-MHZ=`grep 'cpu MHz' /proc/cpuinfo | head -n 1 | awk -F: '{print $2}'`
-MODEL=`grep 'model name' /proc/cpuinfo|head -n 1 | awk -F: '{print $2}'`
-NODE=`hostname`
+CPUS=$(grep -c '^processor' /proc/cpuinfo)
+DISTRO=$(grep PRETTY_NAME /etc/os-release | cut -d "=" -f 2)
+KERNEL=$(uname -s -r)
+MEMORY=$(grep 'MemTotal' /proc/meminfo | awk -F: '{print $2 $3}')
+MHZ=$(grep 'cpu MHz' /proc/cpuinfo | head -n 1 | awk -F: '{print $2}')
+MODEL=$(grep 'model name' /proc/cpuinfo|head -n 1 | awk -F: '{print $2}')
+NODE=$(hostname)
 
-cat << EOF > $OUTPUT_DIR/config.txt
+cat << EOF > "${OUTPUT_DIR}"/config.txt
 date: $(date)
 node: $NODE
 kernel: $KERNEL

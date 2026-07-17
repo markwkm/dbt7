@@ -8,10 +8,10 @@
 
 usage()
 {
-	echo "`basename $0` is the DBT-7 Power Test query plotter"
+	echo "$(basename "${0}") is the DBT-7 Power Test query plotter"
 	echo ""
 	echo "Usage:"
-	echo "  `basename $0` [OPTIONS]"
+	echo "  $(basename "${0}") [OPTIONS]"
 	echo ""
 	echo "General options:"
 	echo "  -i CSV     power test time statistics file"

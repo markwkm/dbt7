@@ -32,14 +32,14 @@ create_stat_page()
 	TAG=$1
 
 	OUTDIR="${PIDSTATDIR}/report/${TAG}"
-	mkdir -p $OUTDIR
+	mkdir -p "${OUTDIR}"
 
-	cat > ${OUTDIR}/index.rst << __EOF__
+	cat > "${OUTDIR}/index.rst" << __EOF__
 ================================================================================
 Database Test 7 pidstat $TAG Charts
 ================================================================================
 
-$(show_images $TAG)
+$(show_images "${TAG}")
 __EOF__
 }
 
@@ -149,13 +149,13 @@ $TITLE
    * - Database Stats Charts
      - \`dbt7 <${DIRECTORY}/dbstat/db/dbt7>\`__
    * - Database Table Stats Charts:
-     - $(links_tables ${DIRECTORY})
+     - $(links_tables "${DIRECTORY}")
    * - Database Index Stats Charts:
-     - $(links_indexes ${DIRECTORY})
+     - $(links_indexes "${DIRECTORY}")
    * - Database Tables by Metric:
-     - $(links_table_metrics ${DIRECTORY})
+     - $(links_table_metrics "${DIRECTORY}")
    * - Database Indexs by Metric:
-     - $(links_index_metrics ${DIRECTORY})
+     - $(links_index_metrics "${DIRECTORY}")
 
 __EOF__
 }
@@ -210,7 +210,7 @@ while [ "${#}" -gt 0 ] ; do
 	shift
 done
 
-if [ "x${INDIR}" = "x" ]; then
+if [ "${INDIR}" = "" ]; then
 	echo "Specify dbt7 results directory with -i"
 	exit 1
 fi

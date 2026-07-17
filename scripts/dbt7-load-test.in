@@ -51,7 +51,7 @@ bailout()
 	echo ""
 	echo "***ERROR: $(date)***"
 	echo "see full output in: $OUTPUTFILE"
-	tail $OUTPUTFILE
+	tail "${OUTPUTFILE}"
 	echo ""
 	exit 1
 }
@@ -66,7 +66,7 @@ while [ "${#}" -gt 0 ] ; do
 	(-o)
 		shift
 		OUTPUT_DIR="${1}"
-		mkdir -p $OUTPUT_DIR
+		mkdir -p "${OUTPUT_DIR}"
 		;;
 	(-p)
 		shift
@@ -114,13 +114,13 @@ while [ "${#}" -gt 0 ] ; do
 	shift
 done
 
-if [ "x$DATABASE" = "x" ]; then
+if [ "${DATABASE}" = "" ]; then
 	echo "Error: Specify database management system with -a flag"
 	usage
 	exit 1
 fi
 
-if [ "x$OUTPUT_DIR" = "x" ]; then
+if [ "${OUTPUT_DIR}" = "" ]; then
 	echo "Error: Specify results directory with -o flag"
 	usage
 	exit 1
@@ -139,7 +139,7 @@ if [ "${CHUNKS}" = "" ]; then
 fi
 LOAD_ARGS="--parallel=${CHUNKS}"
 
-echo "**`date` load test prep**"
+echo "**$(date) load test prep**"
 
 OUTPUTFILE="${OUTPUT_DIR}/output.txt"
 
@@ -149,7 +149,7 @@ eval "${DSTOOLS}/dsdgen \
 		-TABLE dbgen_version \
 		-DIR $OUTPUT_DIR \
 		-SCALE ${SCALE}" \
-		> ${OUTPUT_DIR}/dsdgen.txt 2>&1 || bailout
+		> "${OUTPUT_DIR}/dsdgen.txt" 2>&1 || bailout
 
 # Generate database data if $DS_DATA does not exist
 if [ ! -d "$DS_DATA" ]; then
@@ -183,9 +183,9 @@ fi
 eval "dbt7-${DATABASE}-create-db -o ${OUTPUT_DIR} ${PARAMETERS_ARG} \
 		${PRIVILEGED_ARG}" >> "${OUTPUTFILE}" 2>&1
 
-dbt7-${DATABASE}-drop-tables >> $OUTPUTFILE 2>&1 || bailout
-eval dbt7-${DATABASE}-create-tables ${TABLESPACES_ARG} \
-		>> $OUTPUTFILE 2>&1 || bailout
+dbt7-"${DATABASE}"-drop-tables >> "$OUTPUTFILE" 2>&1 || bailout
+eval "dbt7-${DATABASE}-create-tables ${TABLESPACES_ARG}" \
+		>> "$OUTPUTFILE" 2>&1 || bailout
 
 if [ "${STATS}" -eq 1 ]; then
 	# Collect database statistics
@@ -196,24 +196,24 @@ if [ $PROFILE -eq 1 ]; then
 	ts profile -o "${OUTPUT_DIR}/profile" sleep 1
 fi
 
-echo "**`date` load test starting**"
-S_TIME=`date +%s`
-dbt7-${DATABASE}-time-statistics -s -n LOADTEST || bailout
+echo "**$(date) load test starting**"
+S_TIME=$(date +%s)
+dbt7-"${DATABASE}"-time-statistics -s -n LOADTEST || bailout
 
 eval "$PERFCOMMAND dbt7-${DATABASE}-load-data -s $SCALE ${TABLESPACES_ARG} \
 		${LOAD_ARGS} ${PRIVILEGED_ARG}" >> "${OUTPUTFILE}" 2>&1 || bailout
 
-dbt7-${DATABASE}-time-statistics -e -n LOADTEST || bailout
-E_TIME=`date +%s`
-DIFF_TIME=`expr $E_TIME - $S_TIME`
-echo "**`date` load test completed  ($DIFF_TIME seconds)**"
+dbt7-"${DATABASE}"-time-statistics -e -n LOADTEST || bailout
+E_TIME=$(date +%s)
+DIFF_TIME=$(( E_TIME - S_TIME ))
+echo "**$(date) load test completed  ($DIFF_TIME seconds)**"
 
 if [ "${STATS}" -eq 1 ]; then
 	ts sysstat -o "${OUTPUT_DIR}/sysstat" -s
 	eval "ts ${DATABASE}-stat -o ${OUTPUT_DIR}/dbstat -s"
 fi
 
-dbt7-${DATABASE}-get-query-time -o $OUTPUT_DIR
+dbt7-"${DATABASE}"-get-query-time -o "$OUTPUT_DIR"
 
 if [ $PROFILE -eq 1 ]; then
 	ts profile -o "${OUTPUT_DIR}/profile" -p

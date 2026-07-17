@@ -55,7 +55,7 @@ ALTER TABLE ${TABLE}
 SET (autovacuum_enabled = false, toast.autovacuum_enabled = false);
 __EOF__
 
-	for I in $(seq 1 ${CPUS}); do
+	for I in $(seq 1 "${CPUS}"); do
 		FILENAME="${DS_DATA}/${STREAM}/${TABLE}_${I}_${CPUS}.dat"
 		if [ ! -f "${FILENAME}" ]; then
 			# Smaller scale factors may not generate as many data files as there

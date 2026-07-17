@@ -36,9 +36,9 @@ create_sar_page()
 	SARPLOTDIR=${3}
 	ODIR=${4}
 
-	mkdir -p $ODIR
+	mkdir -p "${ODIR}"
 
-	cat > ${ODIR}/index.rst << __EOF__
+	cat > "${ODIR}/index.rst" << __EOF__
 ================================================================================
 Database Test 7 ${TITLE} ${STATNAME} Charts
 ================================================================================
@@ -170,15 +170,15 @@ DIRPOWER="${INDIR}/power"
 DIRTHROUGHPUT="${INDIR}/throughput"
 
 CONFIGFILE="${INDIR}/config.txt"
-CPU_MODEL=`grep "^model" $CONFIGFILE | cut -d ":" -f2-`
-CPUS=`grep ^cpus $CONFIGFILE | cut -d ":" -f2-`
-DBMS=$(grep "^dbms" $CONFIGFILE | awk '{print $2}')
-KERNEL=`grep ^kernel $CONFIGFILE | cut -d ":" -f2-`
-OS=`grep ^distribution $CONFIGFILE | cut -d ":" -f2-`
-RAM=`grep ^memory $CONFIGFILE | cut -d ":" -f2-`
+CPU_MODEL=$(grep "^model" "${CONFIGFILE}" | cut -d ":" -f2-)
+CPUS=$(grep ^cpus "${CONFIGFILE}" | cut -d ":" -f2-)
+DBMS=$(grep "^dbms" "${CONFIGFILE}" | awk '{print $2}')
+KERNEL=$(grep ^kernel "${CONFIGFILE}" | cut -d ":" -f2-)
+OS=$(grep ^distribution "${CONFIGFILE}" | cut -d ":" -f2-)
+RAM=$(grep ^memory "${CONFIGFILE}" | cut -d ":" -f2-)
 
 if [ -d "${DIRPOWER}" ]; then
-	dbt7-plot-results -i ${INDIR}/power/time_statistics.csv -o ${OUTDIR} \
+	dbt7-plot-results -i "${INDIR}/power/time_statistics.csv" -o "${OUTDIR}" \
 			2> /dev/null
 fi
 
@@ -222,9 +222,9 @@ fi
 
 README="${DIRPOWER}/dbstat/readme-${DBMS}.txt"
 if [ -f "$README" ]; then
-	DBVER=`head -n 1 $README`
+	DBVER=$(head -n 1 "${README}")
 fi
-if [ "x$DBVER" = "x" ]; then
+if [ "${DBVER}" = "" ]; then
 	README="${DIRTHROUGHPUT}/readme.txt"
 	if [ -f "${README}" ]; then
 		DBVER=$(head -n 1 "${README}")
@@ -270,8 +270,8 @@ if [ -d "${DIRTHROUGHPUT}" ]; then
 "
 fi
 
-cat << __EOF__ > $REPORT
-$(cat $SUMMARY)
+cat << __EOF__ > "${REPORT}"
+$(cat "${SUMMARY}")
 
 ${POWER_IMAGE_SECTION}
 System Configuration
@@ -304,7 +304,7 @@ __EOF__
 #
 
 if [ -d "${DIRLOAD}" ]; then
-	cat << __EOF__ > ${REPORTLOAD}
+	cat << __EOF__ > "${REPORTLOAD}"
 =========================
 Database Test 7 Load Test
 =========================
@@ -324,7 +324,7 @@ __EOF__
 				>> "${REPORTLOAD}"
 	done
 
-	cat << __EOF__ >> ${REPORTLOAD}
+	cat << __EOF__ >> "${REPORTLOAD}"
 ================  ===================  ===================  ===============
 
 $(write_system_stats load)
@@ -360,7 +360,7 @@ __EOF__
 fi
 
 echo "Generated text file reports:"
-ls -1v ${OUTDIR}/*.rst
+ls -1v "${OUTDIR}"/*.rst
 echo ""
 
 #
@@ -369,47 +369,45 @@ echo ""
 
 RST2HTML5=""
 for POSSIBILITY in rst2html5.py rst2html5; do
-	which $POSSIBILITY > /dev/null 2>&1
-	if [ $? -eq 0 ]; then
+	if which ${POSSIBILITY} > /dev/null 2>&1; then
 		RST2HTML5="$POSSIBILITY"
 		break
 	fi
 done
 
-if [ ! "x${RST2HTML5}" = "x" ]; then
+if [ ! "${RST2HTML5}" = "" ]; then
 	# pandoc can't properly convert multi-cell table headings from rst but
 	# Sphinx's rst2html can. Then pandoc can convert multi-cell table headings
 	# from html to pdf.
-	$RST2HTML5 ${OUTDIR}/report.rst ${OUTDIR}/report.html 2> /dev/null
+	$RST2HTML5 "${OUTDIR}/report.rst" "${OUTDIR}/report.html" 2> /dev/null
 	find "${INDIR}" -name "*.rst" | while read -r RST; do
 		NAME="${RST%.*}"
 		(cd "$(dirname "${RST}")" && \
-				${RST2HTML5} "$(basename "${RST}")" ${NAME}.html 2> /dev/null)
+				${RST2HTML5} "$(basename "${RST}")" "${NAME}.html" 2> /dev/null)
 	done
 
 	echo "Generated HTML reports:"
-	ls -1v ${OUTDIR}/*.html
+	ls -1v "${OUTDIR}"/*.html
 	echo ""
 
 	if [ "${GENERATE_PDF}" = "1" ]; then
 		# A pdf could be produced other ways, but I believe pandoc produces the
 		# most minimally styled LaTeX looking document, as opposed to using
 		# rst2latex, with default settings.
-		which pandoc > /dev/null 2>&1
-		if [ $? -eq 0 ]; then
-			(cd $OUTDIR && \
+		if which pandoc > /dev/null 2>&1; then
+			(cd "${OUTDIR}" && \
 					pandoc -s report.html -f html -t pdf \
 							-o report.pdf 2> /dev/null) &
 			find "${INDIR}" -name "*.html" | while read -r HTML; do
 				NAME="${HTML%.*}"
 				(cd "$(dirname "${HTML}")" && \
 						pandoc -s "$(basename "${HTML}")" -f html -t pdf \
-								-o ${NAME}.pdf 2> /dev/null) &
+								-o "${NAME}.pdf" 2> /dev/null) &
 			done
 			wait
 
 			echo "Generated PDF reports:"
-			ls -1v ${OUTDIR}/*.pdf
+			ls -1v "${OUTDIR}"/*.pdf
 			echo ""
 		else
 			echo "pandoc required to generate pdf report"

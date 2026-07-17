@@ -60,7 +60,7 @@ while [ "${#}" -gt 0 ] ; do
 	(-o)
 		shift
 		OUTPUT_DIR="${1}"
-		mkdir -p $OUTPUT_DIR
+		mkdir -p "${OUTPUT_DIR}"
 		;;
 	(-p)
 		shift
@@ -101,22 +101,22 @@ while [ "${#}" -gt 0 ] ; do
 	shift
 done
 
-if [ "x${DATABASE}" = "x" ]; then
+if [ "${DATABASE}" = "" ]; then
 	echo "Error: Specify database management system with -a flag"
 	usage
 	exit 1
 fi
 
-if [ "x${DSTOOLS}" = "x" ]; then
+if [ "${DSTOOLS}" = "" ]; then
 	echo "Error: DSTOOLS environment variable not set"
 	exit 1
 fi
-if [ ! -d $DSTOOLS ]; then
+if [ ! -d "${DSTOOLS}" ]; then
 	echo "Error: DSTOOLS dir does not exist: $DSTOOLS"
 	exit 2
 fi
 
-if [ "x${DIALECT}" = "x" ]; then
+if [ "${DIALECT}" = "" ]; then
 	DIALECT=$DATABASE
 fi
 
@@ -125,12 +125,12 @@ if [ "${SCALE}" -eq 1 ]; then
     echo "running power test as query validation test since scale factor is 1"
 fi
 
-echo "**`date` power test prep**"
+echo "**$(date) power test prep**"
 
 # If a seed file wasn't provided per spec, set to 0.
 SEED_FILE="${OUTPUT_DIR}/../seed"
 if [ -f "$SEED_FILE" ]; then
-	read SEED < $SEED_FILE
+	read -r SEED < "${SEED_FILE}"
 	echo "Using generated seed file: $SEED"
 else
 	SEED=0
@@ -144,25 +144,25 @@ eval "${DSTOOLS}/dsdgen \
 		-DIR $OUTPUT_DIR \
 		-SCALE $SCALE \
 		${RNGSEED_ARG}" \
-		> ${OUTPUT_DIR}/dsdgen.txt 2>&1 || exit 1
+		> "${OUTPUT_DIR}/dsdgen.txt" 2>&1 || exit 1
 
 dbt7-generate-queries \
 		--dialect="${DIALECT}" \
 		--scale-factor="${SCALE}" \
 		--streams=1 \
-		--seed=${SEED} \
+		--seed="${SEED}" \
 		"${INPUT_ARG}" \
 		"${DATABASE}" \
 		"${OUTPUT_DIR}" || exit 1
 
 if [ $RESTART -eq 1 ] && [ $PRIVILEGED -eq 1 ]; then
-	dbt7-${DATABASE}-stop-db || exit 1
+	dbt7-"${DATABASE}"-stop-db || exit 1
 fi
 if [ $PRIVILEGED -eq 1 ]; then
-	eval dbt7-${DATABASE}-start-db -o $OUTPUT_DIR $PARAMETERS_ARG || exit 1
+	eval "dbt7-${DATABASE}-start-db -o ${OUTPUT_DIR} ${PARAMETERS_ARG}" || exit 1
 fi
 
-dbt7-${DATABASE}-time-statistics -c
+dbt7-"${DATABASE}"-time-statistics -c
 
 if [ "${STATS}" -eq 1 ]; then
 	# Start collecting system statistics.
@@ -172,17 +172,17 @@ if [ "${STATS}" -eq 1 ]; then
 	eval "ts ${DATABASE}-stat -d ${DBT7DBNAME} -o ${OUTPUT_DIR}/dbstat"
 fi
 
-echo "**`date` power test starting**"
+echo "**$(date) power test starting**"
 
 # Execute the queries.
-S_TIME_POWER=`date +%s`
-dbt7-${DATABASE}-time-statistics -s -n POWER
-dbt7-${DATABASE}-run-stream -s 0 -o $OUTPUT_DIR
-dbt7-${DATABASE}-time-statistics -e -n POWER
-E_TIME_POWER=`date +%s`
+S_TIME_POWER=$(date +%s)
+dbt7-"${DATABASE}"-time-statistics -s -n POWER
+dbt7-"${DATABASE}"-run-stream -s 0 -o "${OUTPUT_DIR}"
+dbt7-"${DATABASE}"-time-statistics -e -n POWER
+E_TIME_POWER=$(date +%s)
 
-DIFF_TIME=$(( $E_TIME_POWER - $S_TIME_POWER ))
-echo "**`date` power test completed ($DIFF_TIME seconds)**"
+DIFF_TIME=$(( E_TIME_POWER - S_TIME_POWER ))
+echo "**$(date) power test completed (${DIFF_TIME} seconds)**"
 
 if [ "${STATS}" -eq 1 ]; then
 	# Stop collecting system statistics.
@@ -190,8 +190,8 @@ if [ "${STATS}" -eq 1 ]; then
 	eval "ts ${DATABASE}-stat -o ${OUTPUT_DIR}/dbstat -s"
 fi
 
-dbt7-${DATABASE}-get-query-time -o $OUTPUT_DIR
+dbt7-"${DATABASE}"-get-query-time -o "${OUTPUT_DIR}"
 
 if [ $RESTART -eq 1 ] && [ $PRIVILEGED -eq 1 ]; then
-	dbt7-${DATABASE}-stop-db || exit 1
+	dbt7-"${DATABASE}"-stop-db || exit 1
 fi

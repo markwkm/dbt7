@@ -7,8 +7,7 @@ usage()
 	echo "usage: $0 [DBMS [SCALE]]"
 }
 
-which docker > /dev/null 2>&1
-if [ $? -ne 0 ]; then
+if ! which docker > /dev/null 2>&1; then
 	echo "docker not in path"
 	exit 1
 fi
@@ -27,19 +26,17 @@ fi
 
 DOCKER_NAME="dbt7-${DBMS}-0"
 DOCKER_TAG="dbt7-${DBMS}"
-DOCKERDIR=`dirname $0`
+DOCKERDIR=$(dirname "${0}")
 
 # Use the return code from `docker inspect` to determine if the docker image
 # needs to be created.
-docker inspect $DOCKER_TAG > /dev/null
-if [ $? -ne 0 ]; then
-	${DOCKERDIR}/build-${DBMS} || exit 1
+if ! docker inspect "${DOCKER_TAG}" > /dev/null; then
+	eval "${DOCKERDIR}/build-${DBMS}" || exit 1
 fi
 
-docker run --rm --name $DOCKER_NAME --shm-size=256m $DOCKER_TAG \
-		dbt7-run-workload -g -a pgsql -s ${SCALE} -d postgresql \
-					-i templates-postgresql.lst -n 3 -o /tmp/results
-if [ $? -ne 0 ]; then
+if ! docker run --rm --name "${DOCKER_NAME}" --shm-size=256m "${DOCKER_TAG}" \
+		dbt7-run-workload -g -a pgsql -s "${SCALE}" -d postgresql \
+					-i templates-postgresql.lst -n 3 -o /tmp/results; then
 	usage
 	exit 1
 fi
