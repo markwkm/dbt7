@@ -24,6 +24,7 @@ RUN apt-get -qq -y update && \
                    gnupg2 \
                    libcairo2-dev \
                    libffi-dev \
+                   libfontconfig1-dev \
                    libfribidi-dev \
                    libgraphite2-dev \
                    libharfbuzz-dev \
@@ -44,6 +45,11 @@ RUN mkdir -p \
           /usr/local/share/licenses/cairo-$(dpkg-query -W -f='${Version}\n' libcairo2) && \
     cp -p /usr/share/doc/libcairo2/copyright \
        /usr/local/share/licenses/cairo-$(dpkg-query -W -f='${Version}\n' libcairo2)/
+
+RUN mkdir -p \
+          /usr/local/share/licenses/fontconfig-$(dpkg-query -W -f='${Version}\n' libfontconfig1) && \
+    cp -p /usr/share/doc/libfontconfig1/copyright \
+       /usr/local/share/licenses/fontconfig-$(dpkg-query -W -f='${Version}\n' libfontconfig1)/
 
 RUN mkdir -p \
           /usr/local/share/licenses/freetype-$(dpkg-query -W -f='${Version}\n' libfreetype6) && \

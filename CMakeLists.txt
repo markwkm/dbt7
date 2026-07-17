@@ -202,6 +202,7 @@ add_custom_target(appimage
     COMMAND mkdir -p ../AppDir/usr/lib/
     COMMAND cp -paL
                `ldd ${GNUPLOT} | grep libcairo\\\\\\\\. | cut -d \" \" -f 3`
+               `ldd ${GNUPLOT} | grep libfontconfig\\\\\\\\. | cut -d \" \" -f 3`
                `ldd ${GNUPLOT} | grep libfreetype\\\\\\\\. | cut -d \" \" -f 3`
                `ldd ${GNUPLOT} | grep libfribidi\\\\\\\\. | cut -d \" \" -f 3`
                `ldd ${GNUPLOT} | grep libgraphite2\\\\\\\\. | cut -d \" \" -f 3`
