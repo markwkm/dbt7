@@ -6,10 +6,21 @@
 #
 # Copyright The DBT-7 Authors
 
-trap 'echo "Test was interrupted by Control-C."; \
-killall sar sadc pidstat ts-${DATABASE}-stat > /dev/null 2>&1' INT
-trap 'echo "Test was interrupted. Got TERM signal."; \
-killall sar sadc pidstat ts-${DATABASE}-stat > /dev/null 2>&1' TERM
+# Ensure this script is a process group leader so that cleanup kills only
+# its own descendants.
+if [ "$$" != "$(ps -o pgid= -p $$ | tr -d ' ')" ]; then
+	exec setsid "$0" "$@"
+fi
+
+cleanup() {
+	echo "Test was interrupted, cleaning up..."
+	trap '' INT TERM
+	kill 0
+	wait
+	exit 1
+}
+
+trap cleanup INT TERM
 
 PARALLEL_ARG=""
 COMMENT=""
