@@ -27,6 +27,33 @@ DIRECTORY is the path to DBT-7 results.
 EOF
 }
 
+create_pid_page()
+{
+	LABEL=$1
+	PID=$2
+	DESC=$3
+
+	SUBDIR="${PIDSTATDIR}/report/${LABEL}/${PID}"
+	mkdir -p "${SUBDIR}"
+
+	cat > "${SUBDIR}/index.rst" << __EOF__
+================================================================================
+Database Test 7 pidstat $LABEL Charts (PID $PID)
+================================================================================
+
+$DESC
+
+$(show_images "${PID}")
+__EOF__
+}
+
+list_pids()
+{
+	PATTERN=$1
+
+	grep -a "${PATTERN}" "${PIDSTATDIR}/${PIDPREFIX}-index.txt"
+}
+
 create_stat_page()
 {
 	LABEL=$1
@@ -35,12 +62,27 @@ create_stat_page()
 	OUTDIR="${PIDSTATDIR}/report/${LABEL}"
 	mkdir -p "${OUTDIR}"
 
+	# Every matched process gets its own chart page, since combining,
+	# say, three "io worker" PIDs onto a single page makes each
+	# individual process' charts hard to read.
+	list_pids "${PATTERN}" | while IFS= read -r LINE; do
+		PID=$(echo "${LINE}" | cut -d " " -f 1)
+		DESC=$(echo "${LINE}" | cut -d " " -f 2- | tr -d '\0' | \
+				sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+		create_pid_page "${LABEL}" "${PID}" "${DESC}"
+	done
+
 	cat > "${OUTDIR}/index.rst" << __EOF__
 ================================================================================
 Database Test 7 pidstat $LABEL Charts
 ================================================================================
 
-$(show_images "${PATTERN}")
+$(list_pids "${PATTERN}" | while IFS= read -r LINE; do
+	PID=$(echo "${LINE}" | cut -d " " -f 1)
+	DESC=$(echo "${LINE}" | cut -d " " -f 2- | tr -d '\0' | \
+			sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+	printf "* \`PID %s: %s <%s/>\`__\n\n" "${PID}" "${DESC}" "${PID}"
+done)
 __EOF__
 }
 
@@ -226,20 +268,15 @@ __EOF__
 
 show_images()
 {
-	PATTERN=$1
+	PID=$1
 
-	TAGPIDS=$(grep -a "${PATTERN}" "${PIDSTATDIR}/${PIDPREFIX}-index.txt" | \
-			cut -d " " -f 1)
-
-	for P in ${TAGPIDS}; do
-		find "${PIDSTATDIR}" -type f -name "${PIDPREFIX}-${P}-*.png" | \
-				sort | while IFS= read -r CHART; do
-			BCHART="$(basename "${CHART}")"
-			echo ".. image:: ../../pidstat/plots/${BCHART}"
-			echo "   :target: ../../pidstat/plots/${BCHART}"
-			echo "   :width: 100%"
-			echo ""
-		done
+	find "${PIDSTATDIR}" -type f -name "${PIDPREFIX}-${PID}-*.png" | \
+			sort | while IFS= read -r CHART; do
+		BCHART="$(basename "${CHART}")"
+		echo ".. image:: ../../../pidstat/plots/${BCHART}"
+		echo "   :target: ../../../pidstat/plots/${BCHART}"
+		echo "   :width: 100%"
+		echo ""
 	done
 }
 
