@@ -152,8 +152,8 @@ summarize()
 	# Create additional HTML pages for the database charts.
 
 	if which dbt-pgsql-generate-db-report > /dev/null 2>&1; then
-		dbt-pgsql-generate-db-report -t "Database Test 7" -d dbt7 \
-				-i "${DBSTATDIR}"
+		dbt-pgsql-generate-db-report -t "Database Test 7" \
+				-d "${DBT7DBNAME:-dbt7}" -i "${DBSTATDIR}"
 	fi
 	if which dbt-pgsql-generate-table-report > /dev/null 2>&1; then
 		dbt-pgsql-generate-table-report -t "Database Test 7" \
@@ -174,7 +174,7 @@ $TITLE
 .. list-table::
 
    * - Database Stats Charts
-     - \`dbt7 <${DIRECTORY}/dbstat/db/dbt7>\`__
+     - \`${DBT7DBNAME:-dbt7} <${DIRECTORY}/dbstat/db/${DBT7DBNAME:-dbt7}>\`__
    * - Database Table Stats Charts:
      - $(links_tables "${DIRECTORY}")
    * - Database Index Stats Charts:
