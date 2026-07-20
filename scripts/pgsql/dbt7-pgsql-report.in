@@ -100,33 +100,58 @@ links_tables()
 	fi
 }
 
+version_supported()
+{
+	MINVER=$1
+	MAXVER=$2
+
+	# Unknown server version: don't filter by version, rely solely on
+	# whether the process is actually present (checked by the caller).
+	if [ -z "${PGVERNUM}" ]; then
+		return 0
+	fi
+	if [ -n "${MINVER}" ] && [ "${PGVERNUM}" -lt "${MINVER}" ]; then
+		return 1
+	fi
+	if [ -n "${MAXVER}" ] && [ "${PGVERNUM}" -gt "${MAXVER}" ]; then
+		return 1
+	fi
+	return 0
+}
+
 list_processes()
 {
-	# LABEL:PATTERN pairs. LABEL names the report page/link; PATTERN is
-	# matched against the raw pidstat/spar index line (which may contain
-	# embedded NULs from /proc/<pid>/cmdline, hence "grep -a" below). Only
-	# processes actually present in this run get a page and a link, so
-	# newer/older/renamed PostgreSQL background processes show up (or
-	# drop out) automatically instead of requiring code changes here.
+	# LABEL:MINVER:MAXVER:PATTERN entries. LABEL names the report
+	# page/link. MINVER/MAXVER (either may be blank) bound the major
+	# server versions the process type can exist in, taken from
+	# PGVERNUM. PATTERN is matched against the raw pidstat/spar index
+	# line (which may contain embedded NULs from /proc/<pid>/cmdline,
+	# hence "grep -a" below). A page/link is only produced when the
+	# version allows it AND it's actually present in this run, so
+	# renamed/added/removed PostgreSQL background processes are handled
+	# without further code changes.
 	printf '%s\n' \
-			"autovacuum:autovacuum launcher" \
-			"autovacuum-worker:autovacuum worker" \
-			"bgwriter:background writer" \
-			"checkpointer:checkpointer" \
-			"logger:postgres: logger" \
-			"logical:logical replication launcher" \
-			"logical-worker:logical replication worker" \
-			"archiver:postgres: archiver" \
-			"startup:postgres: startup" \
-			"walwriter:walwriter" \
-			"walsender:wal sender" \
-			"walreceiver:wal receiver" \
-			"walsummarizer:wal summarizer" \
-			"ioworker:io worker" \
-			"parallel-worker:parallel worker" \
-			"statscollector:stats collector" \
-			"backend:postgres: [^ ]* ${DBT7DBNAME:-dbt7} " | \
-	while IFS=: read -r LABEL PATTERN; do
+			"autovacuum:::autovacuum launcher" \
+			"autovacuum-worker:::autovacuum worker" \
+			"bgwriter:::background writer" \
+			"checkpointer:::checkpointer" \
+			"logger:::postgres: logger" \
+			"logical:10::logical replication launcher" \
+			"logical-worker:10::logical replication worker" \
+			"archiver:::postgres: archiver" \
+			"startup:::postgres: startup" \
+			"walwriter:::walwriter" \
+			"walsender:::wal sender" \
+			"walreceiver:::wal receiver" \
+			"walsummarizer:17::wal summarizer" \
+			"ioworker:18::io worker" \
+			"parallel-worker:::parallel worker" \
+			"statscollector::14:stats collector" \
+			"backend:::postgres: [^ ]* ${DBT7DBNAME:-dbt7} " | \
+	while IFS=: read -r LABEL MINVER MAXVER PATTERN; do
+		if ! version_supported "${MINVER}" "${MAXVER}"; then
+			continue
+		fi
 		if grep -qa "${PATTERN}" \
 				"${PIDSTATDIR}/${PIDPREFIX}-index.txt" 2> /dev/null; then
 			create_stat_page "${LABEL}" "${PATTERN}"
@@ -147,6 +172,18 @@ summarize()
 	DBSTATDIR="${INDIR}/${DIRECTORY}/dbstat"
 	if [ ! -d "${DBSTATDIR}" ]; then
 		return
+	fi
+
+	# Read this phase's own readme file so the set of PostgreSQL
+	# background processes checked for matches the server version that
+	# actually produced this phase's results (e.g. io workers only
+	# exist on PG 18+, stats collector only on PG 14 and earlier).
+	PGVERNUM=""
+	README="${DBSTATDIR}/readme-pgsql.txt"
+	if [ -f "${README}" ]; then
+		PGVERNUM=$(sed -n \
+				's/^PostgreSQL \([0-9][0-9]*\).*/\1/p' "${README}" | \
+				head -n 1)
 	fi
 
 	# Create additional HTML pages for the database charts.
