@@ -14,3 +14,4 @@ dbt7-DSGen-software-code-4.0.0_final-postgresql-queries-test.diff
 dbt7-DSGen-software-code-4.0.0_final-greenplum-queries.diff
 dbt7-DSGen-software-code-4.0.0_final-pg_plan_advice.diff
 dbt7-DSGen-software-code-4.0.0_final-coldfront.diff
+dbt7-DSGen-software-code-4.0.0_final-coldfront-explain.diff

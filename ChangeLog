@@ -47,6 +47,7 @@ vX.Y.Z (YYYY-MM-DD)
 - AppImage: for a linked worktree, mount the directory holding its git
   metadata, so a containerized build derives the same version as a build
   run outside the container
+- Add coldfrontea template for generating plans
 
 v0.7.9 (2026-07-01)
 
