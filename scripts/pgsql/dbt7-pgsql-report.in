@@ -29,17 +29,18 @@ EOF
 
 create_stat_page()
 {
-	TAG=$1
+	LABEL=$1
+	PATTERN=$2
 
-	OUTDIR="${PIDSTATDIR}/report/${TAG}"
+	OUTDIR="${PIDSTATDIR}/report/${LABEL}"
 	mkdir -p "${OUTDIR}"
 
 	cat > "${OUTDIR}/index.rst" << __EOF__
 ================================================================================
-Database Test 7 pidstat $TAG Charts
+Database Test 7 pidstat $LABEL Charts
 ================================================================================
 
-$(show_images "${TAG}")
+$(show_images "${PATTERN}")
 __EOF__
 }
 
@@ -101,11 +102,37 @@ links_tables()
 
 list_processes()
 {
-	for T in autovacuum bgwriter checkpointer logger logical statscollector \
-			walwriter; do
-		create_stat_page $T
-		printf " \`%s <%s/sysstat/report/%s/>\`__" "${T}" \
-				"${DIRECTORY}" "${T}"
+	# LABEL:PATTERN pairs. LABEL names the report page/link; PATTERN is
+	# matched against the raw pidstat/spar index line (which may contain
+	# embedded NULs from /proc/<pid>/cmdline, hence "grep -a" below). Only
+	# processes actually present in this run get a page and a link, so
+	# newer/older/renamed PostgreSQL background processes show up (or
+	# drop out) automatically instead of requiring code changes here.
+	printf '%s\n' \
+			"autovacuum:autovacuum launcher" \
+			"autovacuum-worker:autovacuum worker" \
+			"bgwriter:background writer" \
+			"checkpointer:checkpointer" \
+			"logger:postgres: logger" \
+			"logical:logical replication launcher" \
+			"logical-worker:logical replication worker" \
+			"archiver:postgres: archiver" \
+			"startup:postgres: startup" \
+			"walwriter:walwriter" \
+			"walsender:wal sender" \
+			"walreceiver:wal receiver" \
+			"walsummarizer:wal summarizer" \
+			"ioworker:io worker" \
+			"parallel-worker:parallel worker" \
+			"statscollector:stats collector" \
+			"backend:postgres: [^ ]* ${DBT7DBNAME:-dbt7} " | \
+	while IFS=: read -r LABEL PATTERN; do
+		if grep -qa "${PATTERN}" \
+				"${PIDSTATDIR}/${PIDPREFIX}-index.txt" 2> /dev/null; then
+			create_stat_page "${LABEL}" "${PATTERN}"
+			printf " \`%s <%s/sysstat/report/%s/>\`__" "${LABEL}" \
+					"${DIRECTORY}" "${LABEL}"
+		fi
 	done
 	echo ""
 }
@@ -162,9 +189,9 @@ __EOF__
 
 show_images()
 {
-	TAG=$1
+	PATTERN=$1
 
-	TAGPIDS=$(grep "${TAG}" "${PIDSTATDIR}/${PIDPREFIX}-index.txt" | \
+	TAGPIDS=$(grep -a "${PATTERN}" "${PIDSTATDIR}/${PIDPREFIX}-index.txt" | \
 			cut -d " " -f 1)
 
 	for P in ${TAGPIDS}; do
