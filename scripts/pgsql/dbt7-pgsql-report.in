@@ -51,25 +51,43 @@ list_pids()
 {
 	PATTERN=$1
 
-	grep -a "${PATTERN}" "${PIDSTATDIR}/${PIDPREFIX}-index.txt"
+	# /proc/<pid>/cmdline (as captured in the index file) separates
+	# arguments with NUL bytes rather than spaces. Turn those into
+	# spaces here, on the raw byte stream, before any line of it is
+	# captured into a shell variable ("read"/"$()" both silently drop
+	# embedded NULs, which would otherwise run multi-word commands
+	# together, e.g. "postgres-D/var/lib/pgsql/18/data").
+	tr '\0' ' ' < "${PIDSTATDIR}/${PIDPREFIX}-index.txt" | \
+			grep "${PATTERN}"
 }
 
-create_stat_page()
+pid_desc()
+{
+	LINE=$1
+
+	echo "${LINE}" | cut -d " " -f 2- | \
+			sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
+					-e 's/[[:space:]]\{2,\}/ /g'
+}
+
+create_pages_for_lines()
 {
 	LABEL=$1
-	PATTERN=$2
+	# stdin: pidstat/spar index lines ("PID COMMAND...") to build pages
+	# for.
 
 	OUTDIR="${PIDSTATDIR}/report/${LABEL}"
 	mkdir -p "${OUTDIR}"
 
-	# Every matched process gets its own chart page, since combining,
-	# say, three "io worker" PIDs onto a single page makes each
-	# individual process' charts hard to read.
-	list_pids "${PATTERN}" | while IFS= read -r LINE; do
+	LINES=$(cat)
+
+	# Every process gets its own chart page, since combining, say,
+	# three "io worker" PIDs onto a single page makes each individual
+	# process' charts hard to read.
+	echo "${LINES}" | while IFS= read -r LINE; do
+		[ -z "${LINE}" ] && continue
 		PID=$(echo "${LINE}" | cut -d " " -f 1)
-		DESC=$(echo "${LINE}" | cut -d " " -f 2- | tr -d '\0' | \
-				sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-		create_pid_page "${LABEL}" "${PID}" "${DESC}"
+		create_pid_page "${LABEL}" "${PID}" "$(pid_desc "${LINE}")"
 	done
 
 	cat > "${OUTDIR}/index.rst" << __EOF__
@@ -77,11 +95,11 @@ create_stat_page()
 Database Test 7 pidstat $LABEL Charts
 ================================================================================
 
-$(list_pids "${PATTERN}" | while IFS= read -r LINE; do
+$(echo "${LINES}" | while IFS= read -r LINE; do
+	[ -z "${LINE}" ] && continue
 	PID=$(echo "${LINE}" | cut -d " " -f 1)
-	DESC=$(echo "${LINE}" | cut -d " " -f 2- | tr -d '\0' | \
-			sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-	printf "* \`PID %s: %s <%s/>\`__\n\n" "${PID}" "${DESC}" "${PID}"
+	printf "* \`PID %s: %s <%s/>\`__\n\n" "${PID}" "$(pid_desc "${LINE}")" \
+			"${PID}"
 done)
 __EOF__
 }
@@ -163,15 +181,20 @@ version_supported()
 
 list_processes()
 {
+	# Tracks which PIDs the known patterns below have already claimed,
+	# so the catch-all pass at the end doesn't duplicate them. A file
+	# is used instead of a variable because the while loop below reads
+	# from a pipe and therefore runs in a subshell under POSIX sh.
+	CLAIMEDFILE=$(mktemp)
+
 	# LABEL:MINVER:MAXVER:PATTERN entries. LABEL names the report
 	# page/link. MINVER/MAXVER (either may be blank) bound the major
 	# server versions the process type can exist in, taken from
-	# PGVERNUM. PATTERN is matched against the raw pidstat/spar index
-	# line (which may contain embedded NULs from /proc/<pid>/cmdline,
-	# hence "grep -a" below). A page/link is only produced when the
-	# version allows it AND it's actually present in this run, so
-	# renamed/added/removed PostgreSQL background processes are handled
-	# without further code changes.
+	# PGVERNUM. PATTERN is matched (via list_pids) against the pidstat/
+	# spar index line. A page/link is only produced when the version
+	# allows it AND it's actually present in this run, so
+	# renamed/added/removed PostgreSQL background processes are
+	# handled without further code changes.
 	printf '%s\n' \
 			"autovacuum:::autovacuum launcher" \
 			"autovacuum-worker:::autovacuum worker" \
@@ -194,13 +217,31 @@ list_processes()
 		if ! version_supported "${MINVER}" "${MAXVER}"; then
 			continue
 		fi
-		if grep -qa "${PATTERN}" \
-				"${PIDSTATDIR}/${PIDPREFIX}-index.txt" 2> /dev/null; then
-			create_stat_page "${LABEL}" "${PATTERN}"
+		LINES=$(list_pids "${PATTERN}")
+		if [ -n "${LINES}" ]; then
+			echo "${LINES}" | create_pages_for_lines "${LABEL}"
+			echo "${LINES}" | cut -d " " -f 1 >> "${CLAIMEDFILE}"
 			printf " \`%s <%s/sysstat/report/%s/>\`__" "${LABEL}" \
 					"${DIRECTORY}" "${LABEL}"
 		fi
 	done
+
+	# Catch-all: any PostgreSQL process not claimed above, e.g. a
+	# backend connected to a database other than DBT7DBNAME, or a
+	# background worker type this script doesn't know by name yet.
+	OTHERLINES=$(list_pids "postgres" | while IFS= read -r LINE; do
+		PID=$(echo "${LINE}" | cut -d " " -f 1)
+		if ! grep -qxF "${PID}" "${CLAIMEDFILE}" 2> /dev/null; then
+			echo "${LINE}"
+		fi
+	done)
+	if [ -n "${OTHERLINES}" ]; then
+		echo "${OTHERLINES}" | create_pages_for_lines "other"
+		printf " \`%s <%s/sysstat/report/%s/>\`__" "other" \
+				"${DIRECTORY}" "other"
+	fi
+
+	rm -f "${CLAIMEDFILE}"
 	echo ""
 }
 
