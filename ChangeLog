@@ -17,6 +17,7 @@ vX.Y.Z (YYYY-MM-DD)
 - pgsql: re-enable allowing parallel data loading
 - pgsql: fix data maintenance test execution when running as privileged
   database user
+- AppImage: bump Touchstone Tools version from v0.10.0 to v0.10.4
 
 v0.7.9 (2026-07-01)
 
