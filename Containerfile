@@ -59,7 +59,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf \
          https://sh.rustup.rs -o /tmp/sh.rustup.sh && \
     sh /tmp/sh.rustup.sh -y
 
-ARG TSTOOLSVER=0.10.0
+ARG TSTOOLSVER=0.10.3
 RUN curl -o /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz \
          -SsL https://gitlab.com/touchstone/\
 touchstone-tools/-/archive/v${TSTOOLSVER}/\
