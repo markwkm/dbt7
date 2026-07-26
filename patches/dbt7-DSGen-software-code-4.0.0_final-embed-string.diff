@@ -1,0 +1,27 @@
+embed_string(): copy the overlay word with memcpy().
+
+The function overlays a distribution word inside an already-populated
+fixed-width field, intentionally without a NUL terminator.
+strncpy(dest, word, strlen(word)) does exactly that, but matches the
+classic truncation-bug pattern and trips -Wstringop-truncation.
+memcpy() of strlen(word) bytes is byte-for-byte identical for
+non-overlapping buffers and carries no string semantics for the
+compiler to second-guess.
+
+No behavior change: item.dat is byte-identical.  (History: two earlier
+attempts to silence this warning corrupted i_manager_id and truncated
+i_formulation; see the dbt7 ChangeLog.)
+
+Index: dbt7/dsgen/tools/build_support.c
+===================================================================
+--- dbt7.orig/dsgen/tools/build_support.c
++++ dbt7/dsgen/tools/build_support.c
+@@ -369,7 +369,7 @@ embed_string(char *szDest, char *szDist,
+ 
+ 	pick_distribution(&szWord, szDist, nValue, nWeight, nStream);
+ 	nPosition = genrand_integer(NULL, DIST_UNIFORM, 0, strlen(szDest) - strlen(szWord) - 1, 0, nStream);
+-	strncpy(&szDest[nPosition], szWord, strlen(szWord));
++	memcpy(&szDest[nPosition], szWord, strlen(szWord));
+ 
+ 	return(0);
+ }

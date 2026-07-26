@@ -1,3 +1,13 @@
+Silence unused-code warnings without changing behavior.
+
+- Add (void) casts for variables that are set but never read, mostly
+  the row pointer in stub ld_*/vld_* loader functions
+  (-Wunused-but-set-variable).
+- tokenizer.l: add %option noinput nounput so flex does not emit the
+  unused input()/yyunput() helpers (-Wunused-function).
+
+A (void) cast counts as a use and generates no code.
+
 Index: dbt7/dsgen/tools/dbgen_version.c
 ===================================================================
 --- dbt7.orig/dsgen/tools/dbgen_version.c
@@ -83,7 +93,7 @@ Index: dbt7/dsgen/tools/s_catalog_page.c
 --- dbt7.orig/dsgen/tools/s_catalog_page.c
 +++ dbt7/dsgen/tools/s_catalog_page.c
 @@ -120,7 +120,8 @@ ld_s_catalog_page(void *pSrc)
- 		r = &g_s_catalog_page;
+ 		r = &g_w_catalog_page;
  	else
  		r = pSrc;
 -	
@@ -415,7 +425,7 @@ Index: dbt7/dsgen/tools/s_warehouse.c
 --- dbt7.orig/dsgen/tools/s_warehouse.c
 +++ dbt7/dsgen/tools/s_warehouse.c
 @@ -139,7 +139,8 @@ ld_s_warehouse(void *pSrc)
- 		r = &g_s_warehouse;
+ 		r = &g_w_warehouse;
  	else
  		r = pSrc;
 -	
@@ -499,7 +509,7 @@ Index: dbt7/dsgen/tools/s_web_site.c
 --- dbt7.orig/dsgen/tools/s_web_site.c
 +++ dbt7/dsgen/tools/s_web_site.c
 @@ -145,7 +145,8 @@ ld_s_web_site(void *pSrc)
- 		r = &g_s_web_site;
+ 		r = &g_w_web_site;
  	else
  		r = pSrc;
 -	
@@ -522,6 +532,42 @@ Index: dbt7/dsgen/tools/s_zip_to_gmt.c
  	return(0);
  }
  
+Index: dbt7/dsgen/tools/scd.c
+===================================================================
+--- dbt7.orig/dsgen/tools/scd.c
++++ dbt7/dsgen/tools/scd.c
+@@ -176,6 +176,7 @@ scd_join(int tbl, int col, ds_key_t jDat
+ 		strtodt(&dtTemp, DATA_END_DATE);
+ 		jMaximumDataDate = dtTemp.julian;
+ 		jH1DataDate = jMinimumDataDate + (jMaximumDataDate - jMinimumDataDate) / 2;
++		(void)jH1DataDate; /* Suppress unused-but-set-variable warning. */
+ 		jT2DataDate = (jMaximumDataDate - jMinimumDataDate) / 3;
+ 		jT1DataDate = jMinimumDataDate + jT2DataDate;
+ 		jT2DataDate += jT1DataDate; 
+Index: dbt7/dsgen/tools/tokenizer.l
+===================================================================
+--- dbt7.orig/dsgen/tools/tokenizer.l
++++ dbt7/dsgen/tools/tokenizer.l
+@@ -90,6 +90,7 @@ int yylook(void);
+ %{ 
+ /* macro definitions go here */ 
+ %}
++%option noinput nounput
+ INT	-?[0-9]+
+ DECIMAL   -?[0-9]*\.[0-9]+
+ WS	[ \t]+
+Index: dbt7/dsgen/tools/validate.c
+===================================================================
+--- dbt7.orig/dsgen/tools/validate.c
++++ dbt7/dsgen/tools/validate.c
+@@ -93,6 +93,7 @@ validateGeneric(int nTable, ds_key_t kRo
+ 	if (pT->flags & FL_PARENT)
+    {
+       pChild = getSimpleTdefsByNumber(pT->nParam);
++      (void)pChild; /* Suppress unused-but-set-variable warning. */
+ 		row_skip(pT->nParam, kRow - 1);
+    }
+    pTF->builder(NULL, kRow);
 Index: dbt7/dsgen/tools/w_call_center.c
 ===================================================================
 --- dbt7.orig/dsgen/tools/w_call_center.c
@@ -880,27 +926,3 @@ Index: dbt7/dsgen/tools/w_web_site.c
  	return(0);
  }
  
-Index: dbt7/dsgen/tools/validate.c
-===================================================================
---- dbt7.orig/dsgen/tools/validate.c
-+++ dbt7/dsgen/tools/validate.c
-@@ -93,6 +93,7 @@ validateGeneric(int nTable, ds_key_t kRo
- 	if (pT->flags & FL_PARENT)
-    {
-       pChild = getSimpleTdefsByNumber(pT->nParam);
-+      (void)pChild; /* Suppress unused-but-set-variable warning. */
- 		row_skip(pT->nParam, kRow - 1);
-    }
-    pTF->builder(NULL, kRow);
-Index: dbt7/dsgen/tools/scd.c
-===================================================================
---- dbt7.orig/dsgen/tools/scd.c
-+++ dbt7/dsgen/tools/scd.c
-@@ -176,6 +176,7 @@ scd_join(int tbl, int col, ds_key_t jDat
- 		strtodt(&dtTemp, DATA_END_DATE);
- 		jMaximumDataDate = dtTemp.julian;
- 		jH1DataDate = jMinimumDataDate + (jMaximumDataDate - jMinimumDataDate) / 2;
-+		(void)jH1DataDate; /* Suppress unused-but-set-variable warning. */
- 		jT2DataDate = (jMaximumDataDate - jMinimumDataDate) / 3;
- 		jT1DataDate = jMinimumDataDate + jT2DataDate;
- 		jT2DataDate += jT1DataDate; 

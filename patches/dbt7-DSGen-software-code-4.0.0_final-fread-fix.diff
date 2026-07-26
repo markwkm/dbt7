@@ -1,3 +1,11 @@
+Check fread() return values correctly in load_dist().
+
+fread() returns a size_t, so the original "< 0" comparisons were
+always false and read errors went undetected.  Compare against the
+expected byte count instead, so a short or failed read of tpcds.idx is
+reported.  Behavior changes only on I/O error, which previously meant
+silently loading corrupt distributions.
+
 Index: dbt7/dsgen/tools/dist.c
 ===================================================================
 --- dbt7.orig/dsgen/tools/dist.c

@@ -1,0 +1,19 @@
+genrand_decimal(): initialize the result accumulator.
+
+The decimal_t res was built up from uninitialized storage, which is
+undefined behavior.  Zero-initialize it.  Found by
+-Wmaybe-uninitialized; generated data is unchanged.
+
+Index: dbt7/dsgen/tools/genrand.c
+===================================================================
+--- dbt7.orig/dsgen/tools/genrand.c
++++ dbt7/dsgen/tools/genrand.c
+@@ -267,7 +267,7 @@ genrand_decimal (decimal_t * dest, int d
+                  decimal_t * mean, int stream)
+ {
+    int i;
+-   decimal_t res;
++   decimal_t res = {0};
+    double fres = 0.0;
+ 
+    if (min->precision < max->precision)

@@ -1,0 +1,28 @@
+web_join(): do not free dSiteClose/dSiteOpen before their last use.
+
+The one-time init block freed both date_t structs and then read
+->julian from each on a following line to compute nOffset.  Move the
+free() calls after the last read.  Found by -Wuse-after-free.  The
+freed memory happened to still hold the old values, so generated data
+is unchanged.
+
+Index: dbt7/dsgen/tools/join.c
+===================================================================
+--- dbt7.orig/dsgen/tools/join.c
++++ dbt7/dsgen/tools/join.c
+@@ -301,13 +301,13 @@ web_join(int col, ds_key_t join_key)
+ 	{
+ 		dSiteClose = strtodate(WEB_END_DATE);
+ 		nSiteDuration = dSiteClose->julian;
+-		free(dSiteClose);
+ 		nConcurrentSites = (int)get_rowcount(CONCURRENT_WEB_SITES);
+ 		dSiteOpen = strtodate(WEB_START_DATE);
+ 		nSiteDuration -= dSiteOpen->julian;
+-		free(dSiteOpen);
+ 		nSiteDuration *= nConcurrentSites;
+ 		nOffset = (dSiteClose->julian - dSiteOpen->julian) / (2 * nSiteDuration) ;
++		free(dSiteClose);
++		free(dSiteOpen);
+ 		init = 1;
+ 	}
+ 	

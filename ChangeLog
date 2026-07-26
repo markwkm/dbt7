@@ -6,6 +6,11 @@ vX.Y.Z (YYYY-MM-DD)
 - run: improve trap function to ensure there are not lingering processes after
   an aborted test
 - AppImage: add missing fontconfig library for plotting
+- Restructure the TPC-DS 4.0.0 patch series by purpose: a build patch
+  (-std=gnu99, -fno-common duplicate-definition fixes), one patch per bug
+  fix, and behavior-neutral warning-hygiene patches, each carrying a
+  description of what it does and why; drop the makefile -Wno-*
+  suppressions now that all hidden warning classes are fixed
 
 v0.7.9 (2026-07-01)
 

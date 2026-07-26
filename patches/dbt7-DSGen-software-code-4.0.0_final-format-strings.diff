@@ -1,0 +1,102 @@
+Fix printf-style format strings.
+
+- HUGE_FORMAT: "%lld" assumed long long, but HUGE_TYPE is int64_t;
+  use PRId64 from <inttypes.h> (-Wformat).
+- s_zip_to_gmt: print the zip code bounded with snprintf() and an
+  (int) cast wide enough for the 0-99999 domain, preserving leading
+  zeros (-Wformat, -Wformat-truncation).
+- dbgen_version, date_t_op(): bound the date/time/version strings with
+  snprintf() and use %04hd/%02hhd with matching casts so the compiler
+  can prove the buffers fit (-Wformat-overflow, -Wformat-truncation).
+- print_delete(): the configured DELIMITER was passed as the format
+  string; print it with "%s" (-Wformat-security -- a delimiter
+  containing % previously invoked undefined behavior).
+
+Generated data is unchanged: all rewritten formats produce the same
+bytes for every value in their domain.
+
+Index: dbt7/dsgen/tools/config.h
+===================================================================
+--- dbt7.orig/dsgen/tools/config.h
++++ dbt7/dsgen/tools/config.h
+@@ -99,9 +99,11 @@
+ #endif /* INTERIX */
+ 
+ #ifdef LINUX
++#include <inttypes.h>
++#include <strings.h>
+ #define SUPPORT_64BITS
+ #define HUGE_TYPE	int64_t
+-#define HUGE_FORMAT	"%lld"
++#define HUGE_FORMAT	"%" PRId64
+ #define HUGE_COUNT	1
+ #define USE_STRING_H
+ #define USE_VALUES_H
+Index: dbt7/dsgen/tools/s_zip_to_gmt.c
+===================================================================
+--- dbt7.orig/dsgen/tools/s_zip_to_gmt.c
++++ dbt7/dsgen/tools/s_zip_to_gmt.c
+@@ -149,7 +149,7 @@ mk_s_zip(void *pDest, ds_key_t kIndex)
+ 	pMap = &arGMTOffset[0];
+ 	while (kIndex > pMap->nMax)
+ 		pMap += 1;
+-	sprintf(r->szZip, "%05lld", kIndex);
++	snprintf(r->szZip, sizeof(r->szZip), "%05d", (int)kIndex);
+ 	r->nGMTOffset = pMap->nOffset;
+ 	
+ 	return(r->nGMTOffset == -99?1:0);
+Index: dbt7/dsgen/tools/dbgen_version.c
+===================================================================
+--- dbt7.orig/dsgen/tools/dbgen_version.c
++++ dbt7/dsgen/tools/dbgen_version.c
+@@ -85,9 +85,9 @@ mk_dbgen_version(void *pDest, ds_key_t k
+ 	time( &ltime );                 /* Get time in seconds */
+ 	pTimeStamp = localtime( &ltime );  /* Convert time to struct */
+ 	
+-	sprintf(r->szDate, "%4d-%02d-%02d", pTimeStamp->tm_year + 1900, pTimeStamp->tm_mon + 1, pTimeStamp->tm_mday);
+-	sprintf(r->szTime, "%02d:%02d:%02d", pTimeStamp->tm_hour, pTimeStamp->tm_min, pTimeStamp->tm_sec);
+-	sprintf (r->szVersion,"%d.%d.%d%s", VERSION, RELEASE, MODIFICATION, PATCH);
++	snprintf(r->szDate, 11, "%04hd-%02hhd-%02hhd", (short)(pTimeStamp->tm_year + 1900), (signed char)(pTimeStamp->tm_mon + 1), (signed char)pTimeStamp->tm_mday);
++	snprintf(r->szTime, 9, "%02d:%02d:%02d", pTimeStamp->tm_hour, pTimeStamp->tm_min, pTimeStamp->tm_sec);
++	snprintf (r->szVersion, RS_VERSION_LENGTH, "%d.%d.%d%s", VERSION, RELEASE, MODIFICATION, PATCH);
+ 	strcpy(r->szCmdLineArgs, g_szCommandLine);
+ 	
+ 	return(0);
+Index: dbt7/dsgen/tools/date.c
+===================================================================
+--- dbt7.orig/dsgen/tools/date.c
++++ dbt7/dsgen/tools/date.c
+@@ -355,9 +355,9 @@ date_t_op(date_t *dest, int op, date_t *
+ 		break;
+ 	case OP_SAME_LY:
+ 		if (is_leap(d1->year) && (d1->month == 2) && (d1->day == 29))
+-			sprintf(tString, "%d-02-28", d1->year - 1);
++			sprintf(tString, "%04hd-02-28", (short)(d1->year - 1));
+ 		else
+-			sprintf(tString, "%4d-%02d-%02d", d1->year - 1, d1->month, d1->day);
++			sprintf(tString, "%04hd-%02hhd-%02hhd", (short)(d1->year - 1), (signed char)d1->month, (signed char)d1->day);
+ 		strtodt(dest, tString);
+ 		break;
+ 	case OP_SAME_LQ:
+@@ -368,7 +368,7 @@ date_t_op(date_t *dest, int op, date_t *
+ 			sprintf(tString, "%4d-%s", d1->year, qtr_start[1]);
+ 			strtodt(&tDate, tString);
+ 			tJulian = d1->julian - tDate.julian;
+-			sprintf(tString, "%4d-%s", d1->year - 1, qtr_start[4]);
++			sprintf(tString, "%04hd-%s", (short)(d1->year - 1), qtr_start[4]);
+ 			strtodt(&tDate, tString);
+ 			tJulian += tDate.julian;
+ 			jtodt(dest, tJulian);
+Index: dbt7/dsgen/tools/print.c
+===================================================================
+--- dbt7.orig/dsgen/tools/print.c
++++ dbt7/dsgen/tools/print.c
+@@ -201,7 +201,7 @@ print_delete (int * val)
+       exit(-1);
+ 	}
+    if (is_set("TERMINATE"))
+-	   fprintf(fpDeleteFile, get_str("DELIMITER"));
++	   fprintf(fpDeleteFile, "%s", get_str("DELIMITER"));
+    fprintf(fpDeleteFile, "\n");
+    
+    return;

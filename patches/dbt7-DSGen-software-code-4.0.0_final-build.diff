@@ -1,3 +1,55 @@
+Make the TPC-DS tools build with modern toolchains.
+
+- Pin the C dialect to gnu99: the code is C89 plus // comments plus
+  POSIX interfaces (strcasecmp, values.h) that strict -std=c99 hides.
+  Without a -std pin the build follows the compiler default, and GCC 14
+  turns the implicit-int constructs in this code into hard errors.
+  Also enable -O2 and keep frame pointers for profiling.
+- Resolve duplicate global definitions, which are link errors since
+  GCC 10 defaults to -fno-common:
+  * g_w_warehouse, g_w_catalog_page, g_w_web_site: the w_*.c table
+    builders own the definition; the s_*.c refresh generators fill the
+    same struct through mk_w_*() and print it, so they get extern
+    declarations.
+  * g_s_web_order_lineitem: defined in s_web_order.c, declared extern
+    in s_web_order_lineitem.c.
+  * nItemIndex: defined by all three refresh order generators.  Rather
+    than merging them with extern, give each generator its own cursor
+    (nItemIndexCO, nItemIndexP, nItemIndexWO): sharing one
+    item-permutation cursor across generators is unintended coupling.
+  * yydebug: owned by the generated parser (byacc defines it always;
+    bison defines it because BASE_CFLAGS retains -DYYDEBUG), so
+    QgenMain.c, which only sets it, declares it extern.
+
+Generated data is unchanged: dsdgen output is byte-identical to a
+pristine (-fcommon) build of the unpatched code.
+
+Index: dbt7/dsgen/tools/makefile
+===================================================================
+--- dbt7.orig/dsgen/tools/makefile
++++ dbt7/dsgen/tools/makefile
+@@ -55,7 +55,7 @@ CC		= $($(OS)_CC)
+ # CFLAGS
+ AIX_CFLAGS		= -q64 -O3 -D_LARGE_FILES
+ HPUX_CFLAGS		= -O3 -Wall
+-LINUX_CFLAGS	= -g -Wall
++LINUX_CFLAGS	= -g -Wall -std=gnu99 -O2 -pipe -fno-omit-frame-pointer
+ NCR_CFLAGS		= -g 
+ SOLARIS_CFLAGS	= -O3 -Wall
+ SOL86_CFLAGS	= -O3 
+Index: dbt7/dsgen/tools/QgenMain.c
+===================================================================
+--- dbt7.orig/dsgen/tools/QgenMain.c
++++ dbt7/dsgen/tools/QgenMain.c
+@@ -67,7 +67,7 @@ int g_nQueryNumber,
+ StringBuffer_t *g_sbTemplateName = NULL;
+ 
+ 
+-int yydebug;
++extern int yydebug;
+ int yyparse(void);
+ extern FILE *yyin;
+ extern 	file_ref_t *pCurrentFile;
 Index: dbt7/dsgen/tools/s_catalog_order.c
 ===================================================================
 --- dbt7.orig/dsgen/tools/s_catalog_order.c
@@ -61,6 +113,19 @@ Index: dbt7/dsgen/tools/s_catalog_order_lineitem.c
  	r->kItemID = getFirstSK(r->kItemID);
  
  	r->kPromotionID = mk_join(S_CLIN_PROMOTION_ID, PROMOTION, 1);
+Index: dbt7/dsgen/tools/s_catalog_page.c
+===================================================================
+--- dbt7.orig/dsgen/tools/s_catalog_page.c
++++ dbt7/dsgen/tools/s_catalog_page.c
+@@ -48,7 +48,7 @@
+ #include "validate.h"
+ #include "parallel.h"
+ 
+-struct CATALOG_PAGE_TBL g_w_catalog_page;
++extern struct CATALOG_PAGE_TBL g_w_catalog_page;
+ 
+ int
+ mk_s_catalog_page(void *pDest, ds_key_t kRow)
 Index: dbt7/dsgen/tools/s_pline.c
 ===================================================================
 --- dbt7.orig/dsgen/tools/s_pline.c
@@ -102,7 +167,7 @@ Index: dbt7/dsgen/tools/s_purchase.c
  struct S_PURCHASE_TBL g_s_purchase;
  struct S_PURCHASE_LINEITEM_TBL g_s_purchase_lineitem;
  struct S_STORE_RETURNS_TBL g_s_store_return;
--extern int nItemIndex;
+-int nItemIndex;
 +int nItemIndexP;
  
  /*
@@ -125,37 +190,6 @@ Index: dbt7/dsgen/tools/s_purchase.c
     for (i=1; i < nLineitem; i++)
        mk_detail(i, 0);
     print_start(S_PURCHASE_LINEITEM);
-Index: dbt7/dsgen/tools/s_catalog_page.c
-===================================================================
---- dbt7.orig/dsgen/tools/s_catalog_page.c
-+++ dbt7/dsgen/tools/s_catalog_page.c
-@@ -48,7 +48,7 @@
- #include "validate.h"
- #include "parallel.h"
- 
--struct CATALOG_PAGE_TBL g_w_catalog_page;
-+struct CATALOG_PAGE_TBL g_s_catalog_page;
- 
- int
- mk_s_catalog_page(void *pDest, ds_key_t kRow)
-@@ -79,7 +79,7 @@ pr_s_catalog_page(void *pSrc)
- 	struct CATALOG_PAGE_TBL *r;
- 	
- 	if (pSrc == NULL)
--		r = &g_w_catalog_page;
-+		r = &g_s_catalog_page;
- 	else
- 		r = pSrc;
- 	
-@@ -117,7 +117,7 @@ ld_s_catalog_page(void *pSrc)
- 	struct CATALOG_PAGE_TBL *r;
- 		
- 	if (pSrc == NULL)
--		r = &g_w_catalog_page;
-+		r = &g_s_catalog_page;
- 	else
- 		r = pSrc;
- 	
 Index: dbt7/dsgen/tools/s_warehouse.c
 ===================================================================
 --- dbt7.orig/dsgen/tools/s_warehouse.c
@@ -165,59 +199,10 @@ Index: dbt7/dsgen/tools/s_warehouse.c
  #include "scaling.h"
  
 -struct W_WAREHOUSE_TBL g_w_warehouse;
-+struct W_WAREHOUSE_TBL g_s_warehouse;
++extern struct W_WAREHOUSE_TBL g_w_warehouse;
  
  /*
  * Routine: 
-@@ -103,7 +103,7 @@ pr_s_warehouse(void *pSrc)
- 	struct W_WAREHOUSE_TBL *r;
- 
-    if (pSrc == NULL)
--		r = &g_w_warehouse;
-+		r = &g_s_warehouse;
- 	else
- 		r = pSrc;
- 	
-@@ -136,7 +136,7 @@ ld_s_warehouse(void *pSrc)
- 	struct W_WAREHOUSE_TBL *r;
- 		
- 	if (pSrc == NULL)
--		r = &g_w_warehouse;
-+		r = &g_s_warehouse;
- 	else
- 		r = pSrc;
- 	
-Index: dbt7/dsgen/tools/s_web_site.c
-===================================================================
---- dbt7.orig/dsgen/tools/s_web_site.c
-+++ dbt7/dsgen/tools/s_web_site.c
-@@ -48,7 +48,7 @@
- #include "permute.h"
- #include "scd.h"
- 
--struct W_WEB_SITE_TBL g_w_web_site;
-+struct W_WEB_SITE_TBL g_s_web_site;
- 
- 
- /*
-@@ -105,7 +105,7 @@ pr_s_web_site(void *pSrc)
- 	struct W_WEB_SITE_TBL *r;
- 
- 	if (pSrc == NULL)
--		r = &g_w_web_site;
-+		r = &g_s_web_site;
- 	else
- 		r = pSrc;
- 	
-@@ -142,7 +142,7 @@ ld_s_web_site(void *pSrc)
- 	struct W_WEB_SITE_TBL *r;
- 		
- 	if (pSrc == NULL)
--		r = &g_w_web_site;
-+		r = &g_s_web_site;
- 	else
- 		r = pSrc;
- 	
 Index: dbt7/dsgen/tools/s_web_order.c
 ===================================================================
 --- dbt7.orig/dsgen/tools/s_web_order.c
@@ -226,8 +211,8 @@ Index: dbt7/dsgen/tools/s_web_order.c
  struct S_WEB_ORDER_TBL g_s_web_order;
  struct S_WEB_ORDER_LINEITEM_TBL g_s_web_order_lineitem;
  struct S_WEB_RETURNS_TBL g_s_web_return;
--extern int nItemIndex;
-+int nItemIndexWO;
+-int nItemIndex = -1;
++int nItemIndexWO = -1;
  
  	/* now build/print the lineitems for this order */
  	/* for each lineitem, randomly determine if it is to be returned */
@@ -253,9 +238,12 @@ Index: dbt7/dsgen/tools/s_web_order_lineitem.c
 ===================================================================
 --- dbt7.orig/dsgen/tools/s_web_order_lineitem.c
 +++ dbt7/dsgen/tools/s_web_order_lineitem.c
-@@ -53,7 +53,7 @@
+@@ -51,9 +51,9 @@
+ #include "scaling.h"
+ #include "scd.h"
  
- extern struct S_WEB_ORDER_LINEITEM_TBL g_s_web_order_lineitem;
+-struct S_WEB_ORDER_LINEITEM_TBL g_s_web_order_lineitem;
++extern struct S_WEB_ORDER_LINEITEM_TBL g_s_web_order_lineitem;
  extern struct S_WEB_ORDER_TBL g_s_web_order;
 -extern int nItemIndex;
 +extern int nItemIndexWO;
@@ -279,42 +267,16 @@ Index: dbt7/dsgen/tools/s_web_order_lineitem.c
  	r->kItemID = getFirstSK(r->kItemID);
  
  	r->kPromotionID = mk_join(S_WLIN_PROMOTION_ID, PROMOTION, 1);
-Index: dbt7/dsgen/tools/w_catalog_page.c
+Index: dbt7/dsgen/tools/s_web_site.c
 ===================================================================
---- dbt7.orig/dsgen/tools/w_catalog_page.c
-+++ dbt7/dsgen/tools/w_catalog_page.c
-@@ -49,7 +49,7 @@
- #include "nulls.h"
- #include "tdefs.h"
- 
--extern struct CATALOG_PAGE_TBL g_w_catalog_page;
-+struct CATALOG_PAGE_TBL g_w_catalog_page;
- 
- /*
- * Routine: mk_catalog_page()
-Index: dbt7/dsgen/tools/w_warehouse.c
-===================================================================
---- dbt7.orig/dsgen/tools/w_warehouse.c
-+++ dbt7/dsgen/tools/w_warehouse.c
-@@ -50,7 +50,7 @@
- #include "nulls.h"
- #include "tdefs.h"
- 
--extern struct W_WAREHOUSE_TBL g_w_warehouse;
-+struct W_WAREHOUSE_TBL g_w_warehouse;
- 
- /*
- * mk_warehouse
-Index: dbt7/dsgen/tools/w_web_site.c
-===================================================================
---- dbt7.orig/dsgen/tools/w_web_site.c
-+++ dbt7/dsgen/tools/w_web_site.c
-@@ -56,7 +56,7 @@
- #include "tdefs.h"
+--- dbt7.orig/dsgen/tools/s_web_site.c
++++ dbt7/dsgen/tools/s_web_site.c
+@@ -48,7 +48,7 @@
+ #include "permute.h"
  #include "scd.h"
  
--extern struct W_WEB_SITE_TBL g_w_web_site;
-+struct W_WEB_SITE_TBL g_w_web_site;
- static struct W_WEB_SITE_TBL g_OldValues;
+-struct W_WEB_SITE_TBL g_w_web_site;
++extern struct W_WEB_SITE_TBL g_w_web_site;
+ 
  
  /*
