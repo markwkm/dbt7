@@ -41,10 +41,9 @@ display_version()
 		echo "$NAME not found"
 		return
 	fi
-	CMD="$(which "${NAME}") ${FLAG}"
 	echo ""
-	echo "${CMD}"
-	eval "${CMD}"
+	echo "$(which "${NAME}") ${FLAG}"
+	"${NAME}" "${FLAG}"
 }
 
 version()

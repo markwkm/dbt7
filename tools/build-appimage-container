@@ -61,7 +61,7 @@ if [ "${CONTAINER_CMD}" = "podman" ]; then
 fi
 
 cd "${CONTAINER_DIR}/.." && \
-		eval ${CONTAINER_CMD} build \
+		${CONTAINER_CMD} build \
 				${ISOLATION_FLAG} \
 				--build-arg ARCH="${ARCH}" \
 				-t $CONTAINER_TAG \

@@ -64,7 +64,7 @@ if [ "$ARCH" = "" ]; then
 fi
 
 # Apply patches for successful builds on the old CentOS 7 container image
-eval ${CONTAINER_CMD} run \
+${CONTAINER_CMD} run \
 		--rm \
 		-v "${CONTAINER_DIR}/..:/usr/local/src/dbt7:rw,Z" \
 		--env PKG_CONFIG_PATH="/usr/lib/pkgconfig" \

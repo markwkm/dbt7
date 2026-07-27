@@ -145,11 +145,11 @@ echo "**$(date) load test prep**"
 OUTPUTFILE="${OUTPUT_DIR}/output.txt"
 
 # Save dsdgen info.
-eval "${DSTOOLS}/dsdgen \
-		-DISTRIBUTIONS ${DSDISTRIBUTIONS} \
+"${DSTOOLS}/dsdgen" \
+		-DISTRIBUTIONS "${DSDISTRIBUTIONS}" \
 		-TABLE dbgen_version \
-		-DIR $OUTPUT_DIR \
-		-SCALE ${SCALE}" \
+		-DIR "$OUTPUT_DIR" \
+		-SCALE "${SCALE}" \
 		> "${OUTPUT_DIR}/dsdgen.txt" 2>&1 || bailout
 
 # Generate database data if $DS_DATA does not exist
@@ -164,13 +164,13 @@ if [ ! -d "$DS_DATA" ]; then
 	VALDIR="${DS_DATA}/validation"
 	echo "generating validation data in ${VALDIR}"
 	mkdir -p "${VALDIR}"
-	eval "${DSTOOLS}/dsdgen \
-			-DISTRIBUTIONS ${DSDISTRIBUTIONS} \
-			-DIR $VALDIR \
-			-SCALE ${SCALE} \
+	"${DSTOOLS}/dsdgen" \
+			-DISTRIBUTIONS "${DSDISTRIBUTIONS}" \
+			-DIR "$VALDIR" \
+			-SCALE "${SCALE}" \
 			-TERMINATE N \
 			-VALIDATE \
-			-VCOUNT 50" \
+			-VCOUNT 50 \
 			2> /dev/null &
 else
 	echo "skipping data generation, directory exists: ${DS_DATA}"
@@ -185,7 +185,7 @@ eval "dbt7-${DATABASE}-create-db -o ${OUTPUT_DIR} ${PARAMETERS_ARG} \
 		${PRIVILEGED_ARG}" >> "${OUTPUTFILE}" 2>&1 || bailout
 
 dbt7-"${DATABASE}"-drop-tables >> "$OUTPUTFILE" 2>&1 || bailout
-eval "dbt7-${DATABASE}-create-tables ${TABLESPACES_ARG}" \
+dbt7-"${DATABASE}"-create-tables ${TABLESPACES_ARG} \
 		>> "$OUTPUTFILE" 2>&1 || bailout
 
 if [ "${STATS}" -eq 1 ]; then
@@ -201,8 +201,10 @@ echo "**$(date) load test starting**"
 S_TIME=$(date +%s)
 dbt7-"${DATABASE}"-time-statistics -s -n LOADTEST || bailout
 
-eval "$PERFCOMMAND dbt7-${DATABASE}-load-data -s $SCALE ${TABLESPACES_ARG} \
-		${LOAD_ARGS} ${PRIVILEGED_ARG}" >> "${OUTPUTFILE}" 2>&1 || bailout
+# PERFCOMMAND is a simple command prefix, e.g. "perf stat"; shell syntax
+# such as pipes or redirection is not supported.
+${PERFCOMMAND} dbt7-"${DATABASE}"-load-data -s "$SCALE" ${TABLESPACES_ARG} \
+		${LOAD_ARGS} ${PRIVILEGED_ARG} >> "${OUTPUTFILE}" 2>&1 || bailout
 
 dbt7-"${DATABASE}"-time-statistics -e -n LOADTEST || bailout
 E_TIME=$(date +%s)
@@ -225,4 +227,4 @@ fi
 wait
 
 # Run data validation test. Clause 3.5.
-eval "dbt7-${DATABASE}-data-validation" > "${OUTPUT_DIR}/data-validation.txt"
+dbt7-"${DATABASE}"-data-validation > "${OUTPUT_DIR}/data-validation.txt"

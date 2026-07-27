@@ -297,7 +297,7 @@ System Statistics
 ${LOAD_SAR_SECTION}
 ${POWER_SAR_SECTION}
 ${THROUGHPUT_SAR_SECTION}
-$(eval "dbt7 ${DBMS}-report -i ${INDIR} ${PLOT_DBSTATS_FLAG}")
+$(dbt7 "${DBMS}-report" -i "${INDIR}" ${PLOT_DBSTATS_FLAG})
 __EOF__
 
 #

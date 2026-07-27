@@ -250,17 +250,17 @@ if [ ${PROFILE} -eq 1 ]; then
 fi
 
 S_TIME=$(date +%s.%N)
-OUTPUT="$(eval "${DBCMD}" <<- __EOF__ 2>&1
-	$(eval "${DSTOOLS}/dsqgen \
+OUTPUT="$(${DBCMD} <<- __EOF__ 2>&1
+	$("${DSTOOLS}/dsqgen" \
 			${DIALECT_ARG} \
-			-DIRECTORY ${DSQUERY} \
-			-DISTRIBUTIONS ${DSDISTRIBUTIONS} \
+			-DIRECTORY "${DSQUERY}" \
+			-DISTRIBUTIONS "${DSDISTRIBUTIONS}" \
 			-FILTER Y \
 			-QUIET Y \
-			-SCALE ${SCALE} \
+			-SCALE "${SCALE}" \
 			-STREAMS 1 \
-			-TEMPLATE ${TEMPLATE} \
-			${RNGSEED_ARG}")
+			-TEMPLATE "${TEMPLATE}" \
+			${RNGSEED_ARG})
 __EOF__
 )"
 E_TIME=$(date +%s.%N)

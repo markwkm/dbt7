@@ -55,13 +55,13 @@ run_data_maintenance()
 
 	echo "**$(date) data maintenance test $NUM starting**"
 	S_TIME_POWER=$(date +%s)
-	eval "dbt7-${DATABASE}-time-statistics -s -n DATAMAINT${NUM}"
+	dbt7-"${DATABASE}"-time-statistics -s -n "DATAMAINT${NUM}"
 	for I in $(seq ${STREAM_START} ${STREAM_END}); do
-	   eval "dbt7-${DATABASE}-data-maintenance -i ${OUTPUT_DIR}/.. \
-				-o ${OUTPUT_DIR} -n $I ${PRIVILEGED_ARG}" \
+		dbt7-"${DATABASE}"-data-maintenance -i "${OUTPUT_DIR}/.." \
+				-o "${OUTPUT_DIR}" -n "$I" ${PRIVILEGED_ARG} \
 				> "${OUTPUT_DIR}/dm_${I}".txt 2>&1
 	done
-	eval "dbt7-${DATABASE}-time-statistics -e -n DATAMAINT${NUM}"
+	dbt7-"${DATABASE}"-time-statistics -e -n "DATAMAINT${NUM}"
 	E_TIME_POWER=$(date +%s)
 	DIFF_TIME=$(( E_TIME_POWER - S_TIME_POWER ))
 	echo "**$(date) data maintenance test ${NUM} completed (${DIFF_TIME} seconds)**"
@@ -207,12 +207,12 @@ fi
 RNGSEED_ARG="-RNGSEED ${SEED}"
 
 # Save dsdgen info.
-eval "${DSTOOLS}/dsdgen \
-		-DISTRIBUTIONS ${DSDISTRIBUTIONS} \
+"${DSTOOLS}/dsdgen" \
+		-DISTRIBUTIONS "${DSDISTRIBUTIONS}" \
 		-TABLE dbgen_version \
-		-DIR $OUTPUT_DIR \
-		-SCALE $SCALE \
-		${RNGSEED_ARG}" \
+		-DIR "$OUTPUT_DIR" \
+		-SCALE "$SCALE" \
+		${RNGSEED_ARG} \
 		> "${OUTPUT_DIR}/dsdgen.txt" 2>&1 || exit 1
 
 TOTAL_STREAMS=$(( (STREAMS * 2) + 1 ))
@@ -246,16 +246,16 @@ for J in $(seq 1 $(( STREAMS * 2 ))); do
 	DMDIR=${DS_DATA}/${J}
 	mkdir -p "${DMDIR}"
 	for I in $(seq 1 $CPUS); do
-		eval "${DSTOOLS}/dsdgen \
-				-DISTRIBUTIONS ${DSDISTRIBUTIONS} \
-				-DIR $DMDIR \
-				-SCALE $SCALE \
-				-UPDATE $J \
+		"${DSTOOLS}/dsdgen" \
+				-DISTRIBUTIONS "${DSDISTRIBUTIONS}" \
+				-DIR "$DMDIR" \
+				-SCALE "$SCALE" \
+				-UPDATE "$J" \
 				${PARALLEL_ARG} \
-				-CHILD $I \
+				-CHILD "$I" \
 				-TERMINATE N \
 				-FORCE Y \
-				${RNGSEED_ARG}" \
+				${RNGSEED_ARG} \
 				2> /dev/null &
 	done
 	wait

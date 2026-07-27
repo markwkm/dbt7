@@ -126,14 +126,16 @@ fi
 for I in $(seq 1 "${CHUNKS}"); do
 	if [ "${CHUNKS}" -gt 1 ]; then
 		LOOP_DSGEN_ARGS="${DSGEN_ARGS} -CHILD ${I}"
+	else
+		LOOP_DSGEN_ARGS="${DSGEN_ARGS}"
 	fi
 
-	eval "${DSHOME}/tools/dsdgen \
-			-DISTRIBUTIONS ${DSDISTRIBUTIONS} \
-			-DIR ${DIRECTORY} \
-			-SCALE ${SCALE} \
+	"${DSHOME}/tools/dsdgen" \
+			-DISTRIBUTIONS "${DSDISTRIBUTIONS}" \
+			-DIR "${DIRECTORY}" \
+			-SCALE "${SCALE}" \
 			-TERMINATE N \
-			${LOOP_DSGEN_ARGS}" \
+			${LOOP_DSGEN_ARGS} \
 			> "${DIRECTORY}/dsdgen-${I}.out" 2>&1 &
 done
 wait

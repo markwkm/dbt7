@@ -165,31 +165,31 @@ fi
 
 if [ ${SPLIT} -eq 0 ]; then
 	# Generate the queries.  Clause 4.3.2
-	eval "${DSHOME}/tools/dsqgen \
-			-DISTRIBUTIONS ${DSDISTRIBUTIONS} \
-			-DIALECT ${DIALECT} \
-			-OUTPUT_DIR ${DIRECTORY} \
-			-SCALE ${SCALE} \
-			-DIRECTORY ${DSHOME}/query_templates \
-			-STREAMS ${STREAMS} \
-			-LOG ${DIRECTORY}/query-parameter.log \
-			${QGEN_ARGS}" \
+	"${DSHOME}/tools/dsqgen" \
+			-DISTRIBUTIONS "${DSDISTRIBUTIONS}" \
+			-DIALECT "${DIALECT}" \
+			-OUTPUT_DIR "${DIRECTORY}" \
+			-SCALE "${SCALE}" \
+			-DIRECTORY "${DSHOME}/query_templates" \
+			-STREAMS "${STREAMS}" \
+			-LOG "${DIRECTORY}/query-parameter.log" \
+			${QGEN_ARGS} \
 			> "${DIRECTORY}/dsqgen.txt" 2>&1 || exit 1
 else
 	# This is not to spec
 	while IFS= read -r TEMPLATE; do
 		NUMBER=$(echo "${TEMPLATE}" | grep -o '[0-9]\+')
-		eval "${DSHOME}/tools/dsqgen \
-				-DISTRIBUTIONS ${DSDISTRIBUTIONS} \
-				-DIALECT ${DIALECT} \
-				-OUTPUT_DIR ${DIRECTORY} \
-				-SCALE ${SCALE} \
-				-DIRECTORY ${DSHOME}/query_templates \
-				-STREAMS ${STREAMS} \
-				-LOG ${DIRECTORY}/query${NUMBER}-parameter.log \
+		"${DSHOME}/tools/dsqgen" \
+				-DISTRIBUTIONS "${DSDISTRIBUTIONS}" \
+				-DIALECT "${DIALECT}" \
+				-OUTPUT_DIR "${DIRECTORY}" \
+				-SCALE "${SCALE}" \
+				-DIRECTORY "${DSHOME}/query_templates" \
+				-STREAMS "${STREAMS}" \
+				-LOG "${DIRECTORY}/query${NUMBER}-parameter.log" \
 				-FILTER Y \
-				-TEMPLATE ${TEMPLATE} \
-				${QGEN_ARGS}" \
+				-TEMPLATE "${TEMPLATE}" \
+				${QGEN_ARGS} \
 				> "${DIRECTORY}/query${NUMBER}.sql" \
 				2> "${DIRECTORY}/dsqgen.txt" || exit 1
 	done < "${INPUT}"

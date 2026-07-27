@@ -52,4 +52,4 @@ while [ "${#}" -gt 0 ]; do
 	shift
 done
 
-eval "gpstart -v -w -D ${DBT7PGDATA} ${LOG_FLAG}"
+gpstart -v -w -D "${DBT7PGDATA}" ${LOG_FLAG}

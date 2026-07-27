@@ -140,12 +140,12 @@ fi
 RNGSEED_ARG="-RNGSEED ${SEED}"
 
 # Save dsdgen info.
-eval "${DSTOOLS}/dsdgen \
-		-DISTRIBUTIONS ${DSDISTRIBUTIONS} \
+"${DSTOOLS}/dsdgen" \
+		-DISTRIBUTIONS "${DSDISTRIBUTIONS}" \
 		-TABLE dbgen_version \
-		-DIR $OUTPUT_DIR \
-		-SCALE $SCALE \
-		${RNGSEED_ARG}" \
+		-DIR "$OUTPUT_DIR" \
+		-SCALE "$SCALE" \
+		${RNGSEED_ARG} \
 		> "${OUTPUT_DIR}/dsdgen.txt" 2>&1 || exit 1
 
 dbt7-generate-queries \

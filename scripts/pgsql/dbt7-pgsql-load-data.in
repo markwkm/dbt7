@@ -192,7 +192,7 @@ dbt7-pgsql-time-statistics -e -n TABLE
 dbt7-pgsql-time-statistics -s -n INDEX
 # The Greenplum scripts reuse this script with DATABASE=gp so that the
 # Greenplum version of the index creation script is used.
-eval "dbt7-${DATABASE:-pgsql}-create-indexes ${TABLESPACES_ARG}" || exit 1
+dbt7-"${DATABASE:-pgsql}"-create-indexes ${TABLESPACES_ARG} || exit 1
 dbt7-pgsql-time-statistics -e -n INDEX
 
 dbt7-pgsql-time-statistics -s -n ANALYZE
