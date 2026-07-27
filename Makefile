@@ -14,26 +14,26 @@ default:
 appimage:
 	cmake --preset appimage
 	cmake --build --preset appimage --target install -- DESTDIR=../AppDir
-	rm -rf builds/AppDir/opt/dsgen
-	mkdir -p builds/AppDir/opt
-	cp -a builds/appimage/dsgen builds/AppDir/opt/dsgen
-	builds/AppDir/usr/bin/dbt7-build-dsgen --patch-dir=patches \
-			builds/AppDir/opt/dsgen
-	sed -i -e "s#/usr#././#g" builds/AppDir/opt/dsgen/tools/dsdgen \
-			builds/AppDir/opt/dsgen/tools/dsqgen
-	cd builds/appimage && $(MAKE) DBMS=$(DBMS) appimage
+	rm -rf build/AppDir/opt/dsgen
+	mkdir -p build/AppDir/opt
+	cp -a build/appimage/dsgen build/AppDir/opt/dsgen
+	build/AppDir/usr/bin/dbt7-build-dsgen --patch-dir=patches \
+			build/AppDir/opt/dsgen
+	sed -i -e "s#/usr#././#g" build/AppDir/opt/dsgen/tools/dsdgen \
+			build/AppDir/opt/dsgen/tools/dsqgen
+	cd build/appimage && $(MAKE) DBMS=$(DBMS) appimage
 
 clean:
-	-rm -rf builds
+	-rm -rf build
 
 debug:
 	cmake --preset debug
 	cmake --build --preset debug
 
 package:
-	git checkout-index --prefix=builds/source/ -a
-	cmake -Hbuilds/source -Bbuild/package
-	cd builds/package && $(MAKE) package_source
+	git checkout-index --prefix=build/source/ -a
+	cmake -Hbuild/source -Bbuild/package
+	cd build/package && $(MAKE) package_source
 
 release:
 	cmake --preset release
@@ -41,4 +41,4 @@ release:
 
 test:
 	cmake --preset debug
-	ctest --test-dir builds/debug --output-on-failure
+	ctest --test-dir build/debug --output-on-failure

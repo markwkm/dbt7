@@ -32,7 +32,7 @@ Installing
 
 ::
 
-	cd builds/release
+	cd build/release
 	cmake --install . --prefix /usr/local
 
 Uninstalling

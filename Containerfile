@@ -49,9 +49,9 @@ refs/tags/v${DBTTOOLSVER}.tar.gz && \
     tar -C /usr/local/src \
         -xf /tmp/v${DBTTOOLSVER}.tar.gz && \
     cd /usr/local/src/dbttools-${DBTTOOLSVER} && \
-    cmake -H. -Bbuilds/release \
+    cmake -H. -Bbuild/release \
           -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    cd builds/release && make -s install && \
+    cd build/release && make -s install && \
     rm -f /tmp/v${DBTTOOLSVER}.tar.gz
 
 # Install Touchstone Tools.
@@ -70,9 +70,9 @@ touchstone-tools-v${TSTOOLSVER}.tar.gz && \
         --strip-components=1 \
         -xf /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz && \
     cd /usr/local/src/touchstone-tools-v${TSTOOLSVER} && \
-    cmake -H. -Bbuilds/release \
+    cmake -H. -Bbuild/release \
           -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    cd builds/release && make -s install && \
+    cd build/release && make -s install && \
     cd /usr/local/src/touchstone-tools-v${TSTOOLSVER}/spar \
     && ${HOME}/.cargo/bin/cargo install \
        --root /usr/local --path . && \
@@ -82,15 +82,15 @@ touchstone-tools-v${TSTOOLSVER}.tar.gz && \
 COPY . /usr/local/src/dbt7
 WORKDIR /usr/local/src/dbt7
 
-RUN cmake -H. -Bbuilds/release \
+RUN cmake -H. -Bbuild/release \
           -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    cd builds/release && make -s install
+    cd build/release && make -s install
 
 # Build the TPC-DS Tools.
 RUN dbt7-build-dsgen --patch-dir=patches \
-        builds/release/dsgen
+        build/release/dsgen
 
-ENV DSHOME=/usr/local/src/dbt7/builds/release/dsgen
+ENV DSHOME=/usr/local/src/dbt7/build/release/dsgen
 ENV DS_DATA=/scratch/dbt7data
 ENV DBT7DBNAME=dbt7
 

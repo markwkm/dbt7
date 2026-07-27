@@ -76,5 +76,5 @@ if [ "${CONTAINER_CMD}" = "docker" ]; then
 			-v "${CONTAINER_DIR}/..:/usr/local/src/dbt7:rw,Z" \
 			-w /usr/local/src/dbt7 \
 			${CONTAINER_TAG} \
-			chown -R "$(id -u):$(id -g)" builds
+			chown -R "$(id -u):$(id -g)" build
 fi

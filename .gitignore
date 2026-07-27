@@ -23,7 +23,7 @@ CPackSourceConfig.cmake
 *.gz
 *.bz2
 
-builds/
+build/
 
 # quilt
 patches/*~

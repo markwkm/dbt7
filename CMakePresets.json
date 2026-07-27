@@ -12,21 +12,21 @@
     },
     {
       "name": "appimage",
-      "binaryDir": "${sourceDir}/builds/appimage",
+      "binaryDir": "${sourceDir}/build/appimage",
       "cacheVariables": {
         "CMAKE_INSTALL_PREFIX": "/usr"
       }
     },
     {
       "name": "debug",
-      "binaryDir": "${sourceDir}/builds/debug",
+      "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
       "name": "release",
-      "binaryDir": "${sourceDir}/builds/release",
+      "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
