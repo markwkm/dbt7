@@ -55,6 +55,7 @@ ALTER TABLE $TABLE
 SET (autovacuum_enabled = false, toast.autovacuum_enabled = false);
 __EOF__
 
+	JOBS=""
 	for I in $(seq 1 ${CPUS}); do
 		FILENAME="${DS_DATA}/${STREAM}/${TABLE}_${I}_${CPUS}.dat"
 		if [ ! -f "$FILENAME" ]; then
@@ -68,9 +69,17 @@ __EOF__
 		$PSQL << __EOF__ &
 ${COPYPREFIX}COPY $TABLE FROM '$FILENAME' WITH (DELIMITER '|', NULL '');
 __EOF__
+		JOBS="${JOBS} ${!}"
 	done
 
-	wait
+	RC=0
+	for JOB in ${JOBS}; do
+		wait "${JOB}" || RC=1
+	done
+	if [ "${RC}" -ne 0 ]; then
+		echo "ERROR: could not load table ${TABLE}"
+		exit 1
+	fi
 
 	$PSQL << __EOF__
 ALTER TABLE $TABLE

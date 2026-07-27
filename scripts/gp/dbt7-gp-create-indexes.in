@@ -22,7 +22,7 @@ EOF
 
 create_call_center_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_call_center
 		ON call_center (cc_call_center_sk)
 		WITH (fillfactor = 100)
@@ -45,7 +45,7 @@ create_call_center_indexes()
 
 create_catalog_page_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_catalog_page
 		ON catalog_page (cp_catalog_page_sk)
 		WITH (fillfactor = 100)
@@ -74,7 +74,7 @@ create_catalog_page_indexes()
 
 create_catalog_returns_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_catalog_returns
 		ON catalog_returns (cr_item_sk, cr_order_number)
 		WITH (fillfactor = 100)
@@ -91,7 +91,7 @@ create_catalog_returns_indexes()
 
 create_catalog_sales_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_catalog_sales
 		ON catalog_sales (cs_item_sk, cs_order_number)
 		WITH (fillfactor = 100)
@@ -108,7 +108,7 @@ create_catalog_sales_indexes()
 
 create_customer_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_customer
 		ON customer (c_customer_sk)
 		WITH (fillfactor = 100)
@@ -125,7 +125,7 @@ create_customer_indexes()
 
 create_date_dim()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_date_dim
 		ON date_dim (d_date_sk)
 		WITH (fillfactor = 100)
@@ -142,7 +142,7 @@ create_date_dim()
 
 create_item_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_item
 		ON item (i_item_sk)
 		WITH (fillfactor = 100)
@@ -165,7 +165,7 @@ create_item_indexes()
 
 create_promotion_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_promotion
 		ON promotion (p_promo_sk)
 		WITH (fillfactor = 100)
@@ -182,7 +182,7 @@ create_promotion_indexes()
 
 create_reason_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_reason
 		ON reason (r_reason_sk)
 		WITH (fillfactor = 100)
@@ -199,7 +199,7 @@ create_reason_indexes()
 
 create_s_catalog_order_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_s_catalog_order
 		ON s_catalog_order (cord_order_id)
 		WITH (fillfactor = 100)
@@ -240,7 +240,7 @@ create_s_catalog_order_indexes()
 
 create_s_catalog_order_lineitem_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE INDEX i_clin_ship_date
 		ON s_catalog_order_lineitem (clin_ship_date)
 		WITH (fillfactor = 100)
@@ -287,7 +287,7 @@ create_s_catalog_order_lineitem_indexes()
 
 create_s_inventory_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_s_inventory
 		ON s_inventory (invn_warehouse_id, invn_item_id, invn_date)
 		WITH (fillfactor = 100)
@@ -310,7 +310,7 @@ create_s_inventory_indexes()
 
 create_s_purchase_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_s_purchase
 		ON s_purchase (purc_purchase_id)
 		WITH (fillfactor = 100)
@@ -345,7 +345,7 @@ create_s_purchase_indexes()
 
 create_s_purchase_lineitem_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_s_purchase_lineitem
 		ON s_purchase_lineitem (plin_purchase_id, plin_line_number)
 		WITH (fillfactor = 100)
@@ -374,7 +374,7 @@ create_s_purchase_lineitem_indexes()
 
 create_s_store_returns_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_s_store_returns
 		ON s_store_returns (sret_purchase_id, sret_line_number, sret_item_id)
 		WITH (fillfactor = 100)
@@ -409,7 +409,7 @@ create_s_store_returns_indexes()
 
 create_s_web_returns_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_s_web_returns
 		ON s_web_returns (wret_order_id, wret_line_number, wret_item_id)
 		WITH (fillfactor = 100)
@@ -432,7 +432,7 @@ create_s_web_returns_indexes()
 
 create_s_web_order_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_s_web_order
 		ON s_web_order (word_order_id)
 		WITH (fillfactor = 100)
@@ -455,7 +455,7 @@ create_s_web_order_indexes()
 
 create_s_web_order_lineitem_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE INDEX i_wlin_warehouse_id
 		ON s_web_order_lineitem (wlin_warehouse_id)
 		WITH (fillfactor = 100)
@@ -490,7 +490,7 @@ create_s_web_order_lineitem_indexes()
 
 create_ship_mode_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_ship_mode
 		ON ship_mode (sm_ship_mode_sk)
 		WITH (fillfactor = 100)
@@ -507,7 +507,7 @@ create_ship_mode_indexes()
 
 create_store_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_store
 		ON store (s_store_sk)
 		WITH (fillfactor = 100)
@@ -524,7 +524,7 @@ create_store_indexes()
 
 create_store_returns_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_store_returns
 		ON store_returns (sr_item_sk, sr_ticket_number)
 		WITH (fillfactor = 100)
@@ -541,7 +541,7 @@ create_store_returns_indexes()
 
 create_store_sales_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_store_sales
 		ON store_sales (ss_item_sk, ss_ticket_number)
 		WITH (fillfactor = 100)
@@ -558,7 +558,7 @@ create_store_sales_indexes()
 
 create_web_returns_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_web_returns
 		ON web_returns (wr_item_sk, wr_order_number)
 		WITH (fillfactor = 100)
@@ -575,7 +575,7 @@ create_web_returns_indexes()
 
 create_time_dim_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_time_dim
 		ON time_dim (t_time_sk)
 		WITH (fillfactor = 100)
@@ -592,7 +592,7 @@ create_time_dim_indexes()
 
 create_warehouse_indexes()
 {
-	${PSQL} <<- EOF &
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_warehouse
 		ON warehouse (w_warehouse_sk)
 		WITH (fillfactor = 100)
@@ -609,7 +609,7 @@ create_warehouse_indexes()
 
 create_web_page_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_web_page
 		ON web_page (wp_web_page_sk)
 		WITH (fillfactor = 100)
@@ -626,7 +626,7 @@ create_web_page_indexes()
 
 create_web_sales_indexes()
 {
-	${PSQL} <<- EOF
+	psql_job <<- EOF
 		CREATE UNIQUE INDEX pk_web_sales
 		ON web_sales (ws_item_sk, ws_order_number)
 		WITH (fillfactor = 100)
@@ -671,6 +671,15 @@ if [ -z "${DBT7DBNAME}" ]; then
 fi
 
 PSQL="psql -X -A -t -d ${DBT7DBNAME}"
+
+FAILDIR=$(mktemp -d)
+
+# Run psql with the statements provided on stdin, flagging any failure
+# so the script can exit non-zero after all background jobs finish.
+psql_job()
+{
+	${PSQL} -v ON_ERROR_STOP=1 || touch "${FAILDIR}/failed"
+}
 
 if [ ${TABLESPACES} -eq 1 ]; then
 	PK_STORE_SALES_DIR="${DBT7TSDIR}/pk_store_sales/ts"
@@ -1054,7 +1063,7 @@ create_warehouse_indexes &
 create_web_page_indexes &
 create_web_sales_indexes &
 
-${PSQL} <<- EOF &
+psql_job <<- EOF &
 	CREATE UNIQUE INDEX pk_inventory
 	ON inventory (inv_date_sk, inv_item_sk, inv_warehouse_sk)
 	WITH (fillfactor = 100)
@@ -1062,7 +1071,7 @@ ${PSQL} <<- EOF &
 	;
 EOF
 
-${PSQL} <<- EOF &
+psql_job <<- EOF &
 	CREATE UNIQUE INDEX pk_web_site
 	ON web_site (web_site_sk)
 	WITH (fillfactor = 100)
@@ -1070,7 +1079,7 @@ ${PSQL} <<- EOF &
 	;
 EOF
 
-${PSQL} <<- EOF &
+psql_job <<- EOF &
 	CREATE UNIQUE INDEX pk_customer_address
 	ON customer_address (ca_address_sk)
 	WITH (fillfactor = 100)
@@ -1078,7 +1087,7 @@ ${PSQL} <<- EOF &
 	;
 EOF
 
-${PSQL} <<- EOF &
+psql_job <<- EOF &
 	CREATE UNIQUE INDEX pk_customer_demographics
 	ON customer_demographics (cd_demo_sk)
 	WITH (fillfactor = 100)
@@ -1086,7 +1095,7 @@ ${PSQL} <<- EOF &
 	;
 EOF
 
-${PSQL} <<- EOF &
+psql_job <<- EOF &
 	CREATE UNIQUE INDEX pk_household_demographics
 	ON household_demographics (hd_demo_sk)
 	WITH (fillfactor = 100)
@@ -1094,7 +1103,7 @@ ${PSQL} <<- EOF &
 	;
 EOF
 
-${PSQL} <<- EOF &
+psql_job <<- EOF &
 	CREATE UNIQUE INDEX pk_income_band
 	ON income_band (ib_income_band_sk)
 	WITH (fillfactor = 100)
@@ -1103,3 +1112,10 @@ ${PSQL} <<- EOF &
 EOF
 
 wait
+
+if [ -f "${FAILDIR}/failed" ]; then
+	rm -rf "${FAILDIR}"
+	echo "ERROR: not all indexes could be created"
+	exit 1
+fi
+rm -rf "${FAILDIR}"

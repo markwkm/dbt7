@@ -54,12 +54,16 @@ __EOF__
 		COPYPREFIX="\\"
 	fi
 
+	JOBS=""
 	FILENAME="${DS_DATA}/${TABLE}.dat"
 	if [ -f "${FILENAME}" ]; then
 		# Unchunked data generation creates a single file per table;
 		# split it into a stream per processor.
 		TOTAL_ROWS="$(wc -l "${FILENAME}" | cut -d " " -f 1)"
-		if [ "${TOTAL_ROWS}" -lt "${CPUS}" ]; then
+		if [ "${TOTAL_ROWS}" -eq 0 ]; then
+			# Nothing to load, but avoid dividing by zero below.
+			ROWS_PER_COMMIT=1
+		elif [ "${TOTAL_ROWS}" -lt "${CPUS}" ]; then
 			ROWS_PER_COMMIT=${TOTAL_ROWS}
 		else
 			ROWS_PER_COMMIT=$(( TOTAL_ROWS / CPUS ))
@@ -70,6 +74,7 @@ __EOF__
 			$PSQL << __EOF__ &
 ${COPYPREFIX}COPY ${TABLE} FROM PROGRAM 'split -n l/${I}/${N} ${FILENAME}' WITH (DELIMITER '|', NULL '');
 __EOF__
+			JOBS="${JOBS} ${!}"
 		done
 	else
 		# Chunked data generation creates a file per dsdgen child
@@ -88,6 +93,7 @@ __EOF__
 			$PSQL << __EOF__ &
 ${COPYPREFIX}COPY ${TABLE} FROM '${FILENAME}' WITH (DELIMITER '|', NULL '');
 __EOF__
+			JOBS="${JOBS} ${!}"
 		done
 		if [ "${N}" -eq 0 ]; then
 			echo "ERROR: no data files for table ${TABLE} in" \
@@ -96,7 +102,14 @@ __EOF__
 		fi
 	fi
 
-	wait
+	RC=0
+	for JOB in ${JOBS}; do
+		wait "${JOB}" || RC=1
+	done
+	if [ "${RC}" -ne 0 ]; then
+		echo "ERROR: could not load table ${TABLE}"
+		exit 1
+	fi
 
 	$PSQL << __EOF__
 ALTER TABLE $TABLE
@@ -177,7 +190,9 @@ for T in store_sales store_returns catalog_sales catalog_returns web_sales \
 done
 dbt7-pgsql-time-statistics -e -n TABLE
 dbt7-pgsql-time-statistics -s -n INDEX
-eval "dbt7-${DATABASE}-create-indexes ${TABLESPACES_ARG}"
+# The Greenplum scripts reuse this script with DATABASE=gp so that the
+# Greenplum version of the index creation script is used.
+eval "dbt7-${DATABASE:-pgsql}-create-indexes ${TABLESPACES_ARG}" || exit 1
 dbt7-pgsql-time-statistics -e -n INDEX
 
 dbt7-pgsql-time-statistics -s -n ANALYZE
