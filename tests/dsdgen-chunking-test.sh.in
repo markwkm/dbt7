@@ -1,14 +1,19 @@
 #!/bin/sh
 @SHELLOPTIONS@
 
-DSGEN=${DSGEN:-@CMAKE_SOURCE_DIR@/DSGen-software-code-4.0.0_final}
+DSGEN=${DSGEN:-@DSGEN_SOURCE_DIR@}
 if [ ! -d "${DSGEN}" ]; then
 	echo "ERROR: DSGEN directory does not exist: ${DSGEN}"
 	exit 1
 fi
+DSGEN=$(CDPATH="" cd -- "${DSGEN}" && pwd)
+
+PATCHES=${PATCHES:-@CMAKE_SOURCE_DIR@/patches}
+APPLY_PATCHES=${APPLY_PATCHES:-1}
 
 if [ -n "$1" ]; then
-	TMPDIR=$1
+	mkdir -p "$1"
+	TMPDIR=$(CDPATH="" cd -- "$1" && pwd)
 	CLEANUP=0
 else
 	TMPDIR=$(mktemp -d)
@@ -16,7 +21,25 @@ else
 fi
 
 CHUNKS=${CHUNKS:-2}
-SCALE=${SCALE:-1}
+
+# dsdgen's split_work() only chunks a table when its rowcount is at
+# least 1,000,000; smaller tables are written in their entirety by
+# child 1, so chunking them cannot be tested at any scale factor.  For
+# sales tables the rowcount is the number of orders (tickets), not
+# output lines.  Test each chunkable table at the smallest official
+# scale factor where it crosses the threshold, using -TABLE to avoid
+# generating the rest of the database.  Parent tables also emit their
+# returns tables, which are validated as well.
+DEFAULT_TABLES="
+customer_demographics:1
+inventory:1
+catalog_sales:10
+store_sales:10
+customer:100
+customer_address:100
+web_sales:100
+"
+TABLES=${TABLES:-${DEFAULT_TABLES}}
 
 # shellcheck disable=SC2317,SC2329
 cleanup() {
@@ -28,85 +51,169 @@ trap cleanup EXIT
 
 set -e
 
-# Check if data directories already exist
-SKIP_GENERATE=0
-if [ -d "${TMPDIR}/sf${SCALE}.0" ]; then
+# Make sure the dsgen tree has the DBT-7 patch series applied before
+# building.  quilt tracks its state in ${DSGEN}/.pc: if that is absent,
+# require a pristine git tree so the series is never applied on top of
+# unknown local modifications.  The patches strip a leading "dbt7/"
+# path component, so the tree must be in a directory named "dsgen" and
+# quilt runs from its parent, mirroring the layout of the dbt7
+# repository.  GNU patch does not traverse symlinked directories, so
+# a staging directory cannot fake that layout.  Set APPLY_PATCHES=0 to
+# test the tree exactly as it stands.
+if [ "${APPLY_PATCHES}" -eq 1 ]; then
+	if ! command -v quilt > /dev/null 2>&1; then
+		echo "ERROR: quilt is required to apply the dsgen patch" \
+			"series"
+		exit 1
+	fi
+	if [ ! -f "${PATCHES}/series" ]; then
+		echo "ERROR: patch series does not exist:" \
+			"${PATCHES}/series"
+		exit 1
+	fi
+	if [ "$(basename "${DSGEN}")" != "dsgen" ]; then
+		echo "ERROR: the patch series requires the dsgen tree" \
+			"to be in a directory named \"dsgen\":" \
+			"${DSGEN}"
+		exit 1
+	fi
+
+	if [ ! -d "${DSGEN}/.pc" ]; then
+		if ! GITSTATUS=$(git -C "${DSGEN}" status --porcelain \
+				--untracked-files=no 2>&1); then
+			echo "ERROR: cannot verify ${DSGEN} is pristine:"
+			echo "${GITSTATUS}"
+			exit 1
+		fi
+		if [ -n "${GITSTATUS}" ]; then
+			echo "ERROR: ${DSGEN} has local modifications" \
+				"but no quilt state (.pc); restore the" \
+				"tree or set APPLY_PATCHES=0 to test it" \
+				"as is"
+			exit 1
+		fi
+	fi
+
+	RC=0
+	(cd "$(dirname "${DSGEN}")" && \
+		QUILTRC=/dev/null QUILT_PC="${DSGEN}/.pc" \
+		QUILT_PATCHES="${PATCHES}" \
+		quilt push -a) || RC=$?
+	if [ "${RC}" -ne 0 ] && [ "${RC}" -ne 2 ]; then
+		echo "ERROR: quilt failed to apply the dsgen patch series"
+		exit 1
+	fi
+fi
+
+# Generate baseline and chunked data for any table whose directories do
+# not already exist, all concurrently.  Directory layout per table:
+# ${TABLE}-sf${SCALE}.0 holds the unchunked baseline and
+# ${TABLE}-sf${SCALE}.1 .. ${CHUNKS} hold one child's output each.
+BUILT=0
+for SPEC in ${TABLES}; do
+	TABLE=${SPEC%%:*}
+	SCALE=${SPEC#*:}
+
 	SKIP_GENERATE=1
-	CHUNK=1
+	CHUNK=0
 	while [ "${CHUNK}" -le "${CHUNKS}" ]; do
-		if [ ! -d "${TMPDIR}/sf${SCALE}.${CHUNK}" ]; then
+		if [ ! -d "${TMPDIR}/${TABLE}-sf${SCALE}.${CHUNK}" ]; then
 			SKIP_GENERATE=0
 			break
 		fi
 		CHUNK=$((CHUNK + 1))
 	done
-fi
-
-if [ "${SKIP_GENERATE}" -eq 1 ]; then
-	echo "Data directories already exist, skipping data generation"
-else
-	# Build dsdgen
-	cd "${DSGEN}/tools"
-	make -f makefile
-
-	# Create data directories
-	mkdir -p "${TMPDIR}/sf${SCALE}.0"
-	CHUNK=1
-	while [ "${CHUNK}" -le "${CHUNKS}" ]; do
-		mkdir -p "${TMPDIR}/sf${SCALE}.${CHUNK}"
-		CHUNK=$((CHUNK + 1))
-	done
-
-	# Generate unchunked data
-	./dsdgen -DIR "${TMPDIR}/sf${SCALE}.0" -SCALE "${SCALE}" -TERMINATE N \
-		-RNGSEED 0 &
-
-	# Generate chunked data
-	CHUNK=1
-	while [ "${CHUNK}" -le "${CHUNKS}" ]; do
-		./dsdgen -DIR "${TMPDIR}/sf${SCALE}.${CHUNK}" \
-			-SCALE "${SCALE}" -TERMINATE N -RNGSEED 0 \
-			-PARALLEL "${CHUNKS}" -CHILD "${CHUNK}" &
-		CHUNK=$((CHUNK + 1))
-	done
-
-	wait
-fi
-
-# Compare line counts
-FAILED=0
-
-for FILE in "${TMPDIR}/sf${SCALE}.0"/*.dat; do
-	BASENAME=$(basename "${FILE}" .dat)
-
-	# Skip dbgen_version.dat, it's not table data
-	if [ "${BASENAME}" = "dbgen_version" ]; then
+	if [ "${SKIP_GENERATE}" -eq 1 ]; then
+		echo "${TABLE} data directories already exist," \
+			"skipping data generation"
 		continue
 	fi
 
-	# Count lines in unchunked file
-	LINES=$(wc -l < "${FILE}")
+	# Build dsdgen
+	if [ "${BUILT}" -eq 0 ]; then
+		cd "${DSGEN}/tools"
+		make -f makefile
+		BUILT=1
+	fi
 
-	# Count lines in chunked files (pattern: tablename_chunk_chunks.dat)
-	CHUNKED_LINES=0
+	mkdir -p "${TMPDIR}/${TABLE}-sf${SCALE}.0"
+	{ "${DSGEN}/tools/dsdgen" -TABLE "${TABLE}" \
+		-DISTRIBUTIONS "${DSGEN}/tools/tpcds.idx" \
+		-DIR "${TMPDIR}/${TABLE}-sf${SCALE}.0" \
+		-SCALE "${SCALE}" -TERMINATE N -RNGSEED 0 \
+		|| touch "${TMPDIR}/${TABLE}-sf${SCALE}.failed"; } &
+
 	CHUNK=1
 	while [ "${CHUNK}" -le "${CHUNKS}" ]; do
-		PFILE="${TMPDIR}/sf${SCALE}.${CHUNK}"
-		PFILE="${PFILE}/${BASENAME}_${CHUNK}_${CHUNKS}.dat"
-		if [ -f "${PFILE}" ]; then
-			PCOUNT=$(wc -l < "${PFILE}")
-			CHUNKED_LINES=$(( CHUNKED_LINES + PCOUNT ))
-		fi
-		CHUNK=$(( CHUNK + 1 ))
+		mkdir -p "${TMPDIR}/${TABLE}-sf${SCALE}.${CHUNK}"
+		{ "${DSGEN}/tools/dsdgen" -TABLE "${TABLE}" \
+			-DISTRIBUTIONS "${DSGEN}/tools/tpcds.idx" \
+			-DIR "${TMPDIR}/${TABLE}-sf${SCALE}.${CHUNK}" \
+			-SCALE "${SCALE}" -TERMINATE N -RNGSEED 0 \
+			-PARALLEL "${CHUNKS}" -CHILD "${CHUNK}" \
+			|| touch "${TMPDIR}/${TABLE}-sf${SCALE}.failed"; } &
+		CHUNK=$((CHUNK + 1))
 	done
+done
 
-	if [ "${LINES}" -ne "${CHUNKED_LINES}" ]; then
-		echo "FAIL: ${BASENAME}.dat:" \
-			"single=${LINES} chunked=${CHUNKED_LINES}"
+wait
+
+FAILED=0
+
+# Compare chunked data against the baseline.  Every table in the list
+# must produce a file from every child; a missing chunk file means the
+# table was not actually split.  Returns tables ride along with their
+# parent, so validate every baseline .dat file found for each run.
+for SPEC in ${TABLES}; do
+	TABLE=${SPEC%%:*}
+	SCALE=${SPEC#*:}
+
+	if [ -f "${TMPDIR}/${TABLE}-sf${SCALE}.failed" ]; then
+		echo "FAIL: ${TABLE} sf${SCALE}: dsdgen exited non-zero"
 		FAILED=1
-	else
-		echo "PASS: ${BASENAME}.dat: ${LINES} lines"
+		continue
 	fi
+
+	for FILE in "${TMPDIR}/${TABLE}-sf${SCALE}.0"/*.dat; do
+		BASENAME=$(basename "${FILE}" .dat)
+
+		# Skip dbgen_version.dat, it's not table data
+		if [ "${BASENAME}" = "dbgen_version" ]; then
+			continue
+		fi
+
+		# Collect chunk files (pattern: name_chunk_chunks.dat)
+		set --
+		MISSING=0
+		CHUNK=1
+		while [ "${CHUNK}" -le "${CHUNKS}" ]; do
+			PFILE="${TMPDIR}/${TABLE}-sf${SCALE}.${CHUNK}"
+			PFILE="${PFILE}/${BASENAME}_${CHUNK}_${CHUNKS}.dat"
+			if [ -f "${PFILE}" ]; then
+				set -- "$@" "${PFILE}"
+			elif [ "${BASENAME}" = "${TABLE}" ]; then
+				MISSING=1
+			fi
+			CHUNK=$((CHUNK + 1))
+		done
+
+		LINES=$(wc -l < "${FILE}")
+
+		if [ "${MISSING}" -eq 1 ] || [ "${#}" -eq 0 ]; then
+			echo "FAIL: ${BASENAME}.dat sf${SCALE}:" \
+				"missing chunk file, table was not split"
+			FAILED=1
+		elif cat "$@" | cmp -s - "${FILE}"; then
+			echo "PASS: ${BASENAME}.dat sf${SCALE}:" \
+				"${LINES} lines"
+		else
+			CHUNKED_LINES=$(cat "$@" | wc -l)
+			echo "FAIL: ${BASENAME}.dat sf${SCALE}:" \
+				"single=${LINES} chunked=${CHUNKED_LINES}" \
+				"(content mismatch)"
+			FAILED=1
+		fi
+	done
 done
 
 exit ${FAILED}

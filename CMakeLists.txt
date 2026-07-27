@@ -26,10 +26,14 @@ set (
 )
 
 include (FetchContent)
+# The dsgen patch series expects the tree to be in a directory named
+# "dsgen", per the layout of this repository, so do not use the
+# default FetchContent source directory naming.
 FetchContent_Declare(
     dsgen
     GIT_REPOSITORY https://github.com/osdldbt/dsgen.git
     GIT_TAG        4.0.0
+    SOURCE_DIR     ${CMAKE_BINARY_DIR}/dsgen
 )
 FetchContent_MakeAvailable (dsgen)
 set (DSGEN_SOURCE_DIR ${dsgen_SOURCE_DIR})

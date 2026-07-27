@@ -88,9 +88,9 @@ RUN cmake -H. -Bbuilds/release \
 
 # Build the TPC-DS Tools.
 RUN dbt7-build-dsgen --patch-dir=patches \
-        builds/release/_deps/dsgen-src
+        builds/release/dsgen
 
-ENV DSHOME=/usr/local/src/dbt7/builds/release/_deps/dsgen-src
+ENV DSHOME=/usr/local/src/dbt7/builds/release/dsgen
 ENV DS_DATA=/scratch/dbt7data
 ENV DBT7DBNAME=dbt7
 

@@ -5,17 +5,18 @@ ifneq ($(wildcard CMakeCache.txt),)
 $(error In-source build detected. Remove CMakeCache.txt and use out-of-source builds.)
 endif
 
-.PHONY: appimage clean debug default package release
+.PHONY: appimage clean debug default package release test
 
 default:
-	@echo "targets: appimage (Linux only), clean, debug, package, release"
+	@echo "targets: appimage (Linux only), clean, debug, package," \
+			"release, test"
 
 appimage:
 	cmake --preset appimage
 	cmake --build --preset appimage --target install -- DESTDIR=../AppDir
 	rm -rf builds/AppDir/opt/dsgen
 	mkdir -p builds/AppDir/opt
-	cp -a builds/appimage/_deps/dsgen-src builds/AppDir/opt/dsgen
+	cp -a builds/appimage/dsgen builds/AppDir/opt/dsgen
 	builds/AppDir/usr/bin/dbt7-build-dsgen --patch-dir=patches \
 			builds/AppDir/opt/dsgen
 	sed -i -e "s#/usr#././#g" builds/AppDir/opt/dsgen/tools/dsdgen \
@@ -37,3 +38,7 @@ package:
 release:
 	cmake --preset release
 	cmake --build --preset release
+
+test:
+	cmake --preset debug
+	ctest --test-dir builds/debug --output-on-failure
