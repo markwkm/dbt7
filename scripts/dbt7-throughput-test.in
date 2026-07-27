@@ -225,13 +225,16 @@ dbt7-generate-queries \
 		"${DATABASE}" \
 		"${OUTPUT_DIR}" || exit 1
 
-# Determine number of processors for parallelism.
+# Determine number of processors for parallelism.  The data maintenance
+# scripts locate the refresh data files by the processor count detected
+# there, so both detections must match.
 CPUS=1
-if [ -f "/proc/stat" ]; then
-	CPUS=$(grep -c cpu /proc/stat)
-	CPUS=$(( CPUS - 1 ))
-	echo "detected ${CPUS} processors for parallel data generation and loading"
+if command -v nproc > /dev/null 2>&1; then
+	CPUS=$(nproc)
+elif [ -f "/proc/stat" ]; then
+	CPUS=$(( $(grep -c cpu /proc/stat) - 1 ))
 fi
+echo "detected ${CPUS} processors for parallel data generation and loading"
 PARALLEL_ARG=""
 if [ "${CPUS}" -gt 1 ]; then
 	PARALLEL_ARG="-PARALLEL ${CPUS}"

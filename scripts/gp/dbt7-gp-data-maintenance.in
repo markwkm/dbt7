@@ -132,11 +132,15 @@ fi
 
 # Clause 5
 
-# Determine number of processors for parallelism.
-if [ -f "/proc/stat" ]; then
+# Determine number of processors for parallelism.  The refresh data
+# files are located by the processor count detected when
+# dbt7-throughput-test generated them, so both detections must match.
+if command -v nproc > /dev/null 2>&1; then
 	CPUS=$(nproc)
-	echo "detected ${CPUS} processors for parallel data generation and loading"
+elif [ -f "/proc/stat" ]; then
+	CPUS=$(( $(grep -c cpu /proc/stat) - 1 ))
 fi
+echo "detected ${CPUS} processors for parallel data generation and loading"
 
 for T in s_purchase_lineitem s_purchase s_catalog_order s_web_order \
 		s_catalog_order_lineitem s_web_order_lineitem s_store_returns \
