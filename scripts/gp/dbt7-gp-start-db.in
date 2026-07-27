@@ -23,14 +23,13 @@ Options:
 EOF
 }
 
-LOGFILE="dbt7.log"
-
 # Custom argument handling for hopefully most portability.
 while [ "${#}" -gt 0 ]; do
 	case "${1}" in
 	(-o)
 		shift
-		LOG_FLAG="${1}/${LOGFILE}"
+		OUTPUT_DIR="${1}"
+		LOG_FLAG="-l ${OUTPUT_DIR}"
 		mkdir -p "${OUTPUT_DIR}"
 		;;
 	(-V | --version)
