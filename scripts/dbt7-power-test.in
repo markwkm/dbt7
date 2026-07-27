@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 @SHELLOPTIONS@
 #
 # This file is released under the terms of the Artistic License.
