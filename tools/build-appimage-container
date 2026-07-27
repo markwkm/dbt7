@@ -10,20 +10,25 @@ CONTAINER_CMD=""
 CONTAINERFILE="appimage/Containerfile"
 USE_DOCKER=0
 
-while getopts "dh" opt; do
-	case ${opt} in
-	d)
+# Custom argument handling for hopefully most portability.
+while [ "${#}" -gt 0 ]; do
+	case "${1}" in
+	(-d)
 		USE_DOCKER=1
 		;;
-	h)
+	(-h | -\? | --help)
 		usage
 		exit 0
 		;;
-	*)
+	(--* | -*)
 		usage
 		exit 1
 		;;
+	(*)
+		break
+		;;
 	esac
+	shift
 done
 
 if [ ${USE_DOCKER} -eq 1 ]; then

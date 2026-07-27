@@ -24,43 +24,57 @@ usage()
 	echo "  -s SCALE         scale factor, default $SCALE"
 }
 
-while getopts "a:d:hi:n:o:p:q:s:" opt; do
-	case $opt in
-	a)
-		DBMS=${OPTARG}
+# Custom argument handling for hopefully most portability.
+while [ "${#}" -gt 0 ] ; do
+	case "${1}" in
+	(-a)
+		shift
+		DBMS="${1}"
 		;;
-	d)
-		DIALECT=$OPTARG
+	(-d)
+		shift
+		DIALECT="${1}"
 		;;
-	h)
+	(-i)
+		shift
+		INPUT="${1}"
+		;;
+	(-n)
+		shift
+		STREAMS="${1}"
+		;;
+	(-o)
+		shift
+		OUTPUT_DIR="${1}"
+		;;
+	(-p)
+		# PostgreSQL only.
+		shift
+		LOAD_PARAM="${1}"
+		;;
+	(-q)
+		# PostgreSQL only.
+		shift
+		PERF_PARAM="${1}"
+		;;
+	(-s)
+		shift
+		export SCALE="${1}"
+		;;
+	(-h | -\? | --help)
 		usage
+		exit 0
+		;;
+	(--* | -*)
+		echo "$(basename "${0}"): invalid option -- '${1}'"
+		echo "try \"$(basename "${0}") --help\" for more information."
 		exit 1
 		;;
-	i)
-		INPUT=$OPTARG
-		;;
-	n)
-		STREAMS=$OPTARG
-		;;
-	o)
-		OUTPUT_DIR="$OPTARG"
-		;;
-	p)
-		# PostgreSQL only.
-		LOAD_PARAM="$OPTARG"
-		;;
-	q)
-		# PostgreSQL only.
-		PERF_PARAM="$OPTARG"
-		;;
-	s)
-		export SCALE="${OPTARG}"
-		;;
-	\?)
-		usage
-		exit 1
+	(*)
+		break
 		;;
 	esac
+	shift
 done
 
 CPUS=$(grep -c '^processor' /proc/cpuinfo)

@@ -22,22 +22,34 @@ usage()
 	echo "  -p PARAMETERS    PostgreSQL parameters"
 }
 
-while getopts "fo:p:" OPT; do
-	case $OPT in
-	f)
+# Custom argument handling for hopefully most portability.
+while [ "${#}" -gt 0 ] ; do
+	case "${1}" in
+	(-f)
 		rm -f "${DBT7PGDATA}/postmaster.pid"
 		;;
-	o)
-		OUTDIR=$OPTARG
+	(-o)
+		shift
+		OUTDIR="${1}"
 		;;
-	p)
-		PARAMETERS="$OPTARG"
+	(-p)
+		shift
+		PARAMETERS="${1}"
 		;;
-	\?)
+	(-h | -\? | --help)
 		usage
+		exit 0
+		;;
+	(--* | -*)
+		echo "$(basename "${0}"): invalid option -- '${1}'"
+		echo "try \"$(basename "${0}") --help\" for more information."
 		exit 1
 		;;
+	(*)
+		break
+		;;
 	esac
+	shift
 done
 
 if [ -z "${DBT7PGDATA}" ]; then

@@ -44,18 +44,31 @@ get_time()
 TMPDIR=""
 trap cleanup INT QUIT ABRT TERM
 
-while getopts "i:o:" OPT; do
-	case $OPT in
-	i)
-		RESULTSDIR="${OPTARG}"
+# Custom argument handling for hopefully most portability.
+while [ "${#}" -gt 0 ] ; do
+	case "${1}" in
+	(-i)
+		shift
+		RESULTSDIR="${1}"
 		;;
-	o)
-		OUTPUT_DIR=$OPTARG
+	(-o)
+		shift
+		OUTPUT_DIR="${1}"
 		;;
-	\?)
+	(-h | -\? | --help)
+		usage
+		exit 0
+		;;
+	(--* | -*)
+		echo "$(basename "${0}"): invalid option -- '${1}'"
+		echo "try \"$(basename "${0}") --help\" for more information."
 		exit 1
 		;;
+	(*)
+		break
+		;;
 	esac
+	shift
 done
 
 LOADDIR="${RESULTSDIR}/load"

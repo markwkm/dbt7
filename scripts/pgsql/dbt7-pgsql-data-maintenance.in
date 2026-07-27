@@ -87,31 +87,42 @@ SET (autovacuum_enabled = true, toast.autovacuum_enabled = true);
 __EOF__
 }
 
-while getopts "hi:n:o:s:U" OPT; do
-	case $OPT in
-	h)
+# Custom argument handling for hopefully most portability.
+while [ "${#}" -gt 0 ] ; do
+	case "${1}" in
+	(-i)
+		shift
+		INPUT_DIR="${1}"
+		;;
+	(-n)
+		shift
+		STREAM="${1}"
+		;;
+	(-o)
+		shift
+		OUTPUT_DIR="${1}"
+		;;
+	(-s)
+		shift
+		SCALE="${1}"
+		;;
+	(-U)
+		PRIVILEGED=0
+		;;
+	(-h | -\? | --help)
 		usage
 		exit 0
 		;;
-	i)
-		INPUT_DIR=$OPTARG
-		;;
-	n)
-		STREAM=$OPTARG
-		;;
-	o)
-		OUTPUT_DIR=$OPTARG
-		;;
-	s)
-		SCALE=$OPTARG
-		;;
-	U)
-		PRIVILEGED=0
-		;;
-	\?)
-		usage
+	(--* | -*)
+		echo "$(basename "${0}"): invalid option -- '${1}'"
+		echo "try \"$(basename "${0}") --help\" for more information."
 		exit 1
+		;;
+	(*)
+		break
+		;;
 	esac
+	shift
 done
 
 if [ "${STREAM}" = "" ]; then

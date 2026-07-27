@@ -7,15 +7,22 @@
 # Copyright The DBT-7 Authors
 
 ARGS=
-while getopts "o:" OPT; do
-	case $OPT in
-		o)
-			ARGS="${OPTARG}/time_statistics.csv"
-			;;
-		*)
-			exit 1
-			;;
+# Custom argument handling for hopefully most portability.
+while [ "${#}" -gt 0 ] ; do
+	case "${1}" in
+	(-o)
+		shift
+		ARGS="${1}/time_statistics.csv"
+		;;
+	(--* | -*)
+		echo "$(basename "${0}"): invalid option -- '${1}'"
+		exit 1
+		;;
+	(*)
+		break
+		;;
 	esac
+	shift
 done
 
 if [ -z "${DBT7DBNAME}" ]; then

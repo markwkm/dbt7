@@ -18,22 +18,31 @@ usage()
 	echo "  -s STREAM        stream to execute"
 }
 
-while getopts "ho:s:" OPT; do
-	case $OPT in
-	h)
+# Custom argument handling for hopefully most portability.
+while [ "${#}" -gt 0 ] ; do
+	case "${1}" in
+	(-o)
+		shift
+		OUTPUT_DIR="${1}"
+		;;
+	(-s)
+		shift
+		STREAM="${1}"
+		;;
+	(-h | -\? | --help)
 		usage
 		exit 0
 		;;
-	o)
-		OUTPUT_DIR=$OPTARG
-		;;
-	s)
-		STREAM=$OPTARG
-		;;
-	\?)
-		usage
+	(--* | -*)
+		echo "$(basename "${0}"): invalid option -- '${1}'"
+		echo "try \"$(basename "${0}") --help\" for more information."
 		exit 1
+		;;
+	(*)
+		break
+		;;
 	esac
+	shift
 done
 
 if [ "${STREAM}" = "" ]; then

@@ -10,24 +10,31 @@ CMD_CLEAR=0
 CMD_START=0
 CMD_END=0
 
-while getopts "cen:s" OPT; do
-	case $OPT in
-	c)
+# Custom argument handling for hopefully most portability.
+while [ "${#}" -gt 0 ] ; do
+	case "${1}" in
+	(-c)
 		CMD_CLEAR=1
 		;;
-	e)
+	(-e)
 		CMD_END=1
 		;;
-	n)
-		NAME=$OPTARG
+	(-n)
+		shift
+		NAME="${1}"
 		;;
-	s)
+	(-s)
 		CMD_START=1
 		;;
-	\?)
+	(--* | -*)
+		echo "$(basename "${0}"): invalid option -- '${1}'"
 		exit 1
 		;;
+	(*)
+		break
+		;;
 	esac
+	shift
 done
 
 if [ -z "${DBT7DBNAME}" ]; then

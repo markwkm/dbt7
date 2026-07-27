@@ -33,22 +33,31 @@ TMPDIR=""
 trap cleanup INT QUIT ABRT TERM
 
 OUTDIR="."
-while getopts "hi:o:" OPT; do
-	case $OPT in
-	h)
+# Custom argument handling for hopefully most portability.
+while [ "${#}" -gt 0 ] ; do
+	case "${1}" in
+	(-i)
+		shift
+		INFILE="${1}"
+		;;
+	(-o)
+		shift
+		OUTDIR="${1}"
+		;;
+	(-h | -\? | --help)
 		usage
 		exit 0
 		;;
-	i)
-		INFILE=$OPTARG
-		;;
-	o)
-		OUTDIR=$OPTARG
-		;;
-	\?)
+	(--* | -*)
+		echo "$(basename "${0}"): invalid option -- '${1}'"
+		echo "try \"$(basename "${0}") --help\" for more information."
 		exit 1
 		;;
+	(*)
+		break
+		;;
 	esac
+	shift
 done
 
 # Queries are numbered by execution order, not by the actual query number.
