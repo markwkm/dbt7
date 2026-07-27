@@ -35,7 +35,7 @@ check_cardinality()
 {
 	TABLENAME="${1}"
 
-	eval "${PSQL}" <<- __EOF__
+	${PSQL} <<- __EOF__
 		COPY (SELECT '${TABLENAME}', count(*) FROM ${TABLENAME}) TO STDOUT
 	__EOF__
 }
@@ -67,7 +67,7 @@ validate_single_key_table()
 	KEYS="$(cut -d "|" -f 1 "${A}" | sort -t "|" -k 1 -n -u | xargs |
 			sed -e "s/ /,/g")"
 
-	eval "${PSQL}" > "${B}" <<- __EOF__
+	${PSQL} > "${B}" <<- __EOF__
 		COPY (
 		          SELECT *
 		          FROM ${TABLENAME}
@@ -102,7 +102,7 @@ validate_two_key_table()
 	KEYS="$(awk -F "|" "{print \"(\" \$${COL1} \",\" \$${COL2} \")\"}" "${A}" |
 			xargs | sed -e "s/ /,/g")"
 
-	eval "${PSQL}" > "${B}" <<- __EOF__
+	${PSQL} > "${B}" <<- __EOF__
 		COPY (
 		          SELECT DISTINCT *
 		          FROM ${TABLENAME}
@@ -133,7 +133,7 @@ validate_three_key_table()
 	KEYS="$(awk -F "|" '{print "(" $1 "," $2 "," $3 ")"}' "${A}" | xargs |
 			sed -e "s/ /,/g")"
 
-	eval "${PSQL}" > "${B}" <<- __EOF__
+	${PSQL} > "${B}" <<- __EOF__
 		COPY (
 		          SELECT DISTINCT *
 		          FROM ${TABLENAME}
