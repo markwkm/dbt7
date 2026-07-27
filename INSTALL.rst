@@ -1,7 +1,7 @@
 This document covers installing the kit from source.
 
-Perquisites
------------
+Prerequisites
+-------------
 
 Required software:
 
@@ -10,7 +10,8 @@ Required software:
 
 Recommended software:
 
-* `Make` can be used with the supplied `Makefile` for running common build tasks
+* `Make` can be used with the supplied `Makefile` for running common build
+  tasks
 
 Building
 --------
@@ -40,6 +41,7 @@ Uninstalling
 
 ::
 
-    xargs rm < install_manifest.txt
+	xargs rm < install_manifest.txt
 
-The file `install_manifest.txt` will be created after running `make install`.
+The file `install_manifest.txt` will be created in the build directory
+after installing.

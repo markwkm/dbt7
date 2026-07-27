@@ -1,0 +1,53 @@
+====================
+ dbt7-generate-data
+====================
+
+---------------
+Database Test 7
+---------------
+
+:Date: @MANDATE@
+:Manual section: 1
+:Manual group: Database Test 7 @PROJECT_VERSION@ Documentation
+:Version: Database Test 7 @PROJECT_VERSION@
+
+SYNOPSIS
+========
+
+**dbt7-generate-data** [option...] directory
+
+DESCRIPTION
+===========
+
+**dbt7-generate-data** is the Database Test 7 (DBT-7) **dsdgen** wrapper.
+It generates the flat data files outside of the execution of a load test,
+primarily to aid testing changes to **dsdgen** or generating chunks of data
+in parallel.
+
+OPTIONS
+=======
+
+--parallel=CHUNKS  Parallelize the data generation into CHUNKS parts,
+        default 1 (no parallelism).
+-s SCALE, --scale-factor=SCALE  *scale* factor, roughly equivalent to GB
+        (base 10) of text data, default 1.
+--seed=SEED  Set RNGSEED for **dsdgen**, default unset.
+--tpcdstools=DSHOME  *dshome* is the directory location of the TPC-DS
+        Tools.
+-V, --version  Output version information, then exit.
+--help  This usage message.  Or **-?**.
+
+*directory* is the path to save the flat files.
+
+ENVIRONMENT
+===========
+
+**DSHOME**
+
+    This is the absolute path to the TPC-DS Tools directory.  The
+    --tpcdstools argument will override this environment variable.
+
+SEE ALSO
+========
+
+**dbt7**\ (1), **dbt7-run**\ (1), **dbt7-load-test**\ (1)

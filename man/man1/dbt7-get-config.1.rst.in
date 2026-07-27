@@ -1,0 +1,43 @@
+=================
+ dbt7-get-config
+=================
+
+---------------
+Database Test 7
+---------------
+
+:Date: @MANDATE@
+:Manual section: 1
+:Manual group: Database Test 7 @PROJECT_VERSION@ Documentation
+:Version: Database Test 7 @PROJECT_VERSION@
+
+SYNOPSIS
+========
+
+**dbt7-get-config** [option...]
+
+DESCRIPTION
+===========
+
+**dbt7-get-config** is the Database Test 7 (DBT-7) configuration capture
+script.  It saves the test configuration and system information to a
+*config.txt* file in the output directory.  It is normally invoked by
+**dbt7-run**\ (1).
+
+OPTIONS
+=======
+
+-a DBMS  *dbms* under test (pgsql).
+-d DIALECT  *dialect* override.
+-i INPUT  *input* override.
+-n STREAMS  Number of throughput *streams*.
+-o PATH  Output directory.
+-p PARAMETERS  Database *parameters* for the load test (PostgreSQL only).
+-q PARAMETERS  Database *parameters* for the power test (PostgreSQL only).
+-s SCALE  *scale* factor, default 1.
+--help  This usage message.  Or **-?**.
+
+SEE ALSO
+========
+
+**dbt7**\ (1), **dbt7-run**\ (1)

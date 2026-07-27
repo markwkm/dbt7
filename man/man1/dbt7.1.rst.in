@@ -31,7 +31,7 @@ The available commands are determined by what is installed by the kit.  Run
 OPTIONS
 =======
 
---verbose  Output versions of additional programs used by DBT-3 when used with
+--verbose  Output versions of additional programs used by DBT-7 when used with
         -V or --version OPTION
 -V, --version  Output version information, then exit.
 --help  This usage message.  Or **-?**.
@@ -40,9 +40,16 @@ ENVIRONMENT
 ===========
 
 **PATCHDIR** can be set to specify the series of patches to apply to TPC-DS
-Tools when running **build-dsgen**.
+Tools when running **build-dsgen**, default */usr/share/dbt7/patches*.
+
+**PGHOST**, when unset, is set to */tmp,/var/run/postgresql* so that
+PostgreSQL connections default to local Unix domain sockets.
 
 SEE ALSO
 ========
 
-**dbt7-report**\ (1), **dbt7-run**\ (1)
+**dbt7-build-dsgen**\ (1), **dbt7-generate-data**\ (1),
+**dbt7-generate-queries**\ (1), **dbt7-get-config**\ (1),
+**dbt7-load-test**\ (1), **dbt7-plot-results**\ (1),
+**dbt7-post-process**\ (1), **dbt7-power-test**\ (1), **dbt7-report**\ (1),
+**dbt7-run**\ (1), **dbt7-run-query**\ (1), **dbt7-throughput-test**\ (1)

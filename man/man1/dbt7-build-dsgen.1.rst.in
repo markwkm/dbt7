@@ -1,0 +1,49 @@
+=================
+ dbt7-build-dsgen
+=================
+
+---------------
+Database Test 7
+---------------
+
+:Date: @MANDATE@
+:Manual section: 1
+:Manual group: Database Test 7 @PROJECT_VERSION@ Documentation
+:Version: Database Test 7 @PROJECT_VERSION@
+
+SYNOPSIS
+========
+
+**dbt7-build-dsgen** [option...] directory
+
+DESCRIPTION
+===========
+
+**dbt7-build-dsgen** is the Database Test 7 (DBT-7) TPC-DS Tools builder.
+It applies the DBT-7 patches to the TPC-DS Tools source code and compiles
+the tools.
+
+OPTIONS
+=======
+
+--patch-dir=DIRECTORY  *directory* of patches to apply to the TPC-DS Tools,
+        overrides the **PATCHDIR** environment variable, default
+        */usr/share/dbt7/patches*.
+-V, --version  Output version information, then exit.
+--help  This usage message.  Or **-?**.
+
+*directory* is the path to the TPC-DS Tools source code.
+
+ENVIRONMENT
+===========
+
+**PATCHDIR**
+
+    The directory of patches to apply to the TPC-DS Tools, default
+    */usr/share/dbt7/patches*.  The --patch-dir option overrides this
+    environment variable.
+
+SEE ALSO
+========
+
+**dbt7**\ (1), **dbt7-run**\ (1)

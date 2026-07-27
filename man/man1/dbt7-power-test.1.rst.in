@@ -19,22 +19,27 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-**dbt7-power-test** is the Database Test 7 (DBT-7) power tester
+**dbt7-power-test** is the Database Test 7 (DBT-7) power tester.  It is
+normally invoked by **dbt7-run**\ (1), which exports the environment
+variables described below.
 
 OPTIONS
 =======
 
--a DBMS  *dbms*: pgsql
+-a DBMS  *dbms* to test, see *dbms* options below.  Required.
 -d DIALECT  *dialect* override.
+-i INPUT  *input* templates override.
 -o PATH  *path* to save results.
--r  restart database, if already running
+-r  Restart database, if already running.
 -s SCALE  *scale* factor, default 1.
 --stats  Enable system and database stats collection.
--U  Run test as a privileged operating system and database user.  This means
-        the user has the ability to stop and start the database between the
-        individual tests, as allowed per specification.
+-U  Run test as an unprivileged operating system and database user.  By
+        default the test is run as a privileged user that can stop and start
+        the database between the individual tests, as allowed per
+        specification.
 -V, --version  Output version information, then exit.
--Y  Enable profiling.
+-Y  Accepted for compatibility with the other test scripts; profiling is
+        not currently implemented for the power test.
 --help  This usage message.  Or **-?**.
 
 PostgreSQL options (pgsql):
@@ -43,9 +48,29 @@ PostgreSQL options (pgsql):
 
 *dbms* options are:
 
+* gp Greenplum
 * pgsql PostgreSQL
+
+ENVIRONMENT
+===========
+
+The following variables are required and are normally exported by
+**dbt7-run**\ (1):
+
+**DBT7DBNAME**
+
+    Name of the database to test.
+
+**DSTOOLS**
+
+    Path to the TPC-DS Tools *tools* subdirectory.
+
+**DSDISTRIBUTIONS**
+
+    Path to the TPC-DS Tools *tpcds.idx* distributions file.
 
 SEE ALSO
 ========
 
-**dbt7**\ (1), **dbt7-run**\ (1)
+**dbt7**\ (1), **dbt7-run**\ (1), **dbt7-load-test**\ (1),
+**dbt7-throughput-test**\ (1)

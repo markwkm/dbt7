@@ -14,7 +14,7 @@ Database Test 7
 SYNOPSIS
 ========
 
-**dbt7-report** [option...]
+**dbt7-report** [option...] directory
 
 DESCRIPTION
 ===========
@@ -24,10 +24,20 @@ DESCRIPTION
 OPTIONS
 =======
 
+--skip-database-plotting  Don't plot database statistics.
+--skip-process-plotting  Don't plot per process statistics.
 -V, --version  Output version information, then exit.
 --help  This usage message.  Or **-?**.
 
-*directory* is the path to save test results.
+*directory* is the path to existing DBT-7 test results.  The generated
+report files are written into the same *directory*.
+
+ENVIRONMENT
+===========
+
+**GENERATE_PDF**
+
+    Set to 1 to also generate PDF versions of the reports with **pandoc**.
 
 SEE ALSO
 ========

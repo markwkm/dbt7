@@ -37,7 +37,7 @@ run`.  Use `PGHOST` and `PGPORT` to point to the external database::
 
     docker run --rm \
         -e PGHOST=dbserver \
-		-e PGPORT=5432 \
+        -e PGPORT=5432 \
         --user $(id -u):$(id -g) \
         -v ./results:/results \
         dbt7 run --scale-factor=1 pgsql /results/0
@@ -53,7 +53,7 @@ The container uses two directories for runtime data:
 
 `/results`
     Intended for saving test results.  Mount this to the host to save test
-	results.
+    results.
 
 Mounting Storage
 ----------------
@@ -77,7 +77,7 @@ Notes
 -----
 
 * The container runs as a non-root `dbt` user.
-* The container does not for running a PostgreSQL instance.
+* The container is not intended for running a PostgreSQL instance.
 * To connect to a database running on the same host, use
   `--network host` so the container shares the host's network
   namespace::

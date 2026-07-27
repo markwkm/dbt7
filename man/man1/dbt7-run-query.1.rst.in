@@ -1,0 +1,71 @@
+================
+ dbt7-run-query
+================
+
+---------------
+Database Test 7
+---------------
+
+:Date: @MANDATE@
+:Manual section: 1
+:Manual group: Database Test 7 @PROJECT_VERSION@ Documentation
+:Version: Database Test 7 @PROJECT_VERSION@
+
+SYNOPSIS
+========
+
+**dbt7-run-query** [option...] query dbms [directory]
+
+DESCRIPTION
+===========
+
+**dbt7-run-query** is the Database Test 7 (DBT-7) individual query runner.
+It generates and executes a single query at a time, to make it easy to
+evaluate the effects of changes such as a different index or database
+system parameters on individual query performance.
+
+A database needs to be created and loaded first, e.g. with the **dbt7-run**
+--load flag.
+
+OPTIONS
+=======
+
+--db-name=DBNAME  Database name, default *dbt7*.
+-d DIALECT, --dialect=DIALECT  *dialect* override, default matches *dbms*.
+-i INPUT, --input=INPUT  *input* override, default
+        *dshome*/query_templates/templates-*dbms*.lst.
+--profile  Collect software profile.
+-s SCALE, --scale-factor=SCALE  Database *scale* factor, default 1.
+--seed=SEED  *seed* to use, default random.
+--stats  Enable system and database stats collection.
+--tpcdstools=DSHOME  *dshome* is the directory location of the TPC-DS
+        Tools.
+-V, --version  Output version information, then exit.
+--help  This usage message.  Or **-?**.
+
+PostgreSQL specific options:
+
+--explain  Capture EXPLAIN ANALYZE output as part of the query results.
+
+*query* is the query number to run.
+
+*dbms* options are:
+
+* pgsql PostgreSQL
+
+*directory* is the path to save query results, if specified.  Required if
+collecting system statistics, database statistics, or profiling data.
+
+ENVIRONMENT
+===========
+
+**DSHOME**
+
+    This is the absolute path to the TPC-DS Tools directory.  The
+    --tpcdstools argument will override this environment variable.
+
+SEE ALSO
+========
+
+**dbt7**\ (1), **dbt7-run**\ (1), **dbt7-generate-queries**\ (1),
+**ts-profile**\ (1), **ts-sysstat**\ (1)

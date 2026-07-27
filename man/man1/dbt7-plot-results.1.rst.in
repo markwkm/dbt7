@@ -1,0 +1,37 @@
+===================
+ dbt7-plot-results
+===================
+
+---------------
+Database Test 7
+---------------
+
+:Date: @MANDATE@
+:Manual section: 1
+:Manual group: Database Test 7 @PROJECT_VERSION@ Documentation
+:Version: Database Test 7 @PROJECT_VERSION@
+
+SYNOPSIS
+========
+
+**dbt7-plot-results** [option...]
+
+DESCRIPTION
+===========
+
+**dbt7-plot-results** is the Database Test 7 (DBT-7) power test query
+plotter.  It uses **gnuplot** to plot the query execution times from a
+power test time statistics file.
+
+OPTIONS
+=======
+
+-i CSV  Power test time statistics *csv* file.
+-o PATH  Output directory, default the current directory.
+--help  This usage message.  Or **-?**.
+
+SEE ALSO
+========
+
+**dbt7**\ (1), **dbt7-power-test**\ (1), **dbt7-report**\ (1),
+**gnuplot**\ (1)

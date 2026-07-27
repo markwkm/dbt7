@@ -12,7 +12,7 @@ usage()
 Database Test 7 (DBT-7)
 
 Usage:
-  $(basename "${0}") [COMMAND] [OPTION]
+  $(basename "${0}") [OPTION] [COMMAND [OPTION]...]
 
 Options:
   The OPTION choices are dependent on the COMMAND specified.  The -? flag will

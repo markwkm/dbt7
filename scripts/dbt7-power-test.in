@@ -29,7 +29,7 @@ Options:
   --stats          enable system and database stats collection
   -U               run test as an unprivileged user
   -V, --version    output version information, then exit
-  -Y               enable profiling
+  -Y               accepted for compatibility, profiling not implemented
   -?, --help       show this help, then exit
 
 DBMS options:

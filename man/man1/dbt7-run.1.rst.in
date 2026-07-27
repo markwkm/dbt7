@@ -21,7 +21,7 @@ DESCRIPTION
 
 **dbt7-run** is a wrapper script that helps execute this kit's workload.
 
-The results *directory* will contain subdirectories for each of the test
+The results *directory* will contain subdirectories for each of the
 individual tests: load, power, and throughput.  Note that the power and
 throughput test constitute the performance test, and that the data maintenance
 tests are part of the throughput test.
@@ -32,6 +32,9 @@ within the subdirectories of the load, power, and throughput tests.
 OPTIONS
 =======
 
+Options that take a value may be given as either **--option VALUE** or
+**--option=VALUE**.
+
 -c COMMENTS, --comment=COMMENTS  Provide *comments* to save with the test.
 -d DIALECT, --dialect=DIALECT  *dialect* override, default matches *dbms*.
 -i INPUT, --input=INPUT  *input* override, default
@@ -39,19 +42,16 @@ OPTIONS
 --load  Run load test, default run load, power and throughput.  Selecting
         individual tests disables the other tests unless explicitly specified
         again.
--n STREAMS, --streams=STREAMS  Number of throughput STREAMS, default 1.
+-n STREAMS, --streams=STREAMS  Number of throughput STREAMS, default 4.
 --parallel CHUNKS  Parallelize the load into CHUNKS parts, default detected
-        number of logical processors
---performance  Run performance test, default run load and performance tests.
-        Selecting individual tests disables the other test unless explicitly
-        specified again.
+        number of logical processors.
 --power  Run power test, default run load, power and throughput. Selecting
         individual tests disables the other tests unless explicitly specified
         again.
 --privileged  Run test as a privileged user.
 --profile  Enable profiling (Linux only).
--s SCALE  *scale* factor, default 1.
---seed=SEED  set *seed*, default is a random number.
+-s SCALE, --scale-factor=SCALE  *scale* factor, default 1.
+--seed=SEED  Set *seed*, default is a random number.
 --stats  Enable system and database stats collection.
 --tpcdstools=DSHOME  *dshome* is the directory location of the TPC-DS Tools.
 --throughput  Run throughput test, default run load, power and throughput.
@@ -62,12 +62,18 @@ OPTIONS
 
 PostgreSQL options (pgsql):
 
--p PARAMETERS  Database *parameters* for the load test.
--q PARAMETERS  Database *parameters* for the performance test.
+--load-parameters PARAMETERS  Database *parameters* for the load test.
+        May be given multiple times; the values are appended together.
+--performance-parameters PARAMETERS  Database *parameters* for the
+        performance test.  May be given multiple times; the values are
+        appended together.
 --tablespaces=DIRECTORY  Use and create tablespaces under *directory*.
+        The *directory* is passed to the individual test scripts via the
+        **DBT7TSDIR** environment variable.
 
 *dbms* options are:
 
+* gp Greenplum
 * pgsql PostgreSQL
 
 *directory* is the path to save test results.
@@ -78,7 +84,18 @@ ENVIRONMENT
 **DSHOME**
 
     This is the absolute path to the unzipped TPC-DS Tools directory.  The
-    --tpcdstools argument will override this environment variable.
+    --tpcdstools argument will override this environment variable.  The
+    **DSTOOLS**, **DSQUERY**, and **DSDISTRIBUTIONS** environment variables
+    are derived from **DSHOME** and exported to the individual test scripts.
+
+**DBT7DBNAME**
+
+    Name of the database to test, default *dbt7*.
+
+**DS_DATA**
+
+    Directory where the generated flat files are saved, default
+    */tmp/dbt7data*.
 
 PostgreSQL Specific:
 
@@ -87,14 +104,20 @@ PostgreSQL Specific:
     Set to database configuration parameters for the load test.  This currently
     requires elevated privileges because of the way these parameters are passed
     to the database system.  The command line option will append configuration
-    settings to these environment variables, as opposed to override them.
+    settings to this environment variable, as opposed to override it.
 
 **PERF_PARAMETERS**
 
-    Set to database configuration parameters for the load test.  This currently
-    requires elevated privileges because of the way these parameters are passed
-    to the database system.  The command line option will append configuration
-    settings to these environment variables, as opposed to override them.
+    Set to database configuration parameters for the performance test.  This
+    currently requires elevated privileges because of the way these parameters
+    are passed to the database system.  The command line option will append
+    configuration settings to this environment variable, as opposed to
+    override it.
+
+**DEFAULT_LOAD_PARAMETERS**, **DEFAULT_PERF_PARAMETERS**
+
+    When set, these replace **LOAD_PARAMETERS** and **PERF_PARAMETERS**,
+    respectively, before any command line options are appended.
 
 EXAMPLES
 ========
@@ -102,10 +125,12 @@ EXAMPLES
 A simple example of running a default 1 GB scale factor test against a locally
 running PostgreSQL database::
 
-    dbt7 run --tpcdstool=DSGen-software-code-3.2.0rc1 pgsql results
+    dbt7 run --tpcdstools=DSGen-software-code-3.2.0rc1 pgsql results
 
 SEE ALSO
 ========
 
-**dbt7**\ (1), **oprofile**\ (1), **perf**\ (1), **readprofile**\ (8),
-**ts-profile**\ (1), **ts-sysstat**\ (1)
+**dbt7**\ (1), **dbt7-load-test**\ (1), **dbt7-power-test**\ (1),
+**dbt7-report**\ (1), **dbt7-throughput-test**\ (1), **oprofile**\ (1),
+**perf**\ (1), **readprofile**\ (8), **ts-profile**\ (1),
+**ts-sysstat**\ (1)

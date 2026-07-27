@@ -1,0 +1,38 @@
+===================
+ dbt7-post-process
+===================
+
+---------------
+Database Test 7
+---------------
+
+:Date: @MANDATE@
+:Manual section: 1
+:Manual group: Database Test 7 @PROJECT_VERSION@ Documentation
+:Version: Database Test 7 @PROJECT_VERSION@
+
+SYNOPSIS
+========
+
+**dbt7-post-process** [option...]
+
+DESCRIPTION
+===========
+
+**dbt7-post-process** is the Database Test 7 (DBT-7) post processing
+script.  It aggregates the test execution and query times from a results
+directory into a *summary.rst* file, and calculates the *Queries per Hour*
+score when all of the tests were run.  It is normally invoked by
+**dbt7-run**\ (1).
+
+OPTIONS
+=======
+
+-i DIRECTORY  DBT-7 results *directory*.
+-o PATH  Output directory.
+--help  This usage message.  Or **-?**.
+
+SEE ALSO
+========
+
+**dbt7**\ (1), **dbt7-run**\ (1), **dbt7-report**\ (1)

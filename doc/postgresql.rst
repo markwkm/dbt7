@@ -5,21 +5,29 @@ There are additional dialects for PostgreSQL that are provided to collect query
 plans and `EXPLAIN ANALYZE` output, as shown in the examples below.  These
 files simply help from having to edit a single dialect file for the desired
 usage.  The `DBT7DMPREFIX` environment variable must be used to inject SQL into
-the data maintenance such that `EXPLAIN` output can be captures in those
+the data maintenance such that `EXPLAIN` output can be captured in those
 specific tests. Otherwise only the 99 queries will have `EXPLAIN` output.
 
 Run a 1GB test (with `DBT7DMPREFIX` unset)::
 
-    dbt7-run --tpcdstools=$DSHOME psql /tmp/results
+    dbt7-run --tpcdstools=$DSHOME pgsql /tmp/results
 
-Run a 1GB test and capture `EXPLAIN` output query results::
+Run a 1GB test and capture `EXPLAIN` output with the query results::
 
-    export DBT7DMPREFIX="LOAD 'auto_explain'; SET auto_explain.log_min_duration TO 0; SET auto_explain.log_level TO notice;"
+    export DBT7DMPREFIX="LOAD 'auto_explain';
+    SET auto_explain.log_min_duration TO 0;
+    SET auto_explain.log_level TO notice;"
     dbt7-run --tpcdstools=$DSHOME -d pgsqle pgsql /tmp/results
 
-Run a 1GB test and capture `EXPLAIN ANALYZE` output query::
+Run a 1GB test and capture `EXPLAIN ANALYZE` output with the query
+results::
 
-    export DBT7DMPREFIX="LOAD 'auto_explain'; SET auto_explain.log_min_duration TO 0; SET auto_explain.log_analyze TO on; SET auto_explain.log_buffers TO on; SET auto_explain.log_verbose TO on; SET auto_explain.log_level TO notice;"
+    export DBT7DMPREFIX="LOAD 'auto_explain';
+    SET auto_explain.log_min_duration TO 0;
+    SET auto_explain.log_analyze TO on;
+    SET auto_explain.log_buffers TO on;
+    SET auto_explain.log_verbose TO on;
+    SET auto_explain.log_level TO notice;"
     dbt7-run --tpcdstools=$DSHOME -d pgsqlea pgsql /tmp/results
 
 Advanced PostgreSQL Usage
