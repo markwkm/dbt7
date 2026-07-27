@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Build a container image with the DBT-7 kit installed, using the
+# Containerfile at the top of the repository.
+
+if ! which docker > /dev/null 2>&1; then
+	echo "docker not in path"
+	exit 1
+fi
+
+TOPDIR="$(dirname "${0}")/.."
+
+docker build -t dbt7 -f "${TOPDIR}/Containerfile" "${TOPDIR}"

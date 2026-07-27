@@ -1,6 +1,8 @@
 #!/bin/sh
 
-# Start a DBT-7 test.
+# Run a small DBT-7 test using the container image against an external
+# PostgreSQL instance.  Set PGHOST (and optionally PGPORT) to point the
+# test at the database.  Results are saved under ./results.
 
 usage()
 {
@@ -24,19 +26,30 @@ if [ $# -gt 1 ]; then
 	SCALE=$2
 fi
 
-DOCKER_NAME="dbt7-${DBMS}-0"
-DOCKER_TAG="dbt7-${DBMS}"
-DOCKERDIR=$(dirname "${0}")
-
-# Use the return code from `docker inspect` to determine if the docker image
-# needs to be created.
-if ! docker inspect "${DOCKER_TAG}" > /dev/null; then
-	eval "${DOCKERDIR}/build-${DBMS}" || exit 1
+if [ "${PGHOST}" = "" ]; then
+	echo "set PGHOST (and optionally PGPORT) to the database to test"
+	exit 1
 fi
 
-if ! docker run --rm --name "${DOCKER_NAME}" --shm-size=256m "${DOCKER_TAG}" \
-		dbt7-run-workload -g -a pgsql -s "${SCALE}" -d postgresql \
-					-i templates-postgresql.lst -n 3 -o /tmp/results; then
+TOOLSDIR=$(dirname "${0}")
+
+# Use the return code from `docker inspect` to determine if the container
+# image needs to be created.
+if ! docker inspect dbt7 > /dev/null 2>&1; then
+	"${TOOLSDIR}/build-container" || exit 1
+fi
+
+RESULTSDIR="$(pwd)/results"
+mkdir -p "${RESULTSDIR}"
+
+if ! docker run --rm \
+		--network host \
+		-e PGHOST \
+		-e PGPORT \
+		--user "$(id -u):$(id -g)" \
+		-v "${RESULTSDIR}:/results" \
+		dbt7 run --scale-factor="${SCALE}" "${DBMS}" \
+		"/results/$(date +%Y%m%d-%H%M%S)"; then
 	usage
 	exit 1
 fi
