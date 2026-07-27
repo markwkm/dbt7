@@ -190,7 +190,7 @@ eval "dbt7-${DATABASE}-create-tables ${TABLESPACES_ARG}" \
 
 if [ "${STATS}" -eq 1 ]; then
 	# Collect database statistics
-	eval "ts ${DATABASE}-stat -d ${DBT7DBNAME} -o ${OUTPUT_DIR}/dbstat"
+	ts "${DATABASE}-stat" -d "${DBT7DBNAME}" -o "${OUTPUT_DIR}/dbstat"
 fi
 
 if [ $PROFILE -eq 1 ]; then
@@ -211,7 +211,7 @@ echo "**$(date) load test completed  ($DIFF_TIME seconds)**"
 
 if [ "${STATS}" -eq 1 ]; then
 	ts sysstat -o "${OUTPUT_DIR}/sysstat" -s
-	eval "ts ${DATABASE}-stat -o ${OUTPUT_DIR}/dbstat -s"
+	ts "${DATABASE}-stat" -o "${OUTPUT_DIR}/dbstat" -s
 fi
 
 dbt7-"${DATABASE}"-get-query-time -o "$OUTPUT_DIR"

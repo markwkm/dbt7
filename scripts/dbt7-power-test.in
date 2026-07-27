@@ -171,7 +171,7 @@ if [ "${STATS}" -eq 1 ]; then
 	ts sysstat -o "${OUTPUT_DIR}/sysstat"
 
 	# Collect database statistics
-	eval "ts ${DATABASE}-stat -d ${DBT7DBNAME} -o ${OUTPUT_DIR}/dbstat"
+	ts "${DATABASE}-stat" -d "${DBT7DBNAME}" -o "${OUTPUT_DIR}/dbstat"
 fi
 
 echo "**$(date) power test starting**"
@@ -189,7 +189,7 @@ echo "**$(date) power test completed (${DIFF_TIME} seconds)**"
 if [ "${STATS}" -eq 1 ]; then
 	# Stop collecting system statistics.
 	ts sysstat -o "${OUTPUT_DIR}/sysstat" -s
-	eval "ts ${DATABASE}-stat -o ${OUTPUT_DIR}/dbstat -s"
+	ts "${DATABASE}-stat" -o "${OUTPUT_DIR}/dbstat" -s
 fi
 
 dbt7-"${DATABASE}"-get-query-time -o "${OUTPUT_DIR}"

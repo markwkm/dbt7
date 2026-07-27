@@ -52,7 +52,7 @@ stop_procs() {
 			ts sysstat -o "${OUTDIR}/sysstat" -s &
 		fi
 		if command -v ts > /dev/null 2>&1; then
-			eval "ts ${DATABASE}-stat -o ${OUTDIR}/dbstat -s &"
+			ts "${DATABASE}-stat" -o "${OUTDIR}/dbstat" -s &
 		fi
 	fi
 }
@@ -240,7 +240,7 @@ if [ ${STATS} -eq 1 ]; then
 	if ! command -v ts > /dev/null 2>&1; then
 		echo "WARNING: ts not found for database stats collection"
 	else
-		eval "ts ${DATABASE}-stat -o ${OUTDIR}/dbstat &"
+		ts "${DATABASE}-stat" -o "${OUTDIR}/dbstat" &
 	fi
 fi
 
