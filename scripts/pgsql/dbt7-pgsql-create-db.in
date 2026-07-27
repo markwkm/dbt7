@@ -18,7 +18,7 @@ usage()
 	echo "  -o PATH          path to save database log"
 	echo "  -p PARAMETERS    PostgreSQL parameters"
 	echo "  -U               run test as an unprivileged user"
-	echo "  -x               patch to set for xlog"
+	echo "  -x PATH          PATH to use for the WAL directory"
 }
 
 OUTPUT_DIR="."
@@ -65,17 +65,17 @@ if [ "${PRIVILEGED}" -eq 1 ]; then
 		# indecipherable.
 		dbt7-pgsql-time-statistics -c
 	else
+		# Use alternative WAL directory.
+		WALDIR_ARG=""
+		if [ ! "${XLOGPATH}" = "" ]; then
+			mkdir -p "${XLOGPATH}" || exit 1
+			rm -rf "${XLOGPATH}/pg_wal"
+			WALDIR_ARG="--waldir=${XLOGPATH}/pg_wal"
+		fi
+
 		# initialize database cluster
 		echo "initializing database cluster..."
-		initdb -A trust -D "${DBT7PGDATA}" --locale=C || exit 1
-
-		# Use alternative XLOG directory.
-		if [ ! "${XLOGPATH}" = "" ]; then
-			mkdir -p "${XLOGPATH}"
-			rm -rf "${XLOGPATH}/pg_xlog"
-			mv "${DBT7PGDATA}/pg_xlog" "${XLOGPATH}/pg_xlog" || exit 1
-			ln -s "${XLOGPATH}/pg_xlog" "${DBT7PGDATA}/pg_xlog" || exit 1
-		fi
+		initdb -A trust -D "${DBT7PGDATA}" --locale=C ${WALDIR_ARG} || exit 1
 	fi
 
 	eval dbt7-pgsql-start-db -o "${OUTPUT_DIR}" "${PARAMOPT}"
