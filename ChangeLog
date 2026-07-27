@@ -14,6 +14,7 @@ vX.Y.Z (YYYY-MM-DD)
 - Rewrite the dsdgen chunking test to validate the content of only the
   tables large enough for dsdgen to chunk, applying the dsgen patch series
   with quilt first, and add a "make test" convenience target
+- pgsql: re-enable allowing parallel data loading
 
 v0.7.9 (2026-07-01)
 

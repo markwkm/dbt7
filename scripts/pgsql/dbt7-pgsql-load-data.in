@@ -50,23 +50,51 @@ ALTER TABLE $TABLE
 SET (autovacuum_enabled = false, toast.autovacuum_enabled = false);
 __EOF__
 
-	FILENAME="${DS_DATA}/${TABLE}.dat"
-	TOTAL_ROWS="$(wc -l "${FILENAME}" | cut -d " " -f 1)"
-	if [ "${TOTAL_ROWS}" -lt "${CPUS}" ]; then
-		ROWS_PER_COMMIT=${TOTAL_ROWS}
-	else
-		ROWS_PER_COMMIT=$(( TOTAL_ROWS / CPUS ))
+	if [ $PRIVILEGED -ne 1 ]; then
+		COPYPREFIX="\\"
 	fi
-	N=$(( (TOTAL_ROWS + ROWS_PER_COMMIT - 1) / ROWS_PER_COMMIT ))
 
-	for I in $(seq 1 "${N}"); do
-		if [ $PRIVILEGED -ne 1 ]; then
-			COPYPREFIX="\\"
+	FILENAME="${DS_DATA}/${TABLE}.dat"
+	if [ -f "${FILENAME}" ]; then
+		# Unchunked data generation creates a single file per table;
+		# split it into a stream per processor.
+		TOTAL_ROWS="$(wc -l "${FILENAME}" | cut -d " " -f 1)"
+		if [ "${TOTAL_ROWS}" -lt "${CPUS}" ]; then
+			ROWS_PER_COMMIT=${TOTAL_ROWS}
+		else
+			ROWS_PER_COMMIT=$(( TOTAL_ROWS / CPUS ))
 		fi
-		$PSQL << __EOF__ &
+		N=$(( (TOTAL_ROWS + ROWS_PER_COMMIT - 1) / ROWS_PER_COMMIT ))
+
+		for I in $(seq 1 "${N}"); do
+			$PSQL << __EOF__ &
 ${COPYPREFIX}COPY ${TABLE} FROM PROGRAM 'split -n l/${I}/${N} ${FILENAME}' WITH (DELIMITER '|', NULL '');
 __EOF__
-	done
+		done
+	else
+		# Chunked data generation creates a file per dsdgen child
+		# (pattern: table_child_chunks.dat).  Tables too small for
+		# dsdgen to chunk are emitted in their entirety by the first
+		# child only, so load whatever files exist, one process per
+		# file.  The leading [0-9] keeps a table from matching the
+		# chunks of another table it is a name prefix of, e.g. store
+		# and store_sales.
+		N=0
+		for FILENAME in "${DS_DATA}/${TABLE}"_[0-9]*_[0-9]*.dat; do
+			if [ ! -f "${FILENAME}" ]; then
+				continue
+			fi
+			N=$(( N + 1 ))
+			$PSQL << __EOF__ &
+${COPYPREFIX}COPY ${TABLE} FROM '${FILENAME}' WITH (DELIMITER '|', NULL '');
+__EOF__
+		done
+		if [ "${N}" -eq 0 ]; then
+			echo "ERROR: no data files for table ${TABLE} in" \
+				"${DS_DATA}"
+			exit 1
+		fi
+	fi
 
 	wait
 
