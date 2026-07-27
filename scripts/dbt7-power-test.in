@@ -8,6 +8,7 @@
 
 PRIVILEGED=1
 RESTART=0
+SCALE=1
 STATS=0
 
 usage()
