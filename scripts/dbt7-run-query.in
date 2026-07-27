@@ -114,7 +114,7 @@ while [ "${#}" -gt 0 ] ; do
 		SCALE="${1}"
 		;;
 	(-s?*)
-		SCALE="${1#*-f}"
+		SCALE="${1#-s}"
 		;;
 	(--scale-factor=?*)
 		SCALE="${1#*--scale-factor=}"

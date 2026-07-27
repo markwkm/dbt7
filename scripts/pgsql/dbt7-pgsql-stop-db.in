@@ -14,7 +14,7 @@ usage()
 	echo "  $(basename "${0}")"
 }
 
-while getopts "h:" OPT; do
+while getopts "h" OPT; do
 	case ${OPT} in
 	h)
 		usage
@@ -26,6 +26,8 @@ while getopts "h:" OPT; do
 	esac
 done
 
+shift $(( OPTIND - 1 ))
+
 if [ -z "${DBT7PGDATA}" ]; then
 	echo "DBT7PGDATA not defined."
 	exit 1
@@ -33,5 +35,5 @@ fi
 
 # Only try to stop the database if it's running.
 if [ -f "${DBT7PGDATA}/postmaster.pid" ]; then
-	pg_ctl stop -w -D "${DBT7PGDATA}" "${1}"
+	pg_ctl stop -w -D "${DBT7PGDATA}" "${@}"
 fi

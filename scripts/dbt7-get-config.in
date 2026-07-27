@@ -24,7 +24,7 @@ usage()
 	echo "  -s SCALE         scale factor, default $SCALE"
 }
 
-while getopts "a:d:hi:n:o:pq:s:" opt; do
+while getopts "a:d:hi:n:o:p:q:s:" opt; do
 	case $opt in
 	a)
 		DBMS=${OPTARG}

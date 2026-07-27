@@ -112,7 +112,7 @@ while [ "${#}" -gt 0 ] ; do
 		COMMENT="${1}"
 		;;
 	(--comment=?*)
-		COMMENT="${1#*--comments=}"
+		COMMENT="${1#*--comment=}"
 		;;
 	(-d | --dialect)
 		shift
@@ -166,7 +166,6 @@ while [ "${#}" -gt 0 ] ; do
 		PERF_PARAMETERS="$PERF_PARAMETERS ${1}"
 		;;
 	(--performance-parameters=?*)
-		shift
 		PERF_PARAMETERS="$PERF_PARAMETERS ${1#*--performance-parameters=}"
 		;;
 	(--privileged)
@@ -191,6 +190,7 @@ while [ "${#}" -gt 0 ] ; do
 		STATS_ARG="--stats"
 		;;
 	(--tablespaces)
+		shift
 		TABLESPACES_ARG="--tablespaces"
 		export DBT7TSDIR="${1}"
 		;;
