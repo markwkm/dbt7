@@ -22,10 +22,14 @@ include (FetchContent)
 # The dsgen patch series expects the tree to be in a directory named
 # "dsgen", per the layout of this repository, so do not use the
 # default FetchContent source directory naming.
+# The dsgen git submodule in the source tree is for developers and the
+# manual build documented in the user's guide; this separate clone
+# keeps the source tree pristine during automated builds.
 FetchContent_Declare(
     dsgen
     GIT_REPOSITORY https://github.com/osdldbt/dsgen.git
     GIT_TAG        4.0.0
+    GIT_SHALLOW    TRUE
     SOURCE_DIR     ${CMAKE_BINARY_DIR}/dsgen
 )
 FetchContent_MakeAvailable (dsgen)
