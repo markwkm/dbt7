@@ -65,7 +65,7 @@ while [ "${#}" -gt 0 ] ; do
 		;;
 	(-p)
 		shift
-		PARAMETERS_ARG="-p \"${1}\""
+		PARAMETERS="${1}"
 		;;
 	(-r)
 		RESTART=1
@@ -161,7 +161,11 @@ if [ $RESTART -eq 1 ] && [ $PRIVILEGED -eq 1 ]; then
 	dbt7-"${DATABASE}"-stop-db || exit 1
 fi
 if [ $PRIVILEGED -eq 1 ]; then
-	eval "dbt7-${DATABASE}-start-db -o ${OUTPUT_DIR} ${PARAMETERS_ARG}" || exit 1
+	set -- -o "${OUTPUT_DIR}"
+	if [ -n "${PARAMETERS}" ]; then
+		set -- "$@" -p "${PARAMETERS}"
+	fi
+	dbt7-"${DATABASE}"-start-db "$@" || exit 1
 fi
 
 dbt7-"${DATABASE}"-time-statistics -c

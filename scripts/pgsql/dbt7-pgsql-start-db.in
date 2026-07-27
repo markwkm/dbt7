@@ -69,7 +69,7 @@ fi
 if [ "${PARAMETERS}" = "" ]; then
 	pg_ctl start -w -D "${DBT7PGDATA}" -l "${OUTDIR}/${LOGFILE}"
 else
-	eval pg_ctl start -w -D "${DBT7PGDATA}" -o \""${PARAMETERS}"\" \
+	pg_ctl start -w -D "${DBT7PGDATA}" -o "${PARAMETERS}" \
 			-l "${OUTDIR}/${LOGFILE}"
 fi
 

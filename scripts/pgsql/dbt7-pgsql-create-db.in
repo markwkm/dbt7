@@ -34,7 +34,7 @@ while [ "${#}" -gt 0 ] ; do
 		;;
 	(-p)
 		shift
-		PARAMOPT="-p \"${1}\""
+		PARAMETERS="${1}"
 		;;
 	(-U)
 		PRIVILEGED=0
@@ -88,7 +88,11 @@ if [ "${PRIVILEGED}" -eq 1 ]; then
 		initdb -A trust -D "${DBT7PGDATA}" --locale=C ${WALDIR_ARG} || exit 1
 	fi
 
-	eval dbt7-pgsql-start-db -o "${OUTPUT_DIR}" "${PARAMOPT}"
+	set -- -o "${OUTPUT_DIR}"
+	if [ -n "${PARAMETERS}" ]; then
+		set -- "$@" -p "${PARAMETERS}"
+	fi
+	dbt7-pgsql-start-db "$@"
 fi
 
 DBEXISTS=$(psql -Xlt | cut -d "|" -f 1 | grep -c "\<${DBT7DBNAME}\>")

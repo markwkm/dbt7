@@ -70,7 +70,7 @@ while [ "${#}" -gt 0 ] ; do
 		;;
 	(-p)
 		shift
-		PARAMETERS_ARG="-p \"$1\""
+		PARAMETERS="${1}"
 		;;
 	(--parallel)
 		shift
@@ -181,8 +181,12 @@ if [ "${STATS}" -eq 1 ]; then
 	ts sysstat -o "${OUTPUT_DIR}/sysstat"
 fi
 
-eval "dbt7-${DATABASE}-create-db -o ${OUTPUT_DIR} ${PARAMETERS_ARG} \
-		${PRIVILEGED_ARG}" >> "${OUTPUTFILE}" 2>&1 || bailout
+set -- -o "${OUTPUT_DIR}"
+if [ -n "${PARAMETERS}" ]; then
+	set -- "$@" -p "${PARAMETERS}"
+fi
+dbt7-"${DATABASE}"-create-db "$@" ${PRIVILEGED_ARG} \
+		>> "${OUTPUTFILE}" 2>&1 || bailout
 
 dbt7-"${DATABASE}"-drop-tables >> "$OUTPUTFILE" 2>&1 || bailout
 dbt7-"${DATABASE}"-create-tables ${TABLESPACES_ARG} \
