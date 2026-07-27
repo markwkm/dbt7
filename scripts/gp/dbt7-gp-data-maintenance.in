@@ -64,10 +64,10 @@ __EOF__
 		fi
 		if [ ${PRIVILEGED} -ne 1 ]; then
 			COPYPREFIX="\\"
+		fi
 		${PSQL} << __EOF__ &
 ${COPYPREFIX}COPY ${TABLE} FROM '${FILENAME}' WITH (DELIMITER '|', NULL '');
 __EOF__
-		fi
 	done
 
 	wait
