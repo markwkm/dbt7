@@ -134,7 +134,7 @@ if [ "${CHUNKS}" = "" ]; then
 		echo "detected ${CHUNKS} processors for parallel data generation and loading"
 	else
 		CHUNKS=1
-		echo "could not detected processors, parallelizing for 1"
+		echo "could not detect processors, parallelizing for 1"
 	fi
 
 fi

@@ -347,7 +347,7 @@ __EOF__
 fi
 
 #
-# Generate Throghput Test Report
+# Generate Throughput Test Report
 #
 
 if [ -d "${DIRTHROUGHPUT}" ]; then

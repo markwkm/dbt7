@@ -15,7 +15,7 @@ Usage:
   $(basename "${0}") [COMMAND] [OPTION]
 
 Options:
-  The OPTION choices are depdent on the COMMAND specified.  The -? flag will
+  The OPTION choices are dependent on the COMMAND specified.  The -? flag will
   display the available options.
 
   Without a COMMAND, the OPTION choices are:

@@ -9,7 +9,7 @@
 usage()
 {
 	cat << EOF
-$(basename "${0}") is the Database Test 7 (DBT-7) PostgreSQL index creator
+$(basename "${0}") is the Database Test 7 (DBT-7) Greenplum index creator
 
 Usage:
   $(basename "${0}") [OPTION]

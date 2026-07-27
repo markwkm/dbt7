@@ -198,11 +198,11 @@ while [ "${#}" -gt 0 ] ; do
 		TABLESPACES_ARG="--tablespaces"
 		export DBT7TSDIR="${1#*--tablespaces=}"
 		;;
-   (--tpcdstools)
+	(--tpcdstools)
 		shift
 		DSHOME="${1}"
 		;;
-   (--tpcdstools=?*)
+	(--tpcdstools=?*)
 		DSHOME="${1#*--tpcdstools=}"
 		;;
 	(--throughput)

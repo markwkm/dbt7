@@ -15,7 +15,7 @@ STATS=0
 usage()
 {
 	cat << EOF
-$(basename "${0}") is the Database Test 7 (DBT-7) power tester
+$(basename "${0}") is the Database Test 7 (DBT-7) throughput tester
 
 Usage:
   $(basename "${0}") [OPTION]
@@ -32,7 +32,7 @@ Options:
   --stats          enable system and database stats collection
   -U               run test as an unprivileged user
   -V, --version    output version information, then exit
-  -Y               enable profiling"
+  -Y               enable profiling
   -?, --help       show this help, then exit
 
 DBMS options:

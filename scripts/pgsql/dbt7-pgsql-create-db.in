@@ -70,7 +70,7 @@ if [ "${PRIVILEGED}" -eq 1 ]; then
 	# Create database
 	echo "Creating database..."
 	if [ -d "${DBT7PGDATA}" ]; then
-		echo "PGData directory '${DBT7GDATA}' already exists, skipping initdb..."
+		echo "PGData directory '${DBT7PGDATA}' already exists, skipping initdb..."
 		# Clear time statistics on repeated run otherwise results are
 		# indecipherable.
 		dbt7-pgsql-time-statistics -c

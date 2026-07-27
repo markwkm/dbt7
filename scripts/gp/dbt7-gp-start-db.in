@@ -9,7 +9,7 @@
 usage()
 {
 	cat << EOF
-$(basename "${0}") is the Database Test 7 (DBT-7) Greenplum database start script"
+$(basename "${0}") is the Database Test 7 (DBT-7) Greenplum database start script
 
 Usage:
   $(basename "${0}") [OPTION]

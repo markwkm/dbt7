@@ -49,7 +49,7 @@ EOF
 }
 
 if [ ! "${APPDIR}" = "" ]; then
-    DSHOME="${APPDIR}/opt/dsgen"
+	DSHOME="${APPDIR}/opt/dsgen"
 fi
 
 # Custom argument handling for hopefully most portability.
@@ -96,11 +96,11 @@ while [ "${#}" -gt 0 ] ; do
 	(--streams=?*)
 		STREAMS="${1#*--streams=}"
 		;;
-   (--tpcdstools)
+	(--tpcdstools)
 		shift
 		DSHOME=$(realpath "${1}")
 		;;
-   (--tpcdstools=?*)
+	(--tpcdstools=?*)
 		DSHOME="${1#*--tpcdstools=}"
 		case "${DSHOME}" in
 			"~"*) DSHOME="${HOME}${DSHOME#\~}" ;;
@@ -159,7 +159,7 @@ fi
 
 # If this is a scale factor of 1, perform query validation Clause 7.3.
 if [ "${SCALE}" -eq 1 ]; then
-    echo "generating power test queries for validation at scale factor is 1"
+	echo "generating power test queries for validation since scale factor is 1"
 	QGEN_ARGS="${QGEN_ARGS} -QUALIFY Y"
 fi
 

@@ -15,7 +15,7 @@ Usage:
   $(basename "${0}") [OPTIONS] QUERY DBMS [DIRECTORY]
 
 Generate options:
-  --db-name       databse name, default ${DBNAME}
+  --db-name       database name, default ${DBNAME}
   -d DIALECT, --dialect=DIALECT
                   dialect override, default matches DBMS
   -i INPUT, --input=INPUT
@@ -119,11 +119,11 @@ while [ "${#}" -gt 0 ] ; do
 	(--scale-factor=?*)
 		SCALE="${1#*--scale-factor=}"
 		;;
-   (--tpcdstools)
+	(--tpcdstools)
 		shift
 		DSHOME="${1}"
 		;;
-   (--tpcdstools=?*)
+	(--tpcdstools=?*)
 		DSHOME="${1#*--tpcdstools=}"
 		;;
 	(-V | --version)

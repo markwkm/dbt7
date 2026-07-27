@@ -24,9 +24,9 @@ Options:
                    parallelize the load into CHUNKS parts,
                    default ${CHUNKS} (no parallelism)
   -s SCALE, --scale-factor=SCALE
-                   SCALE factor, roughly equivalient to GB (base 10) text data,
+                   SCALE factor, roughly equivalent to GB (base 10) text data,
                    default ${SCALE}
-  --seed=SEED      set RNDSEED for dsdgen, default unset
+  --seed=SEED      set RNGSEED for dsdgen, default unset
   --tpcdstools=DSHOME
                    DSHOME is the directory location of the TPC-DS Tools
   -V, --version    output version information, then exit
@@ -39,7 +39,7 @@ EOF
 }
 
 if [ ! "${APPDIR}" = "" ]; then
-    DSHOME="${APPDIR}/opt/dsgen"
+	DSHOME="${APPDIR}/opt/dsgen"
 fi
 
 # Custom argument handling for hopefully most portability.
@@ -66,11 +66,11 @@ while [ "${#}" -gt 0 ] ; do
 	(--scale-factor=?*)
 		SCALE="${1#*--scale-factor=}"
 		;;
-   (--tpcdstools)
+	(--tpcdstools)
 		shift
 		DSHOME="${1}"
 		;;
-   (--tpcdstools=?*)
+	(--tpcdstools=?*)
 		DSHOME="${1#*--tpcdstools=}"
 		;;
 	(-V | --version)
