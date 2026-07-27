@@ -1,1 +1,1 @@
-ADD_SUBDIRECTORY(man1)
+add_subdirectory (man1)

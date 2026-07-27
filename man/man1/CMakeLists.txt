@@ -1,6 +1,7 @@
 execute_process(
     COMMAND sed -n "s/^.*(\\(.*\\)).*$/\\1/p;q" ${CMAKE_HOME_DIRECTORY}/ChangeLog
     OUTPUT_VARIABLE MANDATE
+    OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
 find_program(RST2MAN NAMES rst2man.py rst2man)
