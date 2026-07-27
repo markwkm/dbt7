@@ -1,3 +1,4 @@
+set (SCRIPTS "")
 foreach (SCRIPT dbt7-pgsql-create-db
                 dbt7-pgsql-create-tables
                 dbt7-pgsql-create-indexes
@@ -13,21 +14,7 @@ foreach (SCRIPT dbt7-pgsql-create-db
                 dbt7-pgsql-time-statistics
         )
     configure_file(${SCRIPT}.in ${CMAKE_BINARY_DIR}/${SCRIPT} @ONLY)
+    list (APPEND SCRIPTS ${CMAKE_BINARY_DIR}/${SCRIPT})
 endforeach (SCRIPT)
 
-install (
-    PROGRAMS ${CMAKE_BINARY_DIR}/dbt7-pgsql-create-db
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-create-tables
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-create-indexes
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-data-maintenance
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-data-validation
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-drop-tables
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-get-query-time
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-load-data
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-report
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-run-stream
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-start-db
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-stop-db
-             ${CMAKE_BINARY_DIR}/dbt7-pgsql-time-statistics
-    DESTINATION "bin"
-)
+install (PROGRAMS ${SCRIPTS} DESTINATION "bin")
