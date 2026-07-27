@@ -17,7 +17,7 @@ foreach (SCRIPT dbt7
                 dbt7-throughput-test
         )
     configure_file(${SCRIPT}.in ${CMAKE_BINARY_DIR}/${SCRIPT} @ONLY)
-    set (SCRIPTS ${SCRIPTS} ${CMAKE_BINARY_DIR}/${SCRIPT})
+    list (APPEND SCRIPTS ${CMAKE_BINARY_DIR}/${SCRIPT})
 endforeach (SCRIPT)
 
 install (PROGRAMS ${SCRIPTS} DESTINATION "bin")
