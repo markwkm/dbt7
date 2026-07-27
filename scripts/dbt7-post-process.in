@@ -211,115 +211,50 @@ CREATE TABLE qtime(
 .import ${TIMEFILE} qtime
 EOF
 
-	for Q in $(seq 1 99); do
-		MIN1="$(sqlite3 "${DBFILE}" <<- EOF
-			SELECT min(diff_time)
-			FROM qtime
-			WHERE template REGEXP '\D${Q}\D'
-			  AND stream <= ${Sq}
-			;
-		EOF
-		)"
+	INTERVALS="${TMPDIR}/intervals.txt"
+	sqlite3 "${DBFILE}" << EOF > "${INTERVALS}"
+WITH RECURSIVE qnum(q) AS (
+    SELECT 1 UNION ALL SELECT q + 1 FROM qnum WHERE q < 99
+)
+SELECT q
+     , (SELECT min(diff_time) FROM qtime
+        WHERE template REGEXP '\D' || q || '\D' AND stream <= ${Sq})
+     , (SELECT min(diff_time) FROM qtime
+        WHERE template REGEXP '\D' || q || '\D' AND stream > ${Sq})
+     , (SELECT diff_time FROM qtime
+        WHERE template REGEXP '\D' || q || '\D' AND stream <= ${Sq}
+        ORDER BY diff_time ASC
+        LIMIT 1 OFFSET cast(${Sq}.0 / 4.0 AS INT))
+     , (SELECT diff_time FROM qtime
+        WHERE template REGEXP '\D' || q || '\D' AND stream > ${Sq}
+        ORDER BY diff_time ASC
+        LIMIT 1 OFFSET cast(${Sq}.0 / 4.0 AS INT))
+     , (SELECT diff_time FROM qtime
+        WHERE template REGEXP '\D' || q || '\D' AND stream <= ${Sq}
+        ORDER BY diff_time ASC
+        LIMIT 1 OFFSET cast(${Sq}.0 / 2.0 AS INT))
+     , (SELECT diff_time FROM qtime
+        WHERE template REGEXP '\D' || q || '\D' AND stream > ${Sq}
+        ORDER BY diff_time ASC
+        LIMIT 1 OFFSET cast(${Sq}.0 / 2.0 AS INT))
+     , (SELECT diff_time FROM qtime
+        WHERE template REGEXP '\D' || q || '\D' AND stream <= ${Sq}
+        ORDER BY diff_time ASC
+        LIMIT 1 OFFSET cast(${Sq}.0 * 0.75 AS INT))
+     , (SELECT diff_time FROM qtime
+        WHERE template REGEXP '\D' || q || '\D' AND stream > ${Sq}
+        ORDER BY diff_time ASC
+        LIMIT 1 OFFSET cast(${Sq}.0 * 0.75 AS INT))
+     , (SELECT max(diff_time) FROM qtime
+        WHERE template REGEXP '\D' || q || '\D' AND stream <= ${Sq})
+     , (SELECT max(diff_time) FROM qtime
+        WHERE template REGEXP '\D' || q || '\D' AND stream > ${Sq})
+FROM qnum
+;
+EOF
 
-		MIN2="$(sqlite3 "${DBFILE}" <<- EOF
-			SELECT min(diff_time)
-			FROM qtime
-			WHERE template REGEXP '\D${Q}\D'
-			  AND stream > ${Sq}
-			;
-		EOF
-		)"
-
-		Q25_1="$(sqlite3 "${DBFILE}" <<- EOF
-			SELECT diff_time
-			FROM qtime
-			WHERE template REGEXP '\D${Q}\D'
-			  AND stream <= ${Sq}
-			ORDER BY diff_time ASC
-			LIMIT 1
-			OFFSET cast(${Sq}.0 / 4.0 AS INT)
-			;
-		EOF
-		)"
-
-		Q25_2="$(sqlite3 "${DBFILE}" <<- EOF
-			SELECT diff_time
-			FROM qtime
-			WHERE template REGEXP '\D${Q}\D'
-			  AND stream > ${Sq}
-			ORDER BY diff_time ASC
-			LIMIT 1
-			OFFSET cast(${Sq}.0 / 4.0 AS INT)
-			;
-		EOF
-		)"
-
-		MEDIAN1="$(sqlite3 "${DBFILE}" <<- EOF
-			SELECT diff_time
-			FROM qtime
-			WHERE template REGEXP '\D${Q}\D'
-			  AND stream <= ${Sq}
-			ORDER BY diff_time ASC
-			LIMIT 1
-			OFFSET cast(${Sq}.0 / 2.0 AS INT)
-			;
-		EOF
-		)"
-
-		MEDIAN2="$(sqlite3 "${DBFILE}" <<- EOF
-			SELECT diff_time
-			FROM qtime
-			WHERE template REGEXP '\D${Q}\D'
-			  AND stream > ${Sq}
-			ORDER BY diff_time ASC
-			LIMIT 1
-			OFFSET cast(${Sq}.0 / 2.0 AS INT)
-			;
-		EOF
-		)"
-
-		Q75_1="$(sqlite3 "${DBFILE}" <<- EOF
-			SELECT diff_time
-			FROM qtime
-			WHERE template REGEXP '\D${Q}\D'
-			  AND stream <= ${Sq}
-			ORDER BY diff_time ASC
-			LIMIT 1
-			OFFSET cast(${Sq}.0 * 0.75 AS INT)
-			;
-		EOF
-		)"
-
-		Q75_2="$(sqlite3 "${DBFILE}" <<- EOF
-			SELECT diff_time
-			FROM qtime
-			WHERE template REGEXP '\D${Q}\D'
-			  AND stream > ${Sq}
-			ORDER BY diff_time ASC
-			LIMIT 1
-			OFFSET cast(${Sq}.0 * 0.75 AS INT)
-			;
-		EOF
-		)"
-
-		MAX1="$(sqlite3 "${DBFILE}" <<- EOF
-			SELECT max(diff_time)
-			FROM qtime
-			WHERE template REGEXP '\D${Q}\D'
-			  AND stream <= ${Sq}
-			;
-		EOF
-		)"
-
-		MAX2="$(sqlite3 "${DBFILE}" <<- EOF
-			SELECT max(diff_time)
-			FROM qtime
-			WHERE template REGEXP '\D${Q}\D'
-			  AND stream > ${Sq}
-			;
-		EOF
-		)"
-
+	while IFS="|" read -r Q MIN1 MIN2 Q25_1 Q25_2 MEDIAN1 MEDIAN2 Q75_1 \
+			Q75_2 MAX1 MAX2; do
 		printf "%2d  %7.1f  %7.1f  %7.1f   %7.1f  %7.1f  %7.1f  %7.1f   %7.1f  %7.1f  %7.1f\n" \
 				"${Q}" \
 				"${MIN1}" \
@@ -333,7 +268,7 @@ EOF
 				"${MAX1}" \
 				"${MAX2}" \
 				>> "${SUMMARY}"
-	done
+	done < "${INTERVALS}"
 
 	cat << EOF >> "${SUMMARY}"
 ==  =======  =======  =======  ========  =======  =======  =======  ========  =======  =======
