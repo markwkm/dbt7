@@ -76,12 +76,13 @@ if [ ! -f "${SERIESFILE}" ]; then
 fi
 
 cd "${DSGENDIR}" || \
-		(echo "ERROR: cannot enter directory ${DSGENDIR}" && exit 1)
+		{ echo "ERROR: cannot enter directory ${DSGENDIR}"; exit 1; }
 while IFS= read -r PATCHFILE; do
 	patch -s -p2 < "${PATCHDIR}/${PATCHFILE}" || \
-			(echo "ERROR: cannot apply patch ${PATCHFILE}" && exit 1)
+			{ echo "ERROR: cannot apply patch ${PATCHFILE}"; exit 1; }
 done < "${SERIESFILE}"
-cd tools || (echo "ERROR: cannot enter directory ${DSGENDIR}/tools" && exit 1)
+cd tools || \
+		{ echo "ERROR: cannot enter directory ${DSGENDIR}/tools"; exit 1; }
 
-make -s clean || (echo "ERROR: cannot clean tools" && exit 1)
-make -s || (echo "ERROR: cannot make tools" && exit 1)
+make -s clean || { echo "ERROR: cannot clean tools"; exit 1; }
+make -s || { echo "ERROR: cannot make tools"; exit 1; }
