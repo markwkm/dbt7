@@ -181,7 +181,7 @@ if [ "${STATS}" -eq 1 ]; then
 fi
 
 eval "dbt7-${DATABASE}-create-db -o ${OUTPUT_DIR} ${PARAMETERS_ARG} \
-		${PRIVILEGED_ARG}" >> "${OUTPUTFILE}" 2>&1
+		${PRIVILEGED_ARG}" >> "${OUTPUTFILE}" 2>&1 || bailout
 
 dbt7-"${DATABASE}"-drop-tables >> "$OUTPUTFILE" 2>&1 || bailout
 eval "dbt7-${DATABASE}-create-tables ${TABLESPACES_ARG}" \
@@ -218,6 +218,10 @@ dbt7-"${DATABASE}"-get-query-time -o "$OUTPUT_DIR"
 if [ $PROFILE -eq 1 ]; then
 	ts profile -o "${OUTPUT_DIR}/profile" -p
 fi
+
+# Wait for the validation data generation running in the background to
+# finish before running the data validation test.
+wait
 
 # Run data validation test. Clause 3.5.
 eval "dbt7-${DATABASE}-data-validation" > "${OUTPUT_DIR}/data-validation.txt"

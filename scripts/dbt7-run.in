@@ -346,7 +346,7 @@ if [ $RUN_POWER_TEST -eq 1 ] || [ $RUN_THROUGHPUT_TEST -eq 1 ]; then
 fi
 
 if [ $RUN_POWER_TEST -eq 1 ]; then
-	eval "dbt7-power-test \
+	if ! eval "dbt7-power-test \
 			-a $DATABASE \
 			-s $SCALE \
 			-o ${OUTPUT_DIR}/power \
@@ -355,15 +355,14 @@ if [ $RUN_POWER_TEST -eq 1 ]; then
 			$PERF_PARAMETERS_ARG\
 			$PROFILE_FLAG \
 			$PRIVILEGED_ARG \
-			${STATS_ARG}"
-	if [ $? -eq 1 ] ; then
+			${STATS_ARG}"; then
 		echo "Error: power test problem!"
 		exit 1
 	fi
 fi
 
 if [ ${RUN_THROUGHPUT_TEST} -eq 1 ]; then
-	eval "dbt7-throughput-test \
+	if ! eval "dbt7-throughput-test \
 			-a $DATABASE \
 			-s $SCALE \
 			-n $STREAMS \
@@ -373,8 +372,7 @@ if [ ${RUN_THROUGHPUT_TEST} -eq 1 ]; then
 			$THROUGHPUT_PARAMETERS_ARG \
 			$PRIVILEGED_ARG \
 			$PROFILE_FLAG \
-			${STATS_ARG}"
-	if [ $? -eq 1 ] ; then
+			${STATS_ARG}"; then
 		echo "throughput test problem!"
 		exit 1
 	fi
