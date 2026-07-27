@@ -193,6 +193,7 @@ while [ "${#}" -gt 0 ] ; do
 		;;
 	(-V | --version)
 		echo "$(basename "${0}") (Database Test 7) v@PROJECT_VERSION@"
+		exit 0
 		;;
 	(-\? | --help)
 		usage
