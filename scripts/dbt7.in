@@ -61,10 +61,10 @@ version()
 	display_version psql --version
 	display_version python --version
 	RST2HTML5="rst2html5.py"
-	if ! which "${NAME}" > /dev/null 2>&1; then
+	if ! which "${RST2HTML5}" > /dev/null 2>&1; then
 		RST2HTML5="rst2html5"
 	fi
-	display_version $RST2HTML5 --version
+	display_version "${RST2HTML5}" --version
 	display_version sar -V
 	display_version sqlite3 --version
 }
