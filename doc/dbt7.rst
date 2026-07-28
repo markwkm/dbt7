@@ -70,6 +70,8 @@ Optional Software
   statistics, invoked through Touchstone Tools.
 * gnuplot - Used for generating plots for the HTML report.
 * pandoc - Used only to generate PDF files from the HTML reports.
+* quilt - Used by the `make dsgen` convenience target to manage the TPC-DS
+  Tools patches.
 
 ------------
 User's Guide
@@ -96,6 +98,15 @@ the respective licences and thus needs to be built outside of the DBT-7 build
 system, which can be done with the aid of this script::
 
     dbt7-build-dsgen --patch-dir=patches dsgen
+
+Alternatively, when working from a git checkout of the kit, the top-level
+`Makefile` provides convenience targets that manage the patches with quilt::
+
+    make dsgen
+
+This applies the patch series and compiles the tools in the `dsgen`
+subdirectory.  Running `make dsgen-clean` removes the compiled files and
+unapplies the patches, restoring the pristine TPC-DS Tools sources.
 
 For brevity, future references to the location of the TPC-DS tools will be
 `$DSHOME`.
