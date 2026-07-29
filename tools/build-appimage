@@ -59,16 +59,12 @@ if ! ${CONTAINER_CMD} inspect ${CONTAINER_TAG} > /dev/null 2>&1; then
 	"${CONTAINER_DIR}/build-appimage-container" ${DOCKER_FLAG} || exit 1
 fi
 
-if [ "$ARCH" = "" ]; then
-	ARCH="x86_64"
-fi
-
-# Apply patches for successful builds on the old CentOS 7 container image
+# Build the AppImage inside the container image, which uses an old
+# glibc to maximize compatibility across Linux distributions.
 ${CONTAINER_CMD} run \
 		--rm \
 		-v "${CONTAINER_DIR}/..:/usr/local/src/dbt7:rw,Z" \
 		--env PKG_CONFIG_PATH="/usr/lib/pkgconfig" \
-		--env ARCH="$ARCH" \
 		-w /usr/local/src/dbt7 \
 		$CONTAINER_TAG \
 		make DBMS="${DBMS}" "${TARGET}"
