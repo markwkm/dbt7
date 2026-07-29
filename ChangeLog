@@ -28,6 +28,8 @@ vX.Y.Z (YYYY-MM-DD)
 - AppImage: AppRun cleanups: exec the command with proper quoting, error
   out when the man command is given no operand, and document the
   --verbose and -V flags in the usage output
+- AppImage: install ca-certificates and stop disabling TLS certificate
+  verification when downloading source tarballs
 
 v0.7.9 (2026-07-01)
 
