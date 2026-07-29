@@ -36,6 +36,8 @@ vX.Y.Z (YYYY-MM-DD)
 - AppImage: build each bundled component in a single container image
   layer and remove tarballs, source trees, and the Rust toolchain after
   use to shrink the image
+- AppImage: verify sha256 checksums of everything downloaded while
+  building the container image
 
 v0.7.9 (2026-07-01)
 

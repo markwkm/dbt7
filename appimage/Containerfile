@@ -76,8 +76,10 @@ RUN set -e; \
 
 ARG PYTHONMVER="3.11"
 ARG PYTHONVER="${PYTHONMVER}.1"
+ARG PYTHONSHA256="baed518e26b337d4d8105679caf68c5c32630d702614fc174e98cb95c46bdfa4"
 RUN curl -o /tmp/Python-${PYTHONVER}.tgz -SsL \
          https://www.python.org/ftp/python/${PYTHONVER}/Python-${PYTHONVER}.tgz && \
+    echo "${PYTHONSHA256}  /tmp/Python-${PYTHONVER}.tgz" | sha256sum -c - && \
     tar -C /usr/local/src -xf /tmp/Python-${PYTHONVER}.tgz && \
     cd /usr/local/src/Python-${PYTHONVER} && \
     ./configure --silent --prefix=/usr/local \
@@ -96,8 +98,10 @@ RUN mkdir -p /usr/local/share/licenses/docutils-${DOCUTILSVER} && \
        /usr/local/share/licenses/docutils-${DOCUTILSVER}/
 
 ARG PGVER="10.23"
+ARG PGSHA256="94a4b2528372458e5662c18d406629266667c437198160a18cdfd2c4a4d6eee9"
 RUN wget -O /tmp/postgresql-${PGVER}.tar.bz2 -q \
          https://ftp.postgresql.org/pub/source/v${PGVER}/postgresql-${PGVER}.tar.bz2 && \
+    echo "${PGSHA256}  /tmp/postgresql-${PGVER}.tar.bz2" | sha256sum -c - && \
     tar -C /usr/local/src -xf /tmp/postgresql-${PGVER}.tar.bz2 && \
     cd /usr/local/src/postgresql-${PGVER} && \
     ./configure --silent --without-ldap --without-readline --without-zlib \
@@ -110,8 +114,16 @@ RUN wget -O /tmp/postgresql-${PGVER}.tar.bz2 -q \
     rm -rf /usr/local/src/postgresql-${PGVER} /tmp/postgresql-${PGVER}.tar.bz2
 
 ARG CMAKEVER="3.21.0"
+ARG CMAKESHA256_X86_64="d54ef6909f519740bc85cec07ff54574cd1e061f9f17357d9ace69f61c6291ce"
+ARG CMAKESHA256_AARCH64="b1e46825bf370f45f8f47c3a497b1122759ee41fbd60187e525f517a4b0934eb"
 RUN curl -o /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz -SsL \
          https://github.com/Kitware/CMake/releases/download/v${CMAKEVER}/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz && \
+    case "${ARCH}" in \
+    (x86_64) CMAKESHA256="${CMAKESHA256_X86_64}";; \
+    (aarch64) CMAKESHA256="${CMAKESHA256_AARCH64}";; \
+    esac && \
+    echo "${CMAKESHA256}  /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz" | \
+        sha256sum -c - && \
     tar -C /usr --strip-components=1 \
         -xf /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz && \
     rm -f /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz
@@ -119,8 +131,10 @@ RUN curl -o /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz -SsL \
 # Install DBT Tools
 
 ARG DBTTOOLSVER="0.5.1"
+ARG DBTTOOLSSHA256="f2f5395c1a421dabc7f1bd4f509cde17645cb80ed9375ae9467292ffd06e6575"
 RUN curl -o /tmp/v${DBTTOOLSVER}.tar.gz -SsL \
          https://github.com/osdldbt/dbttools/archive/refs/tags/v${DBTTOOLSVER}.tar.gz && \
+    echo "${DBTTOOLSSHA256}  /tmp/v${DBTTOOLSVER}.tar.gz" | sha256sum -c - && \
     tar -C /usr/local/src -xf /tmp/v${DBTTOOLSVER}.tar.gz && \
     cd /usr/local/src/dbttools-${DBTTOOLSVER} && \
     cmake -H. -Bbuild/release -DCMAKE_INSTALL_PREFIX=/usr && \
@@ -131,8 +145,11 @@ RUN curl -o /tmp/v${DBTTOOLSVER}.tar.gz -SsL \
     rm -rf /usr/local/src/dbttools-${DBTTOOLSVER} /tmp/v${DBTTOOLSVER}.tar.gz
 
 ARG SQLITE3VER=3410200
+ARG SQLITE3SHA256="e98c100dd1da4e30fa460761dab7c0b91a50b785e167f8c57acc46514fae9499"
 RUN wget -O /tmp/sqlite-autoconf-${SQLITE3VER}.tar.gz -q \
          https://www.sqlite.org/2023/sqlite-autoconf-${SQLITE3VER}.tar.gz && \
+    echo "${SQLITE3SHA256}  /tmp/sqlite-autoconf-${SQLITE3VER}.tar.gz" | \
+        sha256sum -c - && \
     tar -C /usr/local/src -xf /tmp/sqlite-autoconf-${SQLITE3VER}.tar.gz && \
     cd /usr/local/src/sqlite-autoconf-${SQLITE3VER} && \
     ./configure --quiet --silent --prefix=/usr/local && \
@@ -146,8 +163,11 @@ RUN wget -O /tmp/sqlite-autoconf-${SQLITE3VER}.tar.gz -q \
 
 ARG PANGOVER="1.42"
 ARG PANGOMINORVER="4"
+ARG PANGOSHA256="1d2b74cd63e8bd41961f2f8d952355aa0f9be6002b52c8aa7699d9f5da597c9d"
 RUN curl -o /tmp/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz -SsL \
          https://download.gnome.org/sources/pango/${PANGOVER}/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz && \
+    echo "${PANGOSHA256}  /tmp/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz" | \
+        sha256sum -c - && \
     tar -C /usr/local/src -xf /tmp/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz && \
     cd /usr/local/src/pango-${PANGOVER}.${PANGOMINORVER} && \
     ./configure --quiet --silent --prefix=/usr/local && \
@@ -161,8 +181,11 @@ RUN curl -o /tmp/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz -SsL \
        /tmp/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz
 
 ARG GNUPLOTVER="5.4.6"
+ARG GNUPLOTSHA256="02fc27918200ed64d8f0c3b84fe81b95b59cd47ad99f270939ae497c19f27419"
 RUN wget -O /tmp/gnuplot-${GNUPLOTVER}.tar.gz -q \
          https://sourceforge.net/projects/gnuplot/files/gnuplot/5.4.6/gnuplot-5.4.6.tar.gz/download && \
+    echo "${GNUPLOTSHA256}  /tmp/gnuplot-${GNUPLOTVER}.tar.gz" | \
+        sha256sum -c - && \
     tar -C /usr/local/src -xf /tmp/gnuplot-${GNUPLOTVER}.tar.gz && \
     cd /usr/local/src/gnuplot-${GNUPLOTVER} && \
     ./configure -q --prefix=/usr/local && \
@@ -178,11 +201,14 @@ RUN wget -O /tmp/gnuplot-${GNUPLOTVER}.tar.gz -q \
 # Touchstone Tools; nothing needs it after the image is built.
 ARG RUSTVER="1.97.1"
 ARG TSTOOLSVER="0.10.3"
+ARG TSTOOLSSHA256="ce5a6fd89186b5bb323f355535bf6513aebb8f7125ce1d515dc23b6fa02ca6f6"
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
          -o /tmp/sh.rustup.sh && \
     sh /tmp/sh.rustup.sh -y --default-toolchain ${RUSTVER} && \
     curl -o /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz -SsL \
          https://gitlab.com/touchstone/touchstone-tools/-/archive/v${TSTOOLSVER}/touchstone-tools-v${TSTOOLSVER}.tar.gz && \
+    echo "${TSTOOLSSHA256}  /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz" | \
+        sha256sum -c - && \
     mkdir -p /usr/local/src/touchstone-tools-v${TSTOOLSVER} && \
     tar -C /usr/local/src/touchstone-tools-v${TSTOOLSVER} \
         --strip-components=1 \
@@ -201,7 +227,15 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
 
 WORKDIR /usr/local
 ARG APPIMAGETOOLVER="1.9.1"
+ARG APPIMAGETOOLSHA256_X86_64="ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0"
+ARG APPIMAGETOOLSHA256_AARCH64="f0837e7448a0c1e4e650a93bb3e85802546e60654ef287576f46c71c126a9158"
 RUN curl -SsOL \
          https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOLVER}/appimagetool-${ARCH}.AppImage && \
+    case "${ARCH}" in \
+    (x86_64) APPIMAGETOOLSHA256="${APPIMAGETOOLSHA256_X86_64}";; \
+    (aarch64) APPIMAGETOOLSHA256="${APPIMAGETOOLSHA256_AARCH64}";; \
+    esac && \
+    echo "${APPIMAGETOOLSHA256}  appimagetool-${ARCH}.AppImage" | \
+        sha256sum -c - && \
     chmod +x appimagetool-${ARCH}.AppImage && \
     ./appimagetool-${ARCH}.AppImage --appimage-extract
