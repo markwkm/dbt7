@@ -10,7 +10,8 @@ ARG ARCH
 RUN test -n "${ARCH}" || \
     { echo "ARCH build-arg is required (e.g. x86_64 or aarch64)"; exit 1; }
 
-ENV DEBIAN_FRONTEND=noninteractive
+# ARG rather than ENV so it does not persist into the built image.
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.list && \
     echo "deb http://archive.debian.org/debian-security buster/updates main" >> /etc/apt/sources.list && \
@@ -44,7 +45,8 @@ RUN apt-get -qq -y update && \
                    xz-utils \
                    zlib1g-dev && \
     apt-get -qq -y clean && \
-    apt-get -qq -y autoclean
+    apt-get -qq -y autoclean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Collect the copyright files of the Debian-packaged components that
 # are bundled into the AppImage, named <component>-<version>.
