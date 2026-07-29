@@ -38,6 +38,8 @@ vX.Y.Z (YYYY-MM-DD)
   use to shrink the image
 - AppImage: verify sha256 checksums of everything downloaded while
   building the container image
+- AppImage: keep DEBIAN_FRONTEND out of the built image environment and
+  remove the apt package lists
 
 v0.7.9 (2026-07-01)
 
