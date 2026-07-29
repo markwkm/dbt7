@@ -157,9 +157,10 @@ RUN ./configure -q --prefix=/usr/local && \
 RUN mkdir -p /usr/local/share/licenses/gnuplot-${GNUPLOTVER} && \
     cp -p Copyright README /usr/local/share/licenses/gnuplot-${GNUPLOTVER}/
 
+ARG RUSTVER="1.97.1"
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
          -o /tmp/sh.rustup.sh && \
-    sh /tmp/sh.rustup.sh -y
+    sh /tmp/sh.rustup.sh -y --default-toolchain ${RUSTVER}
 
 ARG TSTOOLSVER="0.10.4"
 RUN curl -o /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz -SsOL \
@@ -177,7 +178,8 @@ RUN mkdir -p /usr/local/share/licenses/touchstone-tools-v${TSTOOLSVER} && \
     cp -p COPYRIGHT /usr/local/share/licenses/touchstone-tools-v${TSTOOLSVER}/
 
 WORKDIR /usr/local
+ARG APPIMAGETOOLVER="1.9.1"
 RUN curl -SsOL \
-         https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${ARCH}.AppImage && \
+         https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOLVER}/appimagetool-${ARCH}.AppImage && \
     chmod +x appimagetool-${ARCH}.AppImage && \
     ./appimagetool-${ARCH}.AppImage --appimage-extract
