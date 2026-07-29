@@ -25,6 +25,9 @@ vX.Y.Z (YYYY-MM-DD)
   Containerfile
 - AppImage: fix bundled license directory names (fribidi, libxau) and add
   the missing libX11 license
+- AppImage: AppRun cleanups: exec the command with proper quoting, error
+  out when the man command is given no operand, and document the
+  --verbose and -V flags in the usage output
 
 v0.7.9 (2026-07-01)
 

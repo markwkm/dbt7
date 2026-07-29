@@ -10,13 +10,20 @@ Usage:
   $(basename "${ARGV0}") COMMAND [OPTION]
 
 Options:
-  The OPTION choices are depdent on the COMMAND specified.  The -h flag will
-  display the available options.
+  The OPTION choices are dependent on the COMMAND specified.  The -h flag
+  will display the available options.
+
+  Without a COMMAND, the OPTION choices are:
+
+  --verbose      output versions of additional programs used by DBT-7 when
+                 used with -V or --version OPTION
+  -V, --version  output version information, then exit
+  -?, --help     show this help, then exit
 
 Help command:
   man   This COMMAND will display the man page for any of the general commands
         below when given as its OPTION.  (Note: man pages are not available for
-		all available commands, yet.)
+        all available commands, yet.)
 
 Commands:
 $(find "${APPDIR}/usr/bin" -maxdepth 1 -type f -name "dbt7-*" -printf "%f\n" | sed -e "s/dbt7-/  /")
@@ -43,6 +50,10 @@ VERSION=0
 while [ "${#}" -gt 0 ] ; do
 	case "${1}" in
 	(man)
+		if [ "${2}" = "" ]; then
+			echo "specify a COMMAND to display its man page"
+			exit 1
+		fi
 		if [ "${MANPATH}" = "" ]; then
 			export MANPATH="${APPDIR}/usr/share/man"
 		else
@@ -109,4 +120,4 @@ fi
 
 shift
 
-$COMMAND "$@"
+exec "${COMMAND}" "$@"
