@@ -6,6 +6,10 @@ FROM debian:10
 
 ARG ARCH
 
+# Fail fast when ARCH is not provided; downloads below depend on it.
+RUN test -n "${ARCH}" || \
+    { echo "ARCH build-arg is required (e.g. x86_64 or aarch64)"; exit 1; }
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN echo "deb http://archive.debian.org/debian buster main" > /etc/apt/sources.list && \
