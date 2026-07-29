@@ -76,16 +76,18 @@ RUN set -e; \
 
 ARG PYTHONMVER="3.11"
 ARG PYTHONVER="${PYTHONMVER}.1"
-RUN curl -o /tmp/Python-${PYTHONVER}.tgz -SsOL \
+RUN curl -o /tmp/Python-${PYTHONVER}.tgz -SsL \
          https://www.python.org/ftp/python/${PYTHONVER}/Python-${PYTHONVER}.tgz && \
-    tar -C /usr/local/src -xf /tmp/Python-${PYTHONVER}.tgz
-WORKDIR /usr/local/src/Python-${PYTHONVER}
-RUN ./configure --silent --prefix=/usr/local \
+    tar -C /usr/local/src -xf /tmp/Python-${PYTHONVER}.tgz && \
+    cd /usr/local/src/Python-${PYTHONVER} && \
+    ./configure --silent --prefix=/usr/local \
                 --with-openssl-rpath=/usr/local/lib && \
     make -s -j$(nproc) && \
-    make -s install
-RUN mkdir -p /usr/local/share/licenses/python-${PYTHONVER} && \
-    cp -p LICENSE /usr/local/share/licenses/python-${PYTHONVER}/
+    make -s install && \
+    mkdir -p /usr/local/share/licenses/python-${PYTHONVER} && \
+    cp -p LICENSE /usr/local/share/licenses/python-${PYTHONVER}/ && \
+    cd / && \
+    rm -rf /usr/local/src/Python-${PYTHONVER} /tmp/Python-${PYTHONVER}.tgz
 
 ARG DOCUTILSVER="0.21.2"
 RUN /usr/local/bin/pip3 install docutils==${DOCUTILSVER}
@@ -96,86 +98,106 @@ RUN mkdir -p /usr/local/share/licenses/docutils-${DOCUTILSVER} && \
 ARG PGVER="10.23"
 RUN wget -O /tmp/postgresql-${PGVER}.tar.bz2 -q \
          https://ftp.postgresql.org/pub/source/v${PGVER}/postgresql-${PGVER}.tar.bz2 && \
-    tar -C /usr/local/src -xf /tmp/postgresql-${PGVER}.tar.bz2
-WORKDIR /usr/local/src/postgresql-${PGVER}
-RUN ./configure --silent --without-ldap --without-readline --without-zlib \
-    --without-gssapi --with-openssl --prefix=/usr && \
+    tar -C /usr/local/src -xf /tmp/postgresql-${PGVER}.tar.bz2 && \
+    cd /usr/local/src/postgresql-${PGVER} && \
+    ./configure --silent --without-ldap --without-readline --without-zlib \
+                --without-gssapi --with-openssl --prefix=/usr && \
     make -s -j $(nproc) install && \
-    ldconfig
-RUN mkdir -p /usr/local/share/licenses/postgresql-${PGVER} && \
-    cp -p COPYRIGHT /usr/local/share/licenses/postgresql-${PGVER}/
+    ldconfig && \
+    mkdir -p /usr/local/share/licenses/postgresql-${PGVER} && \
+    cp -p COPYRIGHT /usr/local/share/licenses/postgresql-${PGVER}/ && \
+    cd / && \
+    rm -rf /usr/local/src/postgresql-${PGVER} /tmp/postgresql-${PGVER}.tar.bz2
 
 ARG CMAKEVER="3.21.0"
-RUN curl -o /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz -SsOL \
+RUN curl -o /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz -SsL \
          https://github.com/Kitware/CMake/releases/download/v${CMAKEVER}/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz && \
     tar -C /usr --strip-components=1 \
-        -xf /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz
+        -xf /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz && \
+    rm -f /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz
 
 # Install DBT Tools
 
 ARG DBTTOOLSVER="0.5.1"
-RUN curl -o /tmp/v${DBTTOOLSVER}.tar.gz -SsOL \
+RUN curl -o /tmp/v${DBTTOOLSVER}.tar.gz -SsL \
          https://github.com/osdldbt/dbttools/archive/refs/tags/v${DBTTOOLSVER}.tar.gz && \
-    tar -C /usr/local/src -xf /tmp/v${DBTTOOLSVER}.tar.gz
-WORKDIR /usr/local/src/dbttools-${DBTTOOLSVER}
-RUN cmake -H. -Bbuild/release -DCMAKE_INSTALL_PREFIX=/usr && \
+    tar -C /usr/local/src -xf /tmp/v${DBTTOOLSVER}.tar.gz && \
+    cd /usr/local/src/dbttools-${DBTTOOLSVER} && \
+    cmake -H. -Bbuild/release -DCMAKE_INSTALL_PREFIX=/usr && \
     (cd build/release && make -s install) && \
-    rm -f /tmp/v${DBTTOOLSVER}.tar.gz
-RUN mkdir -p /usr/local/share/licenses/dbttools-${DBTTOOLSVER} && \
-    cp -p LICENSE /usr/local/share/licenses/dbttools-${DBTTOOLSVER}/
+    mkdir -p /usr/local/share/licenses/dbttools-${DBTTOOLSVER} && \
+    cp -p LICENSE /usr/local/share/licenses/dbttools-${DBTTOOLSVER}/ && \
+    cd / && \
+    rm -rf /usr/local/src/dbttools-${DBTTOOLSVER} /tmp/v${DBTTOOLSVER}.tar.gz
 
 ARG SQLITE3VER=3410200
 RUN wget -O /tmp/sqlite-autoconf-${SQLITE3VER}.tar.gz -q \
          https://www.sqlite.org/2023/sqlite-autoconf-${SQLITE3VER}.tar.gz && \
-    tar -C /usr/local/src -xf /tmp/sqlite-autoconf-${SQLITE3VER}.tar.gz
-WORKDIR /usr/local/src/sqlite-autoconf-${SQLITE3VER}
-RUN ./configure --quiet --silent --prefix=/usr/local && \
-    make -s -j $(nproc) install
-RUN mkdir -p /usr/local/share/licenses/sqlite-autoconf-${SQLITE3VER} && \
+    tar -C /usr/local/src -xf /tmp/sqlite-autoconf-${SQLITE3VER}.tar.gz && \
+    cd /usr/local/src/sqlite-autoconf-${SQLITE3VER} && \
+    ./configure --quiet --silent --prefix=/usr/local && \
+    make -s -j $(nproc) install && \
+    mkdir -p /usr/local/share/licenses/sqlite-autoconf-${SQLITE3VER} && \
     cp -p tea/license.terms \
-       /usr/local/share/licenses/sqlite-autoconf-${SQLITE3VER}/
+       /usr/local/share/licenses/sqlite-autoconf-${SQLITE3VER}/ && \
+    cd / && \
+    rm -rf /usr/local/src/sqlite-autoconf-${SQLITE3VER} \
+       /tmp/sqlite-autoconf-${SQLITE3VER}.tar.gz
 
 ARG PANGOVER="1.42"
 ARG PANGOMINORVER="4"
-RUN curl -o /tmp/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz -SsOL \
+RUN curl -o /tmp/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz -SsL \
          https://download.gnome.org/sources/pango/${PANGOVER}/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz && \
-    tar -C /usr/local/src -xf /tmp/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz
-WORKDIR /usr/local/src/pango-${PANGOVER}.${PANGOMINORVER}
-RUN ./configure --quiet --silent --prefix=/usr/local && \
+    tar -C /usr/local/src -xf /tmp/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz && \
+    cd /usr/local/src/pango-${PANGOVER}.${PANGOMINORVER} && \
+    ./configure --quiet --silent --prefix=/usr/local && \
     make -s -j $(nproc) install && \
-    ldconfig
-RUN mkdir -p /usr/local/share/licenses/pango-${PANGOVER}.${PANGOMINORVER} && \
-cp -p COPYING /usr/local/share/licenses/pango-${PANGOVER}.${PANGOMINORVER}/
+    ldconfig && \
+    mkdir -p /usr/local/share/licenses/pango-${PANGOVER}.${PANGOMINORVER} && \
+    cp -p COPYING \
+       /usr/local/share/licenses/pango-${PANGOVER}.${PANGOMINORVER}/ && \
+    cd / && \
+    rm -rf /usr/local/src/pango-${PANGOVER}.${PANGOMINORVER} \
+       /tmp/pango-${PANGOVER}.${PANGOMINORVER}.tar.xz
 
 ARG GNUPLOTVER="5.4.6"
 RUN wget -O /tmp/gnuplot-${GNUPLOTVER}.tar.gz -q \
          https://sourceforge.net/projects/gnuplot/files/gnuplot/5.4.6/gnuplot-5.4.6.tar.gz/download && \
-    tar -C /usr/local/src -xf /tmp/gnuplot-${GNUPLOTVER}.tar.gz
-WORKDIR /usr/local/src/gnuplot-${GNUPLOTVER}
-RUN ./configure -q --prefix=/usr/local && \
-    make -s -j$(nproc) install
-RUN mkdir -p /usr/local/share/licenses/gnuplot-${GNUPLOTVER} && \
-    cp -p Copyright README /usr/local/share/licenses/gnuplot-${GNUPLOTVER}/
+    tar -C /usr/local/src -xf /tmp/gnuplot-${GNUPLOTVER}.tar.gz && \
+    cd /usr/local/src/gnuplot-${GNUPLOTVER} && \
+    ./configure -q --prefix=/usr/local && \
+    make -s -j$(nproc) install && \
+    mkdir -p /usr/local/share/licenses/gnuplot-${GNUPLOTVER} && \
+    cp -p Copyright README \
+       /usr/local/share/licenses/gnuplot-${GNUPLOTVER}/ && \
+    cd / && \
+    rm -rf /usr/local/src/gnuplot-${GNUPLOTVER} \
+       /tmp/gnuplot-${GNUPLOTVER}.tar.gz
 
+# Install the Rust toolchain only long enough to build spar from the
+# Touchstone Tools; nothing needs it after the image is built.
 ARG RUSTVER="1.97.1"
+ARG TSTOOLSVER="0.10.4"
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
          -o /tmp/sh.rustup.sh && \
-    sh /tmp/sh.rustup.sh -y --default-toolchain ${RUSTVER}
-
-ARG TSTOOLSVER="0.10.4"
-RUN curl -o /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz -SsOL \
+    sh /tmp/sh.rustup.sh -y --default-toolchain ${RUSTVER} && \
+    curl -o /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz -SsL \
          https://gitlab.com/touchstone/touchstone-tools/-/archive/v${TSTOOLSVER}/touchstone-tools-v${TSTOOLSVER}.tar.gz && \
     mkdir -p /usr/local/src/touchstone-tools-v${TSTOOLSVER} && \
     tar -C /usr/local/src/touchstone-tools-v${TSTOOLSVER} \
         --strip-components=1 \
-        -xf /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz
-WORKDIR /usr/local/src/touchstone-tools-v${TSTOOLSVER}
-RUN cmake -H. -Bbuild/release -DCMAKE_INSTALL_PREFIX=/usr && \
+        -xf /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz && \
+    cd /usr/local/src/touchstone-tools-v${TSTOOLSVER} && \
+    cmake -H. -Bbuild/release -DCMAKE_INSTALL_PREFIX=/usr && \
     (cd build/release && make -s install) && \
     (cd spar && ${HOME}/.cargo/bin/cargo install --root /usr/local --path .) && \
-    rm -f /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz
-RUN mkdir -p /usr/local/share/licenses/touchstone-tools-v${TSTOOLSVER} && \
-    cp -p COPYRIGHT /usr/local/share/licenses/touchstone-tools-v${TSTOOLSVER}/
+    mkdir -p /usr/local/share/licenses/touchstone-tools-v${TSTOOLSVER} && \
+    cp -p COPYRIGHT \
+       /usr/local/share/licenses/touchstone-tools-v${TSTOOLSVER}/ && \
+    cd / && \
+    rm -rf /usr/local/src/touchstone-tools-v${TSTOOLSVER} \
+       /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz \
+       /tmp/sh.rustup.sh "${HOME}/.rustup" "${HOME}/.cargo"
 
 WORKDIR /usr/local
 ARG APPIMAGETOOLVER="1.9.1"

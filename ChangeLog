@@ -33,6 +33,9 @@ vX.Y.Z (YYYY-MM-DD)
 - AppImage: add the missing docutils license to the bundled licenses
 - AppImage: pin the appimagetool release (1.9.1) and Rust toolchain
   (1.97.1) instead of installing whatever is current
+- AppImage: build each bundled component in a single container image
+  layer and remove tarballs, source trees, and the Rust toolchain after
+  use to shrink the image
 
 v0.7.9 (2026-07-01)
 
