@@ -30,6 +30,7 @@ vX.Y.Z (YYYY-MM-DD)
   --verbose and -V flags in the usage output
 - AppImage: install ca-certificates and stop disabling TLS certificate
   verification when downloading source tarballs
+- AppImage: add the missing docutils license to the bundled licenses
 
 v0.7.9 (2026-07-01)
 

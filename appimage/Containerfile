@@ -148,6 +148,9 @@ RUN mkdir -p /usr/local/share/licenses/python-${PYTHONVER} && \
 
 ARG DOCUTILSVER="0.21.2"
 RUN /usr/local/bin/pip3 install docutils==${DOCUTILSVER}
+RUN mkdir -p /usr/local/share/licenses/docutils-${DOCUTILSVER} && \
+    cp -p /usr/local/lib/python${PYTHONMVER}/site-packages/docutils-${DOCUTILSVER}.dist-info/COPYING.txt \
+       /usr/local/share/licenses/docutils-${DOCUTILSVER}/
 
 ARG PGVER="10.23"
 RUN wget -O /tmp/postgresql-${PGVER}.tar.bz2 -q \
