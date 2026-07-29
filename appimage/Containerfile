@@ -57,9 +57,9 @@ RUN mkdir -p \
        /usr/local/share/licenses/freetype-$(dpkg-query -W -f='${Version}\n' libfreetype6)/
 
 RUN mkdir -p \
-          /usr/local/share/licenses/fribifi-$(dpkg-query -W -f='${Version}\n' libfribidi0) && \
+          /usr/local/share/licenses/fribidi-$(dpkg-query -W -f='${Version}\n' libfribidi0) && \
     cp -p /usr/share/doc/libfribidi0/copyright \
-       /usr/local/share/licenses/fribifi-$(dpkg-query -W -f='${Version}\n' libfribidi0)/
+       /usr/local/share/licenses/fribidi-$(dpkg-query -W -f='${Version}\n' libfribidi0)/
 
 RUN mkdir -p \
           /usr/local/share/licenses/graphite2-$(dpkg-query -W -f='${Version}\n' libgraphite2-3) && \
@@ -77,9 +77,14 @@ RUN mkdir -p \
        /usr/local/share/licenses/libpng-$(dpkg-query -W -f='${Version}\n' libpng16-16)/
 
 RUN mkdir -p \
-          /usr/local/share/licenses/libau-$(dpkg-query -W -f='${Version}\n' libxau6) && \
+          /usr/local/share/licenses/libx11-$(dpkg-query -W -f='${Version}\n' libx11-6) && \
+    cp -p /usr/share/doc/libx11-6/copyright \
+       /usr/local/share/licenses/libx11-$(dpkg-query -W -f='${Version}\n' libx11-6)/
+
+RUN mkdir -p \
+          /usr/local/share/licenses/libxau-$(dpkg-query -W -f='${Version}\n' libxau6) && \
     cp -p /usr/share/doc/libxau6/copyright \
-       /usr/local/share/licenses/libau-$(dpkg-query -W -f='${Version}\n' libxau6)/
+       /usr/local/share/licenses/libxau-$(dpkg-query -W -f='${Version}\n' libxau6)/
 
 RUN mkdir -p \
           /usr/local/share/licenses/libbsd-$(dpkg-query -W -f='${Version}\n' libbsd0) && \

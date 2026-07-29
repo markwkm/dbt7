@@ -23,6 +23,8 @@ vX.Y.Z (YYYY-MM-DD)
 - AppImage: fix C references to DS
 - AppImage: fix missing $ in the Touchstone Tools archive filename in the
   Containerfile
+- AppImage: fix bundled license directory names (fribidi, libxau) and add
+  the missing libX11 license
 
 v0.7.9 (2026-07-01)
 
