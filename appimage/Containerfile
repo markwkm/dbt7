@@ -209,7 +209,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
 
 ARG TSTOOLSVER="0.10.4"
 RUN curl -o /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz -SsOL \
-         https://gitlab.com/touchstone/touchstone-tools/-/archive/v${TSTOOLSVER}/touchstone-tools-v{TSTOOLSVER}.tar.gz && \
+         https://gitlab.com/touchstone/touchstone-tools/-/archive/v${TSTOOLSVER}/touchstone-tools-v${TSTOOLSVER}.tar.gz && \
     mkdir -p /usr/local/src/touchstone-tools-v${TSTOOLSVER} && \
     tar -C /usr/local/src/touchstone-tools-v${TSTOOLSVER} \
         --strip-components=1 \
