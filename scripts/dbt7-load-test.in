@@ -154,9 +154,8 @@ OUTPUTFILE="${OUTPUT_DIR}/output.txt"
 
 # Generate database data if $DS_DATA does not exist
 if [ ! -d "$DS_DATA" ]; then
-	# TODO: Hard code to not chunk data generation until we can figure out why
-	# chunked data generation produces data that fails data validation.
 	dbt7-generate-data \
+			--parallel="${CHUNKS}" \
 			--tpcdstools="${DSHOME}" \
 			--scale-factor="${SCALE}" \
 			"${DS_DATA}"
