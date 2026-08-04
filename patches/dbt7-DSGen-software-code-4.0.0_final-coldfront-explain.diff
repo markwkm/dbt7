@@ -1,7 +1,7 @@
-Index: dbt7/dsgen/coldfrontea/query1.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query1.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query1.tpl
++++ dbt7/dsgen/templates_coldfrontea/query1.tpl
 @@ -0,0 +1,63 @@
 +--
 +-- Legal Notice 
@@ -66,10 +66,10 @@ Index: dbt7/dsgen/coldfrontea/query1.tpl
 +and ctr1.ctr_customer_sk = c_customer_sk
 +order by c_customer_id
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query10.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query10.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query10.tpl
++++ dbt7/dsgen/templates_coldfrontea/query10.tpl
 @@ -0,0 +1,96 @@
 +--
 +-- Legal Notice 
@@ -167,10 +167,10 @@ Index: dbt7/dsgen/coldfrontea/query10.tpl
 +          cd_dep_employed_count,
 +          cd_dep_college_count
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query11.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query11.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query11.tpl
++++ dbt7/dsgen/templates_coldfrontea/query11.tpl
 @@ -0,0 +1,120 @@
 +--
 +-- Legal Notice 
@@ -292,10 +292,10 @@ Index: dbt7/dsgen/coldfrontea/query11.tpl
 +         ,t_s_secyear.customer_last_name
 +         ,[SELECTONE]
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query12.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query12.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query12.tpl
++++ dbt7/dsgen/templates_coldfrontea/query12.tpl
 @@ -0,0 +1,72 @@
 +--
 +-- Legal Notice 
@@ -369,10 +369,10 @@ Index: dbt7/dsgen/coldfrontea/query12.tpl
 +        ,i_item_desc
 +        ,revenueratio
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query13.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query13.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query13.tpl
++++ dbt7/dsgen/templates_coldfrontea/query13.tpl
 @@ -0,0 +1,89 @@
 +--
 +-- Legal Notice 
@@ -463,10 +463,10 @@ Index: dbt7/dsgen/coldfrontea/query13.tpl
 +  and ss_net_profit between 50 and 250  
 +     ))
 +;
-Index: dbt7/dsgen/coldfrontea/query14.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query14.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query14.tpl
++++ dbt7/dsgen/templates_coldfrontea/query14.tpl
 @@ -0,0 +1,248 @@
 +--
 +-- Legal Notice 
@@ -716,10 +716,10 @@ Index: dbt7/dsgen/coldfrontea/query14.tpl
 +   and this_year.i_category_id = last_year.i_category_id
 + order by this_year.channel, this_year.i_brand_id, this_year.i_class_id, this_year.i_category_id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query15.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query15.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query15.tpl
++++ dbt7/dsgen/templates_coldfrontea/query15.tpl
 @@ -0,0 +1,56 @@
 +--
 +-- Legal Notice 
@@ -777,10 +777,10 @@ Index: dbt7/dsgen/coldfrontea/query15.tpl
 + group by ca_zip
 + order by ca_zip
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query16.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query16.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query16.tpl
++++ dbt7/dsgen/templates_coldfrontea/query16.tpl
 @@ -0,0 +1,75 @@
 +--
 +-- Legal Notice 
@@ -857,10 +857,10 @@ Index: dbt7/dsgen/coldfrontea/query16.tpl
 +               where cs1.cs_order_number = cr1.cr_order_number)
 +order by count(distinct cs_order_number)
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query17.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query17.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query17.tpl
++++ dbt7/dsgen/templates_coldfrontea/query17.tpl
 @@ -0,0 +1,80 @@
 +--
 +-- Legal Notice 
@@ -942,10 +942,10 @@ Index: dbt7/dsgen/coldfrontea/query17.tpl
 +         ,i_item_desc
 +         ,s_state
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query18.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query18.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query18.tpl
++++ dbt7/dsgen/templates_coldfrontea/query18.tpl
 @@ -0,0 +1,73 @@
 +--
 +-- Legal Notice 
@@ -1020,10 +1020,10 @@ Index: dbt7/dsgen/coldfrontea/query18.tpl
 +        ca_county,
 +	i_item_id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query19.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query19.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query19.tpl
++++ dbt7/dsgen/templates_coldfrontea/query19.tpl
 @@ -0,0 +1,63 @@
 +--
 +-- Legal Notice 
@@ -1088,10 +1088,10 @@ Index: dbt7/dsgen/coldfrontea/query19.tpl
 +         ,i_manufact_id
 +         ,i_manufact
 +[_LIMITC] ;
-Index: dbt7/dsgen/coldfrontea/query2.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query2.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query2.tpl
++++ dbt7/dsgen/templates_coldfrontea/query2.tpl
 @@ -0,0 +1,95 @@
 +--
 +-- Legal Notice 
@@ -1188,10 +1188,10 @@ Index: dbt7/dsgen/coldfrontea/query2.tpl
 +        d_year = [YEAR]+1) z
 + where d_week_seq1=d_week_seq2-53
 + order by d_week_seq1;
-Index: dbt7/dsgen/coldfrontea/query20.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query20.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query20.tpl
++++ dbt7/dsgen/templates_coldfrontea/query20.tpl
 @@ -0,0 +1,67 @@
 +--
 +-- Legal Notice 
@@ -1260,10 +1260,10 @@ Index: dbt7/dsgen/coldfrontea/query20.tpl
 +         ,i_item_desc
 +         ,revenueratio
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query21.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query21.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query21.tpl
++++ dbt7/dsgen/templates_coldfrontea/query21.tpl
 @@ -0,0 +1,66 @@
 +--
 +-- Legal Notice 
@@ -1331,10 +1331,10 @@ Index: dbt7/dsgen/coldfrontea/query21.tpl
 + order by w_warehouse_name
 +         ,i_item_id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query22.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query22.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query22.tpl
++++ dbt7/dsgen/templates_coldfrontea/query22.tpl
 @@ -0,0 +1,55 @@
 +--
 +-- Legal Notice 
@@ -1391,10 +1391,10 @@ Index: dbt7/dsgen/coldfrontea/query22.tpl
 +                       ,i_category)
 +order by qoh, i_product_name, i_brand, i_class, i_category
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query23.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query23.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query23.tpl
++++ dbt7/dsgen/templates_coldfrontea/query23.tpl
 @@ -0,0 +1,146 @@
 +--
 +-- Legal Notice 
@@ -1542,10 +1542,10 @@ Index: dbt7/dsgen/coldfrontea/query23.tpl
 +       group by c_last_name,c_first_name) y 
 +     order by c_last_name,c_first_name,sales
 +  [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query24.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query24.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query24.tpl
++++ dbt7/dsgen/templates_coldfrontea/query24.tpl
 @@ -0,0 +1,147 @@
 +--
 +-- Legal Notice 
@@ -1694,10 +1694,10 @@ Index: dbt7/dsgen/coldfrontea/query24.tpl
 +        ,c_first_name
 +        ,s_store_name
 +;
-Index: dbt7/dsgen/coldfrontea/query25.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query25.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query25.tpl
++++ dbt7/dsgen/templates_coldfrontea/query25.tpl
 @@ -0,0 +1,84 @@
 +--
 +-- Legal Notice 
@@ -1783,10 +1783,10 @@ Index: dbt7/dsgen/coldfrontea/query25.tpl
 + ,s_store_id
 + ,s_store_name
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query26.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query26.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query26.tpl
++++ dbt7/dsgen/templates_coldfrontea/query26.tpl
 @@ -0,0 +1,59 @@
 +--
 +-- Legal Notice 
@@ -1847,10 +1847,10 @@ Index: dbt7/dsgen/coldfrontea/query26.tpl
 + group by i_item_id
 + order by i_item_id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query27.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query27.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query27.tpl
++++ dbt7/dsgen/templates_coldfrontea/query27.tpl
 @@ -0,0 +1,68 @@
 +--
 +-- Legal Notice 
@@ -1920,10 +1920,10 @@ Index: dbt7/dsgen/coldfrontea/query27.tpl
 + order by i_item_id
 +         ,s_state
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query28.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query28.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query28.tpl
++++ dbt7/dsgen/templates_coldfrontea/query28.tpl
 @@ -0,0 +1,91 @@
 +--
 +-- Legal Notice 
@@ -2016,10 +2016,10 @@ Index: dbt7/dsgen/coldfrontea/query28.tpl
 +          or ss_coupon_amt between [COUPONAMT.6] and [COUPONAMT.6]+1000
 +          or ss_wholesale_cost between [WHOLESALECOST.6] and [WHOLESALECOST.6]+20)) B6
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query29.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query29.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query29.tpl
++++ dbt7/dsgen/templates_coldfrontea/query29.tpl
 @@ -0,0 +1,84 @@
 +--
 +-- Legal Notice 
@@ -2105,10 +2105,10 @@ Index: dbt7/dsgen/coldfrontea/query29.tpl
 +   ,s_store_id
 +   ,s_store_name
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query3.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query3.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query3.tpl
++++ dbt7/dsgen/templates_coldfrontea/query3.tpl
 @@ -0,0 +1,58 @@
 +--
 +-- Legal Notice 
@@ -2168,10 +2168,10 @@ Index: dbt7/dsgen/coldfrontea/query3.tpl
 +         ,sum_agg desc
 +         ,brand_id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query30.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query30.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query30.tpl
++++ dbt7/dsgen/templates_coldfrontea/query30.tpl
 @@ -0,0 +1,67 @@
 +--
 +-- Legal Notice 
@@ -2240,10 +2240,10 @@ Index: dbt7/dsgen/coldfrontea/query30.tpl
 +                  ,c_birth_day,c_birth_month,c_birth_year,c_birth_country,c_login,c_email_address
 +                  ,c_last_review_date_sk,ctr_total_return
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query31.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query31.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query31.tpl
++++ dbt7/dsgen/templates_coldfrontea/query31.tpl
 @@ -0,0 +1,88 @@
 +--
 +-- Legal Notice 
@@ -2333,10 +2333,10 @@ Index: dbt7/dsgen/coldfrontea/query31.tpl
 +    and case when ws2.web_sales > 0 then ws3.web_sales/ws2.web_sales else null end
 +       > case when ss2.store_sales > 0 then ss3.store_sales/ss2.store_sales else null end
 + order by [AGG];
-Index: dbt7/dsgen/coldfrontea/query32.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query32.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query32.tpl
++++ dbt7/dsgen/templates_coldfrontea/query32.tpl
 @@ -0,0 +1,65 @@
 +--
 +-- Legal Notice 
@@ -2403,10 +2403,10 @@ Index: dbt7/dsgen/coldfrontea/query32.tpl
 +          and d_date_sk = cs_sold_date_sk 
 +      ) 
 +[_LIMITC]; 
-Index: dbt7/dsgen/coldfrontea/query33.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query33.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query33.tpl
++++ dbt7/dsgen/templates_coldfrontea/query33.tpl
 @@ -0,0 +1,114 @@
 +--
 +-- Legal Notice 
@@ -2522,10 +2522,10 @@ Index: dbt7/dsgen/coldfrontea/query33.tpl
 + group by i_manufact_id
 + order by total_sales
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query34.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query34.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query34.tpl
++++ dbt7/dsgen/templates_coldfrontea/query34.tpl
 @@ -0,0 +1,77 @@
 +--
 +-- Legal Notice 
@@ -2604,10 +2604,10 @@ Index: dbt7/dsgen/coldfrontea/query34.tpl
 +    where ss_customer_sk = c_customer_sk
 +      and cnt between 15 and 20
 +    order by c_last_name,c_first_name,c_salutation,c_preferred_cust_flag desc, ss_ticket_number;
-Index: dbt7/dsgen/coldfrontea/query35.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query35.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query35.tpl
++++ dbt7/dsgen/templates_coldfrontea/query35.tpl
 @@ -0,0 +1,97 @@
 +--
 +-- Legal Notice 
@@ -2706,10 +2706,10 @@ Index: dbt7/dsgen/coldfrontea/query35.tpl
 +          cd_dep_employed_count,
 +          cd_dep_college_count
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query36a.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query36a.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query36a.tpl
++++ dbt7/dsgen/templates_coldfrontea/query36a.tpl
 @@ -0,0 +1,86 @@
 +--
 +-- Legal Notice 
@@ -2797,10 +2797,10 @@ Index: dbt7/dsgen/coldfrontea/query36a.tpl
 +  ,case when lochierarchy = 0 then i_category end
 +  ,rank_within_parent
 +  [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query37.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query37.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query37.tpl
++++ dbt7/dsgen/templates_coldfrontea/query37.tpl
 @@ -0,0 +1,55 @@
 +--
 +-- Legal Notice 
@@ -2857,10 +2857,10 @@ Index: dbt7/dsgen/coldfrontea/query37.tpl
 + group by i_item_id,i_item_desc,i_current_price
 + order by i_item_id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query38.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query38.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query38.tpl
++++ dbt7/dsgen/templates_coldfrontea/query38.tpl
 @@ -0,0 +1,58 @@
 +--
 +-- Legal Notice 
@@ -2920,10 +2920,10 @@ Index: dbt7/dsgen/coldfrontea/query38.tpl
 +      and d_month_seq between [DMS] and [DMS] + 11
 +) hot_cust
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query39.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query39.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query39.tpl
++++ dbt7/dsgen/templates_coldfrontea/query39.tpl
 @@ -0,0 +1,95 @@
 +--
 +-- Legal Notice 
@@ -3020,10 +3020,10 @@ Index: dbt7/dsgen/coldfrontea/query39.tpl
 +order by inv1.w_warehouse_sk,inv1.i_item_sk,inv1.d_moy,inv1.mean,inv1.cov
 +        ,inv2.d_moy,inv2.mean, inv2.cov
 +;
-Index: dbt7/dsgen/coldfrontea/query4.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query4.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query4.tpl
++++ dbt7/dsgen/templates_coldfrontea/query4.tpl
 @@ -0,0 +1,155 @@
 +--
 +-- Legal Notice 
@@ -3180,10 +3180,10 @@ Index: dbt7/dsgen/coldfrontea/query4.tpl
 +         ,t_s_secyear.customer_last_name
 +         ,[SELECTONE]
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query40.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query40.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query40.tpl
++++ dbt7/dsgen/templates_coldfrontea/query40.tpl
 @@ -0,0 +1,64 @@
 +--
 +-- Legal Notice 
@@ -3249,10 +3249,10 @@ Index: dbt7/dsgen/coldfrontea/query40.tpl
 +    w_state,i_item_id
 + order by w_state,i_item_id
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query41.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query41.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query41.tpl
++++ dbt7/dsgen/templates_coldfrontea/query41.tpl
 @@ -0,0 +1,90 @@
 +--
 +-- Legal Notice 
@@ -3344,10 +3344,10 @@ Index: dbt7/dsgen/coldfrontea/query41.tpl
 +        )))) > 0
 + order by i_product_name
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query42.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query42.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query42.tpl
++++ dbt7/dsgen/templates_coldfrontea/query42.tpl
 @@ -0,0 +1,58 @@
 +--
 +-- Legal Notice 
@@ -3407,10 +3407,10 @@ Index: dbt7/dsgen/coldfrontea/query42.tpl
 + 		,item.i_category_id
 + 		,item.i_category
 +[_LIMITC] ;
-Index: dbt7/dsgen/coldfrontea/query43.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query43.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query43.tpl
++++ dbt7/dsgen/templates_coldfrontea/query43.tpl
 @@ -0,0 +1,56 @@
 +--
 +-- Legal Notice 
@@ -3468,10 +3468,10 @@ Index: dbt7/dsgen/coldfrontea/query43.tpl
 + group by s_store_name, s_store_id
 + order by s_store_name, s_store_id,sun_sales,mon_sales,tue_sales,wed_sales,thu_sales,fri_sales,sat_sales
 + [_LIMITC]; 
-Index: dbt7/dsgen/coldfrontea/query44.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query44.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query44.tpl
++++ dbt7/dsgen/templates_coldfrontea/query44.tpl
 @@ -0,0 +1,72 @@
 +--
 +-- Legal Notice 
@@ -3545,10 +3545,10 @@ Index: dbt7/dsgen/coldfrontea/query44.tpl
 +  and i2.i_item_sk=descending.item_sk
 +order by asceding.rnk
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query45.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query45.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query45.tpl
++++ dbt7/dsgen/templates_coldfrontea/query45.tpl
 @@ -0,0 +1,57 @@
 +--
 +-- Legal Notice 
@@ -3607,10 +3607,10 @@ Index: dbt7/dsgen/coldfrontea/query45.tpl
 + group by ca_zip, [GBOBC]
 + order by ca_zip, [GBOBC]
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query46.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query46.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query46.tpl
++++ dbt7/dsgen/templates_coldfrontea/query46.tpl
 @@ -0,0 +1,78 @@
 +--
 +-- Legal Notice 
@@ -3690,10 +3690,10 @@ Index: dbt7/dsgen/coldfrontea/query46.tpl
 +          ,bought_city
 +          ,ss_ticket_number
 +  [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query47.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query47.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query47.tpl
++++ dbt7/dsgen/templates_coldfrontea/query47.tpl
 @@ -0,0 +1,89 @@
 +--
 +-- Legal Notice 
@@ -3784,10 +3784,10 @@ Index: dbt7/dsgen/coldfrontea/query47.tpl
 +        case when avg_monthly_sales > 0 then abs(sum_sales - avg_monthly_sales) / avg_monthly_sales else null end > 0.1
 + order by sum_sales - avg_monthly_sales, [ORDERBY]
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query48.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query48.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query48.tpl
++++ dbt7/dsgen/templates_coldfrontea/query48.tpl
 @@ -0,0 +1,104 @@
 +--
 +-- Legal Notice 
@@ -3893,10 +3893,10 @@ Index: dbt7/dsgen/coldfrontea/query48.tpl
 +  )
 + )
 +;
-Index: dbt7/dsgen/coldfrontea/query49.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query49.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query49.tpl
++++ dbt7/dsgen/templates_coldfrontea/query49.tpl
 @@ -0,0 +1,165 @@
 +--
 +-- Legal Notice 
@@ -4063,10 +4063,10 @@ Index: dbt7/dsgen/coldfrontea/query49.tpl
 + ) query49
 + order by 1,4,5,2
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query5.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query5.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query5.tpl
++++ dbt7/dsgen/templates_coldfrontea/query5.tpl
 @@ -0,0 +1,164 @@
 +--
 +-- Legal Notice 
@@ -4232,10 +4232,10 @@ Index: dbt7/dsgen/coldfrontea/query5.tpl
 + order by channel
 +         ,id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query50.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query50.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query50.tpl
++++ dbt7/dsgen/templates_coldfrontea/query50.tpl
 @@ -0,0 +1,96 @@
 +--
 +-- Legal Notice 
@@ -4333,10 +4333,10 @@ Index: dbt7/dsgen/coldfrontea/query50.tpl
 +        ,s_state
 +        ,s_zip
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query51.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query51.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query51.tpl
++++ dbt7/dsgen/templates_coldfrontea/query51.tpl
 @@ -0,0 +1,81 @@
 +--
 +-- Legal Notice 
@@ -4419,10 +4419,10 @@ Index: dbt7/dsgen/coldfrontea/query51.tpl
 +order by item_sk
 +        ,d_date
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query52.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query52.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query52.tpl
++++ dbt7/dsgen/templates_coldfrontea/query52.tpl
 @@ -0,0 +1,58 @@
 +--
 +-- Legal Notice 
@@ -4482,10 +4482,10 @@ Index: dbt7/dsgen/coldfrontea/query52.tpl
 + 	,ext_price desc
 + 	,brand_id
 +[_LIMITC] ;
-Index: dbt7/dsgen/coldfrontea/query53.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query53.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query53.tpl
++++ dbt7/dsgen/templates_coldfrontea/query53.tpl
 @@ -0,0 +1,64 @@
 +--
 +-- Legal Notice 
@@ -4551,10 +4551,10 @@ Index: dbt7/dsgen/coldfrontea/query53.tpl
 +	 sum_sales,
 +	 i_manufact_id
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query54.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query54.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query54.tpl
++++ dbt7/dsgen/templates_coldfrontea/query54.tpl
 @@ -0,0 +1,95 @@
 +--
 +-- Legal Notice 
@@ -4651,10 +4651,10 @@ Index: dbt7/dsgen/coldfrontea/query54.tpl
 + group by segment
 + order by segment, num_customers
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query55.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query55.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query55.tpl
++++ dbt7/dsgen/templates_coldfrontea/query55.tpl
 @@ -0,0 +1,51 @@
 +--
 +-- Legal Notice 
@@ -4707,10 +4707,10 @@ Index: dbt7/dsgen/coldfrontea/query55.tpl
 + group by i_brand, i_brand_id
 + order by ext_price desc, i_brand_id
 +[_LIMITC] ;
-Index: dbt7/dsgen/coldfrontea/query56.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query56.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query56.tpl
++++ dbt7/dsgen/templates_coldfrontea/query56.tpl
 @@ -0,0 +1,107 @@
 +--
 +-- Legal Notice 
@@ -4819,10 +4819,10 @@ Index: dbt7/dsgen/coldfrontea/query56.tpl
 + order by total_sales,
 +          i_item_id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query57.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query57.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query57.tpl
++++ dbt7/dsgen/templates_coldfrontea/query57.tpl
 @@ -0,0 +1,87 @@
 +--
 +-- Legal Notice 
@@ -4911,10 +4911,10 @@ Index: dbt7/dsgen/coldfrontea/query57.tpl
 +        case when avg_monthly_sales > 0 then abs(sum_sales - avg_monthly_sales) / avg_monthly_sales else null end > 0.1
 + order by sum_sales - avg_monthly_sales, [ORDERBY]
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query58.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query58.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query58.tpl
++++ dbt7/dsgen/templates_coldfrontea/query58.tpl
 @@ -0,0 +1,101 @@
 +--
 +-- Legal Notice 
@@ -5017,10 +5017,10 @@ Index: dbt7/dsgen/coldfrontea/query58.tpl
 + order by item_id
 +         ,ss_item_rev
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query59.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query59.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query59.tpl
++++ dbt7/dsgen/templates_coldfrontea/query59.tpl
 @@ -0,0 +1,79 @@
 +--
 +-- Legal Notice 
@@ -5101,10 +5101,10 @@ Index: dbt7/dsgen/coldfrontea/query59.tpl
 +   and d_week_seq1=d_week_seq2-52
 + order by s_store_name1,s_store_id1,d_week_seq1
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query6.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query6.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query6.tpl
++++ dbt7/dsgen/templates_coldfrontea/query6.tpl
 @@ -0,0 +1,62 @@
 +--
 +-- Legal Notice 
@@ -5168,10 +5168,10 @@ Index: dbt7/dsgen/coldfrontea/query6.tpl
 + having count(*) >= 10
 + order by cnt, a.ca_state 
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query60.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query60.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query60.tpl
++++ dbt7/dsgen/templates_coldfrontea/query60.tpl
 @@ -0,0 +1,116 @@
 +--
 +-- Legal Notice 
@@ -5289,10 +5289,10 @@ Index: dbt7/dsgen/coldfrontea/query60.tpl
 + order by i_item_id
 +      ,total_sales
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query61.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query61.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query61.tpl
++++ dbt7/dsgen/templates_coldfrontea/query61.tpl
 @@ -0,0 +1,83 @@
 +--
 +-- Legal Notice 
@@ -5377,10 +5377,10 @@ Index: dbt7/dsgen/coldfrontea/query61.tpl
 +   and   d_moy  = [MONTH]) all_sales
 +order by promotions, total
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query62.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query62.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query62.tpl
++++ dbt7/dsgen/templates_coldfrontea/query62.tpl
 @@ -0,0 +1,71 @@
 +--
 +-- Legal Notice 
@@ -5453,10 +5453,10 @@ Index: dbt7/dsgen/coldfrontea/query62.tpl
 +        ,sm_type
 +       ,web_name
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query63.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query63.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query63.tpl
++++ dbt7/dsgen/templates_coldfrontea/query63.tpl
 @@ -0,0 +1,64 @@
 +--
 +-- Legal Notice 
@@ -5522,10 +5522,10 @@ Index: dbt7/dsgen/coldfrontea/query63.tpl
 +        ,avg_monthly_sales
 +        ,sum_sales
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query64.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query64.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query64.tpl
++++ dbt7/dsgen/templates_coldfrontea/query64.tpl
 @@ -0,0 +1,158 @@
 +--
 +-- Legal Notice 
@@ -5685,10 +5685,10 @@ Index: dbt7/dsgen/coldfrontea/query64.tpl
 +       ,cs2.cnt
 +       ,cs1.s1
 +       ,cs2.s1;
-Index: dbt7/dsgen/coldfrontea/query65.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query65.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query65.tpl
++++ dbt7/dsgen/templates_coldfrontea/query65.tpl
 @@ -0,0 +1,63 @@
 +--
 +-- Legal Notice 
@@ -5753,10 +5753,10 @@ Index: dbt7/dsgen/coldfrontea/query65.tpl
 +       i_item_sk = sc.ss_item_sk
 + order by s_store_name, i_item_desc
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query66.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query66.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query66.tpl
++++ dbt7/dsgen/templates_coldfrontea/query66.tpl
 @@ -0,0 +1,261 @@
 +--
 +-- Legal Notice 
@@ -6019,10 +6019,10 @@ Index: dbt7/dsgen/coldfrontea/query66.tpl
 +       ,year
 + order by w_warehouse_name
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query67.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query67.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query67.tpl
++++ dbt7/dsgen/templates_coldfrontea/query67.tpl
 @@ -0,0 +1,79 @@
 +--
 +-- Legal Notice 
@@ -6103,10 +6103,10 @@ Index: dbt7/dsgen/coldfrontea/query67.tpl
 +        ,sumsales
 +        ,rk
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query68.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query68.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query68.tpl
++++ dbt7/dsgen/templates_coldfrontea/query68.tpl
 @@ -0,0 +1,82 @@
 +--
 +-- Legal Notice 
@@ -6190,10 +6190,10 @@ Index: dbt7/dsgen/coldfrontea/query68.tpl
 + order by c_last_name
 +         ,ss_ticket_number
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query69.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query69.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query69.tpl
++++ dbt7/dsgen/templates_coldfrontea/query69.tpl
 @@ -0,0 +1,84 @@
 +--
 +-- Legal Notice 
@@ -6279,10 +6279,10 @@ Index: dbt7/dsgen/coldfrontea/query69.tpl
 +          cd_purchase_estimate,
 +          cd_credit_rating
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query7.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query7.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query7.tpl
++++ dbt7/dsgen/templates_coldfrontea/query7.tpl
 @@ -0,0 +1,59 @@
 +--
 +-- Legal Notice 
@@ -6343,10 +6343,10 @@ Index: dbt7/dsgen/coldfrontea/query7.tpl
 + group by i_item_id
 + order by i_item_id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query70.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query70.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query70.tpl
++++ dbt7/dsgen/templates_coldfrontea/query70.tpl
 @@ -0,0 +1,77 @@
 +--
 +-- Legal Notice 
@@ -6425,10 +6425,10 @@ Index: dbt7/dsgen/coldfrontea/query70.tpl
 +  ,case when lochierarchy = 0 then s_state end
 +  ,rank_within_parent
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query71.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query71.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query71.tpl
++++ dbt7/dsgen/templates_coldfrontea/query71.tpl
 @@ -0,0 +1,75 @@
 +--
 +-- Legal Notice 
@@ -6505,10 +6505,10 @@ Index: dbt7/dsgen/coldfrontea/query71.tpl
 + group by i_brand, i_brand_id,t_hour,t_minute
 + order by ext_price desc, i_brand_id
 + ;
-Index: dbt7/dsgen/coldfrontea/query72.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query72.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query72.tpl
++++ dbt7/dsgen/templates_coldfrontea/query72.tpl
 @@ -0,0 +1,67 @@
 +--
 +-- Legal Notice 
@@ -6577,10 +6577,10 @@ Index: dbt7/dsgen/coldfrontea/query72.tpl
 +group by i_item_desc,w_warehouse_name,d1.d_week_seq
 +order by total_cnt desc, i_item_desc, w_warehouse_name, d_week_seq
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query73.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query73.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query73.tpl
++++ dbt7/dsgen/templates_coldfrontea/query73.tpl
 @@ -0,0 +1,69 @@
 +--
 +-- Legal Notice 
@@ -6651,10 +6651,10 @@ Index: dbt7/dsgen/coldfrontea/query73.tpl
 +    where ss_customer_sk = c_customer_sk
 +      and cnt between 1 and 5
 +    order by cnt desc, c_last_name asc;
-Index: dbt7/dsgen/coldfrontea/query74.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query74.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query74.tpl
++++ dbt7/dsgen/templates_coldfrontea/query74.tpl
 @@ -0,0 +1,99 @@
 +--
 +-- Legal Notice 
@@ -6755,10 +6755,10 @@ Index: dbt7/dsgen/coldfrontea/query74.tpl
 +           > case when t_s_firstyear.year_total > 0 then t_s_secyear.year_total / t_s_firstyear.year_total else null end
 + order by [ORDERC.1],[ORDERC.2],[ORDERC.3]
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query75.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query75.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query75.tpl
++++ dbt7/dsgen/templates_coldfrontea/query75.tpl
 @@ -0,0 +1,108 @@
 +--
 +-- Legal Notice 
@@ -6868,10 +6868,10 @@ Index: dbt7/dsgen/coldfrontea/query75.tpl
 +   AND CAST(curr_yr.sales_cnt AS DECIMAL(17,2))/CAST(prev_yr.sales_cnt AS DECIMAL(17,2))<0.9
 + ORDER BY sales_cnt_diff,sales_amt_diff
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query76.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query76.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query76.tpl
++++ dbt7/dsgen/templates_coldfrontea/query76.tpl
 @@ -0,0 +1,61 @@
 +--
 +-- Legal Notice 
@@ -6934,10 +6934,10 @@ Index: dbt7/dsgen/coldfrontea/query76.tpl
 +GROUP BY channel, col_name, d_year, d_qoy, i_category
 +ORDER BY channel, col_name, d_year, d_qoy, i_category
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query77.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query77.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query77.tpl
++++ dbt7/dsgen/templates_coldfrontea/query77.tpl
 @@ -0,0 +1,144 @@
 +--
 +-- Legal Notice 
@@ -7083,10 +7083,10 @@ Index: dbt7/dsgen/coldfrontea/query77.tpl
 + order by channel
 +         ,id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query78.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query78.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query78.tpl
++++ dbt7/dsgen/templates_coldfrontea/query78.tpl
 @@ -0,0 +1,95 @@
 +--
 +-- Legal Notice 
@@ -7183,10 +7183,10 @@ Index: dbt7/dsgen/coldfrontea/query78.tpl
 +  other_chan_sales_price,
 +  ratio
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query79.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query79.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query79.tpl
++++ dbt7/dsgen/templates_coldfrontea/query79.tpl
 @@ -0,0 +1,60 @@
 +--
 +-- Legal Notice 
@@ -7248,10 +7248,10 @@ Index: dbt7/dsgen/coldfrontea/query79.tpl
 +    where ss_customer_sk = c_customer_sk
 + order by c_last_name,c_first_name,substr(s_city,1,30), profit
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query8.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query8.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query8.tpl
++++ dbt7/dsgen/templates_coldfrontea/query8.tpl
 @@ -0,0 +1,145 @@
 +--
 +-- Legal Notice 
@@ -7398,10 +7398,10 @@ Index: dbt7/dsgen/coldfrontea/query8.tpl
 + group by s_store_name
 + order by s_store_name
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query80.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query80.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query80.tpl
++++ dbt7/dsgen/templates_coldfrontea/query80.tpl
 @@ -0,0 +1,132 @@
 +--
 +-- Legal Notice 
@@ -7535,10 +7535,10 @@ Index: dbt7/dsgen/coldfrontea/query80.tpl
 + order by channel
 +         ,id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query81.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query81.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query81.tpl
++++ dbt7/dsgen/templates_coldfrontea/query81.tpl
 @@ -0,0 +1,67 @@
 +--
 +-- Legal Notice 
@@ -7607,10 +7607,10 @@ Index: dbt7/dsgen/coldfrontea/query81.tpl
 +                   ,ca_street_type,ca_suite_number,ca_city,ca_county,ca_state,ca_zip,ca_country,ca_gmt_offset
 +                  ,ca_location_type,ctr_total_return
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query82.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query82.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query82.tpl
++++ dbt7/dsgen/templates_coldfrontea/query82.tpl
 @@ -0,0 +1,55 @@
 +--
 +-- Legal Notice 
@@ -7667,10 +7667,10 @@ Index: dbt7/dsgen/coldfrontea/query82.tpl
 + group by i_item_id,i_item_desc,i_current_price
 + order by i_item_id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query83.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query83.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query83.tpl
++++ dbt7/dsgen/templates_coldfrontea/query83.tpl
 @@ -0,0 +1,105 @@
 +--
 +-- Legal Notice 
@@ -7777,10 +7777,10 @@ Index: dbt7/dsgen/coldfrontea/query83.tpl
 + order by sr_items.item_id
 +         ,sr_item_qty
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query84.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query84.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query84.tpl
++++ dbt7/dsgen/templates_coldfrontea/query84.tpl
 @@ -0,0 +1,57 @@
 +--
 +-- Legal Notice 
@@ -7839,10 +7839,10 @@ Index: dbt7/dsgen/coldfrontea/query84.tpl
 +   and sr_cdemo_sk = cd_demo_sk
 + order by c_customer_id
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query85.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query85.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query85.tpl
++++ dbt7/dsgen/templates_coldfrontea/query85.tpl
 @@ -0,0 +1,122 @@
 +--
 +-- Legal Notice 
@@ -7966,10 +7966,10 @@ Index: dbt7/dsgen/coldfrontea/query85.tpl
 +        ,avg(wr_refunded_cash)
 +        ,avg(wr_fee)
 +[_LIMITC]; 
-Index: dbt7/dsgen/coldfrontea/query86.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query86.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query86.tpl
++++ dbt7/dsgen/templates_coldfrontea/query86.tpl
 @@ -0,0 +1,70 @@
 +--
 +-- Legal Notice 
@@ -8041,10 +8041,10 @@ Index: dbt7/dsgen/coldfrontea/query86.tpl
 +   case when lochierarchy = 0 then i_category end,
 +   rank_within_parent 
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query87.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query87.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query87.tpl
++++ dbt7/dsgen/templates_coldfrontea/query87.tpl
 @@ -0,0 +1,57 @@
 +--
 +-- Legal Notice 
@@ -8103,10 +8103,10 @@ Index: dbt7/dsgen/coldfrontea/query87.tpl
 +         and d_month_seq between [DMS] and [DMS]+11)
 +) cool_cust
 +;
-Index: dbt7/dsgen/coldfrontea/query88.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query88.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query88.tpl
++++ dbt7/dsgen/templates_coldfrontea/query88.tpl
 @@ -0,0 +1,129 @@
 +--
 +-- Legal Notice 
@@ -8237,10 +8237,10 @@ Index: dbt7/dsgen/coldfrontea/query88.tpl
 +          (household_demographics.hd_dep_count = [HOUR.3] and household_demographics.hd_vehicle_count<=[HOUR.3]+2))
 +     and store.s_store_name = 'ese') s8
 +;
-Index: dbt7/dsgen/coldfrontea/query89.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query89.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query89.tpl
++++ dbt7/dsgen/templates_coldfrontea/query89.tpl
 @@ -0,0 +1,76 @@
 +--
 +-- Legal Notice 
@@ -8318,10 +8318,10 @@ Index: dbt7/dsgen/coldfrontea/query89.tpl
 +where case when (avg_monthly_sales <> 0) then (abs(sum_sales - avg_monthly_sales) / avg_monthly_sales) else null end > 0.1
 +order by sum_sales - avg_monthly_sales, s_store_name
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query9.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query9.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query9.tpl
++++ dbt7/dsgen/templates_coldfrontea/query9.tpl
 @@ -0,0 +1,87 @@
 +--
 +-- Legal Notice 
@@ -8410,10 +8410,10 @@ Index: dbt7/dsgen/coldfrontea/query9.tpl
 +from reason
 +where r_reason_sk = 1
 +;
-Index: dbt7/dsgen/coldfrontea/query90.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query90.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query90.tpl
++++ dbt7/dsgen/templates_coldfrontea/query90.tpl
 @@ -0,0 +1,59 @@
 +--
 +-- Legal Notice 
@@ -8474,10 +8474,10 @@ Index: dbt7/dsgen/coldfrontea/query90.tpl
 +         and web_page.wp_char_count between 5000 and 5200) pt
 + order by am_pm_ratio
 + [_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query91.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query91.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query91.tpl
++++ dbt7/dsgen/templates_coldfrontea/query91.tpl
 @@ -0,0 +1,69 @@
 +--
 +-- Legal Notice 
@@ -8548,10 +8548,10 @@ Index: dbt7/dsgen/coldfrontea/query91.tpl
 +and     ca_gmt_offset           = [GMT]
 +group by cc_call_center_id,cc_name,cc_manager,cd_marital_status,cd_education_status
 +order by sum(cr_net_loss) desc;
-Index: dbt7/dsgen/coldfrontea/query92.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query92.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query92.tpl
++++ dbt7/dsgen/templates_coldfrontea/query92.tpl
 @@ -0,0 +1,68 @@
 +--
 +-- Legal Notice 
@@ -8621,10 +8621,10 @@ Index: dbt7/dsgen/coldfrontea/query92.tpl
 +      ) 
 +order by sum(ws_ext_discount_amt)
 +[_LIMITC]; 
-Index: dbt7/dsgen/coldfrontea/query93.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query93.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query93.tpl
++++ dbt7/dsgen/templates_coldfrontea/query93.tpl
 @@ -0,0 +1,54 @@
 +--
 +-- Legal Notice 
@@ -8680,10 +8680,10 @@ Index: dbt7/dsgen/coldfrontea/query93.tpl
 +      group by ss_customer_sk
 +      order by sumsales, ss_customer_sk
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query94.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query94.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query94.tpl
++++ dbt7/dsgen/templates_coldfrontea/query94.tpl
 @@ -0,0 +1,67 @@
 +--
 +-- Legal Notice 
@@ -8752,10 +8752,10 @@ Index: dbt7/dsgen/coldfrontea/query94.tpl
 +               where ws1.ws_order_number = wr1.wr_order_number)
 +order by count(distinct ws_order_number)
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query95.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query95.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query95.tpl
++++ dbt7/dsgen/templates_coldfrontea/query95.tpl
 @@ -0,0 +1,70 @@
 +--
 +-- Legal Notice 
@@ -8827,10 +8827,10 @@ Index: dbt7/dsgen/coldfrontea/query95.tpl
 +                            where wr_order_number = ws_wh.ws_order_number)
 +order by count(distinct ws_order_number)
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query96.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query96.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query96.tpl
++++ dbt7/dsgen/templates_coldfrontea/query96.tpl
 @@ -0,0 +1,53 @@
 +--
 +-- Legal Notice 
@@ -8885,10 +8885,10 @@ Index: dbt7/dsgen/coldfrontea/query96.tpl
 +    and store.s_store_name = 'ese'
 +order by count(*)
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query97.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query97.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query97.tpl
++++ dbt7/dsgen/templates_coldfrontea/query97.tpl
 @@ -0,0 +1,63 @@
 +--
 +-- Legal Notice 
@@ -8953,10 +8953,10 @@ Index: dbt7/dsgen/coldfrontea/query97.tpl
 +from ssci full outer join csci on (ssci.customer_sk=csci.customer_sk
 +                               and ssci.item_sk = csci.item_sk)
 +[_LIMITC];
-Index: dbt7/dsgen/coldfrontea/query98.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query98.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query98.tpl
++++ dbt7/dsgen/templates_coldfrontea/query98.tpl
 @@ -0,0 +1,70 @@
 +--
 +-- Legal Notice 
@@ -9028,10 +9028,10 @@ Index: dbt7/dsgen/coldfrontea/query98.tpl
 +        ,i_item_id
 +        ,i_item_desc
 +        ,revenueratio;
-Index: dbt7/dsgen/coldfrontea/query99.tpl
+Index: dbt7/dsgen/templates_coldfrontea/query99.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/coldfrontea/query99.tpl
++++ dbt7/dsgen/templates_coldfrontea/query99.tpl
 @@ -0,0 +1,70 @@
 +--
 +-- Legal Notice 
@@ -9108,102 +9108,102 @@ Index: dbt7/dsgen/query_templates/templates-coldfrontea.lst
 --- /dev/null
 +++ dbt7/dsgen/query_templates/templates-coldfrontea.lst
 @@ -0,0 +1,99 @@
-+../coldfrontea/query1.tpl
-+../coldfrontea/query2.tpl
-+../coldfrontea/query3.tpl
-+../coldfrontea/query4.tpl
-+../coldfrontea/query5.tpl
-+../coldfrontea/query6.tpl
-+../coldfrontea/query7.tpl
-+../coldfrontea/query8.tpl
-+../coldfrontea/query9.tpl
-+../coldfrontea/query10.tpl
-+../coldfrontea/query11.tpl
-+../coldfrontea/query12.tpl
-+../coldfrontea/query13.tpl
-+../coldfrontea/query14.tpl
-+../coldfrontea/query15.tpl
-+../coldfrontea/query16.tpl
-+../coldfrontea/query17.tpl
-+../coldfrontea/query18.tpl
-+../coldfrontea/query19.tpl
-+../coldfrontea/query20.tpl
-+../coldfrontea/query21.tpl
-+../coldfrontea/query22.tpl
-+../coldfrontea/query23.tpl
-+../coldfrontea/query24.tpl
-+../coldfrontea/query25.tpl
-+../coldfrontea/query26.tpl
-+../coldfrontea/query27.tpl
-+../coldfrontea/query28.tpl
-+../coldfrontea/query29.tpl
-+../coldfrontea/query30.tpl
-+../coldfrontea/query31.tpl
-+../coldfrontea/query32.tpl
-+../coldfrontea/query33.tpl
-+../coldfrontea/query34.tpl
-+../coldfrontea/query35.tpl
-+../coldfrontea/query36a.tpl
-+../coldfrontea/query37.tpl
-+../coldfrontea/query38.tpl
-+../coldfrontea/query39.tpl
-+../coldfrontea/query40.tpl
-+../coldfrontea/query41.tpl
-+../coldfrontea/query42.tpl
-+../coldfrontea/query43.tpl
-+../coldfrontea/query44.tpl
-+../coldfrontea/query45.tpl
-+../coldfrontea/query46.tpl
-+../coldfrontea/query47.tpl
-+../coldfrontea/query48.tpl
-+../coldfrontea/query49.tpl
-+../coldfrontea/query50.tpl
-+../coldfrontea/query51.tpl
-+../coldfrontea/query52.tpl
-+../coldfrontea/query53.tpl
-+../coldfrontea/query54.tpl
-+../coldfrontea/query55.tpl
-+../coldfrontea/query56.tpl
-+../coldfrontea/query57.tpl
-+../coldfrontea/query58.tpl
-+../coldfrontea/query59.tpl
-+../coldfrontea/query60.tpl
-+../coldfrontea/query61.tpl
-+../coldfrontea/query62.tpl
-+../coldfrontea/query63.tpl
-+../coldfrontea/query64.tpl
-+../coldfrontea/query65.tpl
-+../coldfrontea/query66.tpl
-+../coldfrontea/query67.tpl
-+../coldfrontea/query68.tpl
-+../coldfrontea/query69.tpl
-+../coldfrontea/query70.tpl
-+../coldfrontea/query71.tpl
-+../coldfrontea/query72.tpl
-+../coldfrontea/query73.tpl
-+../coldfrontea/query74.tpl
-+../coldfrontea/query75.tpl
-+../coldfrontea/query76.tpl
-+../coldfrontea/query77.tpl
-+../coldfrontea/query78.tpl
-+../coldfrontea/query79.tpl
-+../coldfrontea/query80.tpl
-+../coldfrontea/query81.tpl
-+../coldfrontea/query82.tpl
-+../coldfrontea/query83.tpl
-+../coldfrontea/query84.tpl
-+../coldfrontea/query85.tpl
-+../coldfrontea/query86.tpl
-+../coldfrontea/query87.tpl
-+../coldfrontea/query88.tpl
-+../coldfrontea/query89.tpl
-+../coldfrontea/query90.tpl
-+../coldfrontea/query91.tpl
-+../coldfrontea/query92.tpl
-+../coldfrontea/query93.tpl
-+../coldfrontea/query94.tpl
-+../coldfrontea/query95.tpl
-+../coldfrontea/query96.tpl
-+../coldfrontea/query97.tpl
-+../coldfrontea/query98.tpl
-+../coldfrontea/query99.tpl
++../templates_coldfrontea/query1.tpl
++../templates_coldfrontea/query2.tpl
++../templates_coldfrontea/query3.tpl
++../templates_coldfrontea/query4.tpl
++../templates_coldfrontea/query5.tpl
++../templates_coldfrontea/query6.tpl
++../templates_coldfrontea/query7.tpl
++../templates_coldfrontea/query8.tpl
++../templates_coldfrontea/query9.tpl
++../templates_coldfrontea/query10.tpl
++../templates_coldfrontea/query11.tpl
++../templates_coldfrontea/query12.tpl
++../templates_coldfrontea/query13.tpl
++../templates_coldfrontea/query14.tpl
++../templates_coldfrontea/query15.tpl
++../templates_coldfrontea/query16.tpl
++../templates_coldfrontea/query17.tpl
++../templates_coldfrontea/query18.tpl
++../templates_coldfrontea/query19.tpl
++../templates_coldfrontea/query20.tpl
++../templates_coldfrontea/query21.tpl
++../templates_coldfrontea/query22.tpl
++../templates_coldfrontea/query23.tpl
++../templates_coldfrontea/query24.tpl
++../templates_coldfrontea/query25.tpl
++../templates_coldfrontea/query26.tpl
++../templates_coldfrontea/query27.tpl
++../templates_coldfrontea/query28.tpl
++../templates_coldfrontea/query29.tpl
++../templates_coldfrontea/query30.tpl
++../templates_coldfrontea/query31.tpl
++../templates_coldfrontea/query32.tpl
++../templates_coldfrontea/query33.tpl
++../templates_coldfrontea/query34.tpl
++../templates_coldfrontea/query35.tpl
++../templates_coldfrontea/query36a.tpl
++../templates_coldfrontea/query37.tpl
++../templates_coldfrontea/query38.tpl
++../templates_coldfrontea/query39.tpl
++../templates_coldfrontea/query40.tpl
++../templates_coldfrontea/query41.tpl
++../templates_coldfrontea/query42.tpl
++../templates_coldfrontea/query43.tpl
++../templates_coldfrontea/query44.tpl
++../templates_coldfrontea/query45.tpl
++../templates_coldfrontea/query46.tpl
++../templates_coldfrontea/query47.tpl
++../templates_coldfrontea/query48.tpl
++../templates_coldfrontea/query49.tpl
++../templates_coldfrontea/query50.tpl
++../templates_coldfrontea/query51.tpl
++../templates_coldfrontea/query52.tpl
++../templates_coldfrontea/query53.tpl
++../templates_coldfrontea/query54.tpl
++../templates_coldfrontea/query55.tpl
++../templates_coldfrontea/query56.tpl
++../templates_coldfrontea/query57.tpl
++../templates_coldfrontea/query58.tpl
++../templates_coldfrontea/query59.tpl
++../templates_coldfrontea/query60.tpl
++../templates_coldfrontea/query61.tpl
++../templates_coldfrontea/query62.tpl
++../templates_coldfrontea/query63.tpl
++../templates_coldfrontea/query64.tpl
++../templates_coldfrontea/query65.tpl
++../templates_coldfrontea/query66.tpl
++../templates_coldfrontea/query67.tpl
++../templates_coldfrontea/query68.tpl
++../templates_coldfrontea/query69.tpl
++../templates_coldfrontea/query70.tpl
++../templates_coldfrontea/query71.tpl
++../templates_coldfrontea/query72.tpl
++../templates_coldfrontea/query73.tpl
++../templates_coldfrontea/query74.tpl
++../templates_coldfrontea/query75.tpl
++../templates_coldfrontea/query76.tpl
++../templates_coldfrontea/query77.tpl
++../templates_coldfrontea/query78.tpl
++../templates_coldfrontea/query79.tpl
++../templates_coldfrontea/query80.tpl
++../templates_coldfrontea/query81.tpl
++../templates_coldfrontea/query82.tpl
++../templates_coldfrontea/query83.tpl
++../templates_coldfrontea/query84.tpl
++../templates_coldfrontea/query85.tpl
++../templates_coldfrontea/query86.tpl
++../templates_coldfrontea/query87.tpl
++../templates_coldfrontea/query88.tpl
++../templates_coldfrontea/query89.tpl
++../templates_coldfrontea/query90.tpl
++../templates_coldfrontea/query91.tpl
++../templates_coldfrontea/query92.tpl
++../templates_coldfrontea/query93.tpl
++../templates_coldfrontea/query94.tpl
++../templates_coldfrontea/query95.tpl
++../templates_coldfrontea/query96.tpl
++../templates_coldfrontea/query97.tpl
++../templates_coldfrontea/query98.tpl
++../templates_coldfrontea/query99.tpl
