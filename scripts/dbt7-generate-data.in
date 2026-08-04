@@ -121,8 +121,6 @@ if [ "${SEED}" -ge 0 ]; then
 	DSGEN_ARGS="${DSGEN_ARGS} -RNGSEED ${SEED}"
 fi
 
-# TODO: Figure out why chunked data generation produces data that fails the
-# data validation test.  Don't chunk data for reliable data generation.
 for I in $(seq 1 "${CHUNKS}"); do
 	if [ "${CHUNKS}" -gt 1 ]; then
 		LOOP_DSGEN_ARGS="${DSGEN_ARGS} -CHILD ${I}"
