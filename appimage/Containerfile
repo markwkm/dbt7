@@ -132,8 +132,8 @@ RUN curl -o /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz -SsL \
 
 # Install DBT Tools
 
-ARG DBTTOOLSVER="0.5.1"
-ARG DBTTOOLSSHA256="f2f5395c1a421dabc7f1bd4f509cde17645cb80ed9375ae9467292ffd06e6575"
+ARG DBTTOOLSVER="0.5.2"
+ARG DBTTOOLSSHA256="ab87149a79203d7ff95cb5e122ad67fb335f3dbff8c99d5629a44b9b76338421"
 RUN curl -o /tmp/v${DBTTOOLSVER}.tar.gz -SsL \
          https://github.com/osdldbt/dbttools/archive/refs/tags/v${DBTTOOLSVER}.tar.gz && \
     echo "${DBTTOOLSSHA256}  /tmp/v${DBTTOOLSVER}.tar.gz" | sha256sum -c - && \

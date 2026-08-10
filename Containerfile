@@ -42,7 +42,7 @@ RUN apt-get -qq -y update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install DBT Tools.
-ARG DBTTOOLSVER=0.5.1
+ARG DBTTOOLSVER=0.5.2
 RUN curl -o /tmp/v${DBTTOOLSVER}.tar.gz -SsL \
          https://github.com/osdldbt/dbttools/archive/\
 refs/tags/v${DBTTOOLSVER}.tar.gz && \
