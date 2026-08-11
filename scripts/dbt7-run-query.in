@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 @SHELLOPTIONS@
 #
 # This file is released under the terms of the Artistic License.
@@ -279,7 +279,8 @@ if [ ${STATS} -eq 1 ]; then
 fi
 
 printf "\nQuery ${Q} executed in %0.3f second(s).\n" \
-		"$(bc <<< "${E_TIME} - ${S_TIME}")"
+		"$(awk -v S="${S_TIME}" -v E="${E_TIME}" \
+				'BEGIN { printf "%.6f", E - S }')"
 
 if [ ${STATS} -eq 1 ]; then
 	echo
