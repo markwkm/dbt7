@@ -1,0 +1,67 @@
+---
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/appimage.yml'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
+      - 'Makefile'
+      - 'appimage/**'
+      - 'scripts/**'
+      - 'tools/build-appimage'
+      - 'tools/build-appimage-container'
+  workflow_dispatch:
+
+name: AppImage Build
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  appimage:
+    runs-on: ubuntu-latest
+    # The container image compiles several dependencies from source, so
+    # a cold build is long.  This only needs to be generous enough not
+    # to cut off a legitimate run.
+    timeout-minutes: 120
+    steps:
+      # Full history and tags: the version is derived from git at
+      # configure time, and a shallow checkout carries no tags, so every
+      # build would otherwise look like an untagged commit.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # The same two commands the release workflow runs, so this
+      # exercises the path a tag push takes.
+      - run: sh -eux tools/build-appimage-container
+      - run: ARCH=$(uname -m) sh -ex tools/build-appimage
+
+      - name: Check that an AppImage was produced
+        run: |
+          find . -name '*.AppImage' -print
+          test -n "$(find . -name '*.AppImage' -print -quit)"
+
+      # --appimage-extract unpacks the image rather than mounting it, so
+      # this does not need FUSE on the runner.
+      - name: Smoke test the AppImage
+        run: |
+          APPIMAGE="$(find . -name '*.AppImage' -print -quit)"
+          chmod +x "${APPIMAGE}"
+          "${APPIMAGE}" --appimage-extract > /dev/null
+          ./squashfs-root/AppRun --version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dbt7-appimage
+          path: build/**/*.AppImage
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Report disk usage
+        if: always()
+        run: df -h /
