@@ -1,0 +1,84 @@
+---
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+name: CI
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: |
+          sudo apt-get -qq -y update
+          sudo apt-get -qq -y install shellcheck python3-docutils
+
+      # The .in templates are not valid sh until CMake substitutes the
+      # @VAR@ placeholders, so configure first and lint the generated
+      # scripts.  The debug preset sets SHELLOPTIONS, which the release
+      # preset leaves empty, so it covers one more line of each script.
+      - run: cmake --preset debug
+
+      # No -s: let shellcheck take the shell from each shebang, so the
+      # /bin/sh scripts get the POSIX checks and dbt7-run-query, which
+      # is deliberately bash, is not held to them.
+      - run: |
+          shellcheck -S warning \
+              build/debug/dbt7 \
+              build/debug/dbt7-* \
+              build/debug/AppRun \
+              build/debug/build-appimage.sh \
+              build/debug/tests/*.sh
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        preset:
+          - appimage
+          - debug
+          - release
+    steps:
+      - uses: actions/checkout@v4
+
+      # rst2man comes from python3-docutils.  Without it,
+      # man/man1/CMakeLists.txt only warns and skips the man pages, so a
+      # broken .1.rst.in would go unnoticed.
+      - run: |
+          sudo apt-get -qq -y update
+          sudo apt-get -qq -y install python3-docutils
+
+      - run: cmake --preset ${{ matrix.preset }}
+      - run: cmake --build --preset ${{ matrix.preset }}
+
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: |
+          sudo apt-get -qq -y update
+          sudo apt-get -qq -y install python3-docutils
+
+      # dbt7.rst includes container.rst and postgresql.rst, so rendering
+      # it covers all three.  --halt=warning so malformed markup fails
+      # rather than rendering to a mangled page.
+      - run: |
+          for RST in doc/dbt7.rst INSTALL.rst tools/README.rst; do
+            rst2html5 --halt=warning "${RST}" > /dev/null
+          done
