@@ -46,8 +46,30 @@ else
 fi
 
 CONTAINER_DIR=$(readlink -f "$(dirname "$0")")
+SRCDIR=$(readlink -f "${CONTAINER_DIR}/..")
 CONTAINER_TAG="dbt7-appimage"
 TARGET="appimage"
+
+# The version is derived from git at configure time.  A linked worktree
+# keeps its git metadata outside the source directory: .git is a file naming
+# the directory that holds it.  Mount that directory at the same path it has
+# here, so the version the build derives from git is the same one a build
+# outside the container derives.  A plain clone keeps everything under the
+# source directory, which is already mounted, and adds nothing.
+set --
+if [ -f "${SRCDIR}/.git" ]; then
+	GITDIR="$(sed -n 's/^gitdir: //p' "${SRCDIR}/.git")"
+	if [ -d "${GITDIR}" ]; then
+		# commondir is relative to the directory holding it, and names the
+		# repository the worktree belongs to.
+		COMMONDIR="$(cd "${GITDIR}" &&
+				cd "$(cat commondir 2> /dev/null || echo .)" &&
+				pwd)"
+		# Read-write: the worktree's index lives in this directory, and
+		# the refresh of that index at configure time has to write.
+		set -- -v "${COMMONDIR}:${COMMONDIR}:rw,Z"
+	fi
+fi
 
 # Use the return code from `$CONTAINER_CMD inspect` to determine if the container
 # image needs to be created.
@@ -64,6 +86,7 @@ fi
 ${CONTAINER_CMD} run \
 		--rm \
 		-v "${CONTAINER_DIR}/..:/usr/local/src/dbt7:rw,Z" \
+		"$@" \
 		--env PKG_CONFIG_PATH="/usr/lib/pkgconfig" \
 		-w /usr/local/src/dbt7 \
 		$CONTAINER_TAG \
