@@ -7843,7 +7843,7 @@ Index: dbt7/dsgen/templates_coldfrontea/query85.tpl
 ===================================================================
 --- /dev/null
 +++ dbt7/dsgen/templates_coldfrontea/query85.tpl
-@@ -0,0 +1,122 @@
+@@ -0,0 +1,134 @@
 +--
 +-- Legal Notice 
 +-- 
@@ -7883,6 +7883,16 @@ Index: dbt7/dsgen/templates_coldfrontea/query85.tpl
 + define STATE= ulist(dist(fips_county, 3, 1), 9);
 + define YEAR= random(1998,2002, uniform);
 + define _LIMIT=100;
++
++ -- DuckDB has no NDV statistics for Iceberg columns, so it estimates
++ -- cd1 JOIN cd2 ON (cd_marital_status, cd_education_status) at 1,920,800 rows
++ -- when the true size is 105,413,504,000 (5 x 7 distinct values over 1,920,800
++ -- rows), then picks that relation as a hash-join build side.  That is the
++ -- "failed to allocate data of size 128.0 GiB" failure.  Holding the
++ -- FROM-clause order keeps every build side small.  It is reset afterwards
++ -- because a stream is one psql session, hence one DuckDB instance, shared by
++ -- every following query.
++ select duckdb.raw_query($$ SET disabled_optimizers='join_order' $$);
 +
 + EXPLAIN ANALYZE
 + [_LIMITA] select [_LIMITB] substr(r_reason_desc,1,20)
@@ -7966,6 +7976,8 @@ Index: dbt7/dsgen/templates_coldfrontea/query85.tpl
 +        ,avg(wr_refunded_cash)
 +        ,avg(wr_fee)
 +[_LIMITC]; 
++
++ select duckdb.raw_query($$ RESET disabled_optimizers $$);
 Index: dbt7/dsgen/templates_coldfrontea/query86.tpl
 ===================================================================
 --- /dev/null
