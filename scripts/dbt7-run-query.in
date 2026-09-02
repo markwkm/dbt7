@@ -47,12 +47,15 @@ EOF
 }
 
 stop_procs() {
+	# Stop collectors in the foreground.  On INT/TERM this runs from the
+	# trap, and backgrounding the stop would let the script exit before
+	# the stop completes, leaving the collectors running.
 	if [ ! "${OUTDIR}" = "" ]; then
 		if command -v ts > /dev/null 2>&1; then
-			ts sysstat -o "${OUTDIR}/sysstat" -s &
+			ts sysstat -o "${OUTDIR}/sysstat" -s
 		fi
 		if command -v ts > /dev/null 2>&1; then
-			ts "${DATABASE}-stat" -o "${OUTDIR}/dbstat" -s &
+			ts "${DATABASE}-stat" -o "${OUTDIR}/dbstat" -s
 		fi
 	fi
 }
