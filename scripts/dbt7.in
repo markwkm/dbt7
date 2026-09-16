@@ -36,14 +36,14 @@ EOF
 display_version()
 {
 	NAME=$1
-	FLAG=$2
+	shift
 	if ! which "${NAME}" > /dev/null 2>&1; then
 		echo "$NAME not found"
 		return
 	fi
 	echo ""
-	echo "$(which "${NAME}") ${FLAG}"
-	"${NAME}" "${FLAG}"
+	echo "$(which "${NAME}") ${*}"
+	"${NAME}" "${@}"
 }
 
 version()
@@ -54,6 +54,7 @@ version()
 		return
 	fi
 
+	display_version dbt-version
 	display_version gnuplot --version
 	display_version pandoc --version
 	display_version perl --version
@@ -66,6 +67,7 @@ version()
 	display_version "${RST2HTML5}" --version
 	display_version sar -V
 	display_version sqlite3 --version
+	display_version ts --version
 }
 
 if [ $# -eq 0 ]; then

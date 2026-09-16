@@ -75,7 +75,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf \
 # When TSTOOLSREPO names a git repository, TSTOOLSREF a tag or branch in
 # it, or both, this step clones that source instead of downloading the
 # release tarball.
-ARG TSTOOLSVER=0.10.4
+ARG TSTOOLSVER=0.10.5
 ARG TSTOOLSREPO=""
 ARG TSTOOLSREF=""
 RUN set -e; \

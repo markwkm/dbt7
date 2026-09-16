@@ -19,7 +19,7 @@ vX.Y.Z (YYYY-MM-DD)
 - pgsql: re-enable allowing parallel data loading
 - pgsql: fix data maintenance test execution when running as privileged
   database user
-- AppImage: bump Touchstone Tools version from v0.10.0 to v0.10.4
+- AppImage: bump Touchstone Tools version from v0.10.0 to v0.10.5
 - Add dsgen and dsgen-clean make targets to apply the TPC-DS Tools patch
   series with quilt and build the tools, and to undo both
 - AppImage: fix C references to DS
@@ -57,6 +57,11 @@ vX.Y.Z (YYYY-MM-DD)
   another git repository or ref (tag or branch) by setting the
   TSTOOLSREPO and TSTOOLSREF build arguments, which tools/build-container
   and tools/build-appimage-container forward from the environment
+- Report the DBT Tools and Touchstone Tools versions with --version
+  --verbose
+- AppImage: bundle dbt-version, and answer --version after the bundled
+  programs are on PATH so that the verbose report describes the bundle
+  rather than the host
 
 v0.7.9 (2026-07-01)
 

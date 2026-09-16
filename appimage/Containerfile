@@ -235,8 +235,8 @@ RUN wget -O /tmp/gnuplot-${GNUPLOTVER}.tar.gz -q \
 # downloading the tarball.  A clone has no recorded checksum, so the
 # commit it resolved to is written beside the bundled license.
 ARG RUSTVER="1.97.1"
-ARG TSTOOLSVER="0.10.4"
-ARG TSTOOLSSHA256="19b5f9dcdc5b7cf4c5be4416599b538e59bb62bc5973c21d27590ef377bde298"
+ARG TSTOOLSVER="0.10.5"
+ARG TSTOOLSSHA256="d8b9db4ccaa38323904949de81a647f6015f77b2224dcb8273ddc49818320873"
 ARG TSTOOLSREPO=""
 ARG TSTOOLSREF=""
 RUN set -e; \

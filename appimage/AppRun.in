@@ -84,15 +84,6 @@ while [ "${#}" -gt 0 ] ; do
 	shift
 done
 
-if [ $VERSION -eq 1 ]; then
-	if [ $VERBOSE -eq 1 ]; then
-		"${APPDIR}/usr/bin/dbt7" --version --verbose
-	else
-		"${APPDIR}/usr/bin/dbt7" --version
-	fi
-	exit 0
-fi
-
 export PATH="${APPDIR}/usr/bin:${PATH}"
 
 if [ "${LD_LIBRARY_PATH}" = "" ]; then
@@ -110,6 +101,18 @@ if [ "$PGHOST" = "" ]; then
 fi
 
 export PERL5LIB="${APPDIR}/etc/perl"
+
+# Report versions only after the bundled programs are on PATH and their
+# libraries can be found, so that the report describes the bundle rather
+# than whatever the host has installed.
+if [ $VERSION -eq 1 ]; then
+	if [ $VERBOSE -eq 1 ]; then
+		"${APPDIR}/usr/bin/dbt7" --version --verbose
+	else
+		"${APPDIR}/usr/bin/dbt7" --version
+	fi
+	exit 0
+fi
 
 COMMAND="${APPDIR}/usr/bin/dbt7-${1}"
 
