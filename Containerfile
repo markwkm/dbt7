@@ -41,18 +41,31 @@ RUN apt-get -qq -y update && \
     apt-get -qq -y install postgresql-client && \
     rm -rf /var/lib/apt/lists/*
 
-# Install DBT Tools.
+# Install DBT Tools.  When DBTTOOLSREPO names a git repository,
+# DBTTOOLSREF a tag or branch in it, or both, this step clones that
+# source instead of downloading the release tarball.
 ARG DBTTOOLSVER=0.5.2
-RUN curl -o /tmp/v${DBTTOOLSVER}.tar.gz -SsL \
-         https://github.com/osdldbt/dbttools/archive/\
-refs/tags/v${DBTTOOLSVER}.tar.gz && \
-    tar -C /usr/local/src \
-        -xf /tmp/v${DBTTOOLSVER}.tar.gz && \
-    cd /usr/local/src/dbttools-${DBTTOOLSVER} && \
+ARG DBTTOOLSREPO=""
+ARG DBTTOOLSREF=""
+RUN set -e; \
+    if [ -n "${DBTTOOLSREPO}${DBTTOOLSREF}" ]; then \
+        git -c advice.detachedHead=false clone -q --depth 1 \
+            --branch "${DBTTOOLSREF:-v${DBTTOOLSVER}}" \
+            "${DBTTOOLSREPO:-https://github.com/osdldbt/dbttools.git}" \
+            /usr/local/src/dbttools; \
+    else \
+        curl -o /tmp/v${DBTTOOLSVER}.tar.gz -SsL \
+             https://github.com/osdldbt/dbttools/archive/\
+refs/tags/v${DBTTOOLSVER}.tar.gz; \
+        mkdir -p /usr/local/src/dbttools; \
+        tar -C /usr/local/src/dbttools --strip-components=1 \
+            -xf /tmp/v${DBTTOOLSVER}.tar.gz; \
+        rm -f /tmp/v${DBTTOOLSVER}.tar.gz; \
+    fi; \
+    cd /usr/local/src/dbttools; \
     cmake -H. -Bbuild/release \
-          -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    cd build/release && make -s install && \
-    rm -f /tmp/v${DBTTOOLSVER}.tar.gz
+          -DCMAKE_INSTALL_PREFIX=/usr/local; \
+    cd build/release && make -s install
 
 # Install Touchstone Tools.
 RUN curl --proto '=https' --tlsv1.2 -sSf \

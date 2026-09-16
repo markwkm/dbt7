@@ -18,6 +18,14 @@ From the top of the repository, create a container image named `dbt7`::
 
     docker build -t dbt7 -f Containerfile .
 
+The image build installs DBT Tools from a release pinned in the
+`Containerfile`.  To build it from another git repository or ref
+instead, pass the repository as `DBTTOOLSREPO`, a tag or branch in it as
+`DBTTOOLSREF`, or both::
+
+    docker build -t dbt7 -f Containerfile \
+        --build-arg DBTTOOLSREF=main .
+
 Persisting Results
 ------------------
 

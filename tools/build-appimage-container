@@ -60,10 +60,22 @@ if [ "${CONTAINER_CMD}" = "podman" ]; then
 	ISOLATION_FLAG="--isolation=chroot"
 fi
 
+# Forward the source overrides for the bundled tools when they are set
+# in the environment.  The ARG comments in appimage/Containerfile
+# describe them.
+set --
+if [ -n "${DBTTOOLSREPO:-}" ]; then
+	set -- "${@}" --build-arg "DBTTOOLSREPO=${DBTTOOLSREPO}"
+fi
+if [ -n "${DBTTOOLSREF:-}" ]; then
+	set -- "${@}" --build-arg "DBTTOOLSREF=${DBTTOOLSREF}"
+fi
+
 cd "${CONTAINER_DIR}/.." && \
 		${CONTAINER_CMD} build \
 				${ISOLATION_FLAG} \
 				--build-arg ARCH="${ARCH}" \
+				"${@}" \
 				-t $CONTAINER_TAG \
 				-f ${CONTAINERFILE} \
 				.

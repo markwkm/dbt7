@@ -132,19 +132,46 @@ RUN curl -o /tmp/cmake-${CMAKEVER}-linux-${ARCH}.tar.gz -SsL \
 
 # Install DBT Tools
 
+# The release tarball is checked against its recorded checksum.  When
+# DBTTOOLSREPO names a git repository, DBTTOOLSREF a tag or branch in it,
+# or both, this step clones that source with depth 1 instead of
+# downloading the tarball.  A clone has no recorded checksum, so the
+# commit it resolved to is written beside the bundled license.
 ARG DBTTOOLSVER="0.5.2"
 ARG DBTTOOLSSHA256="ab87149a79203d7ff95cb5e122ad67fb335f3dbff8c99d5629a44b9b76338421"
-RUN curl -o /tmp/v${DBTTOOLSVER}.tar.gz -SsL \
-         https://github.com/osdldbt/dbttools/archive/refs/tags/v${DBTTOOLSVER}.tar.gz && \
-    echo "${DBTTOOLSSHA256}  /tmp/v${DBTTOOLSVER}.tar.gz" | sha256sum -c - && \
-    tar -C /usr/local/src -xf /tmp/v${DBTTOOLSVER}.tar.gz && \
-    cd /usr/local/src/dbttools-${DBTTOOLSVER} && \
-    cmake -H. -Bbuild/release -DCMAKE_INSTALL_PREFIX=/usr && \
-    (cd build/release && make -s install) && \
-    mkdir -p /usr/local/share/licenses/dbttools-${DBTTOOLSVER} && \
-    cp -p LICENSE /usr/local/share/licenses/dbttools-${DBTTOOLSVER}/ && \
-    cd / && \
-    rm -rf /usr/local/src/dbttools-${DBTTOOLSVER} /tmp/v${DBTTOOLSVER}.tar.gz
+ARG DBTTOOLSREPO=""
+ARG DBTTOOLSREF=""
+RUN set -e; \
+    REPO="${DBTTOOLSREPO:-https://github.com/osdldbt/dbttools.git}"; \
+    REF="${DBTTOOLSREF:-v${DBTTOOLSVER}}"; \
+    if [ -n "${DBTTOOLSREPO}${DBTTOOLSREF}" ]; then \
+        git -c advice.detachedHead=false clone -q --depth 1 \
+            --branch "${REF}" "${REPO}" /usr/local/src/dbttools; \
+        cd /usr/local/src/dbttools; \
+        LABEL="$(git describe --tags --always | tr '/' '-')"; \
+    else \
+        TARBALL="/tmp/v${DBTTOOLSVER}.tar.gz"; \
+        curl -o "${TARBALL}" -SsL \
+             https://github.com/osdldbt/dbttools/archive/refs/tags/v${DBTTOOLSVER}.tar.gz; \
+        echo "${DBTTOOLSSHA256}  ${TARBALL}" | sha256sum -c -; \
+        mkdir -p /usr/local/src/dbttools; \
+        tar -C /usr/local/src/dbttools --strip-components=1 -xf "${TARBALL}"; \
+        rm -f "${TARBALL}"; \
+        cd /usr/local/src/dbttools; \
+        LABEL="${DBTTOOLSVER}"; \
+    fi; \
+    cmake -H. -Bbuild/release -DCMAKE_INSTALL_PREFIX=/usr; \
+    (cd build/release && make -s install); \
+    LICENSEDIR="/usr/local/share/licenses/dbttools-${LABEL}"; \
+    mkdir -p "${LICENSEDIR}"; \
+    cp -p LICENSE "${LICENSEDIR}/"; \
+    if [ -d .git ]; then \
+        printf 'repository: %s\nref: %s\ncommit: %s\n' \
+               "${REPO}" "${REF}" "$(git rev-parse HEAD)" \
+               > "${LICENSEDIR}/SOURCE"; \
+    fi; \
+    cd /; \
+    rm -rf /usr/local/src/dbttools
 
 ARG SQLITE3VER=3410200
 ARG SQLITE3SHA256="e98c100dd1da4e30fa460761dab7c0b91a50b785e167f8c57acc46514fae9499"
