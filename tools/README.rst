@@ -19,10 +19,11 @@ The quickest way to try out the kit is to run::
 * `run-test` - Run a small test using the container image against an
                external PostgreSQL instance.
 
-Both container images build DBT Tools from a pinned release.  To build
-it from another git repository or ref instead, set `DBTTOOLSREPO` to the
-repository, `DBTTOOLSREF` to a tag or branch in it, or both, in the
-environment.  The `build-container` and `build-appimage-container`
-scripts pass them on as build arguments.  The `build-appimage` script
-reuses an existing `dbt7-appimage` image, so run
-`build-appimage-container` first to rebuild it with the overrides.
+Both container images build DBT Tools and Touchstone Tools from pinned
+releases.  To build either from another git repository or ref instead,
+set `DBTTOOLSREPO` or `TSTOOLSREPO` to the repository, `DBTTOOLSREF` or
+`TSTOOLSREF` to a tag or branch in it, or both, in the environment.  The
+`build-container` and `build-appimage-container` scripts pass them on as
+build arguments.  The `build-appimage` script reuses an existing
+`dbt7-appimage` image, so run `build-appimage-container` first to
+rebuild it with the overrides.

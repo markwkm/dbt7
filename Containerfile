@@ -72,24 +72,35 @@ RUN curl --proto '=https' --tlsv1.2 -sSf \
          https://sh.rustup.rs -o /tmp/sh.rustup.sh && \
     sh /tmp/sh.rustup.sh -y
 
+# When TSTOOLSREPO names a git repository, TSTOOLSREF a tag or branch in
+# it, or both, this step clones that source instead of downloading the
+# release tarball.
 ARG TSTOOLSVER=0.10.4
-RUN curl -o /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz \
-         -SsL https://gitlab.com/touchstone/\
+ARG TSTOOLSREPO=""
+ARG TSTOOLSREF=""
+RUN set -e; \
+    if [ -n "${TSTOOLSREPO}${TSTOOLSREF}" ]; then \
+        git -c advice.detachedHead=false clone -q --depth 1 \
+            --branch "${TSTOOLSREF:-v${TSTOOLSVER}}" \
+            "${TSTOOLSREPO:-https://gitlab.com/touchstone/touchstone-tools.git}" \
+            /usr/local/src/touchstone-tools; \
+    else \
+        curl -o /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz \
+             -SsL https://gitlab.com/touchstone/\
 touchstone-tools/-/archive/v${TSTOOLSVER}/\
-touchstone-tools-v${TSTOOLSVER}.tar.gz && \
-    mkdir -p \
-          /usr/local/src/touchstone-tools-v${TSTOOLSVER} && \
-    tar -C /usr/local/src/touchstone-tools-v${TSTOOLSVER} \
-        --strip-components=1 \
-        -xf /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz && \
-    cd /usr/local/src/touchstone-tools-v${TSTOOLSVER} && \
+touchstone-tools-v${TSTOOLSVER}.tar.gz; \
+        mkdir -p /usr/local/src/touchstone-tools; \
+        tar -C /usr/local/src/touchstone-tools \
+            --strip-components=1 \
+            -xf /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz; \
+        rm -f /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz; \
+    fi; \
+    cd /usr/local/src/touchstone-tools; \
     cmake -H. -Bbuild/release \
-          -DCMAKE_INSTALL_PREFIX=/usr/local && \
-    cd build/release && make -s install && \
-    cd /usr/local/src/touchstone-tools-v${TSTOOLSVER}/spar \
-    && ${HOME}/.cargo/bin/cargo install \
-       --root /usr/local --path . && \
-    rm -f /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz
+          -DCMAKE_INSTALL_PREFIX=/usr/local; \
+    (cd build/release && make -s install); \
+    cd spar && ${HOME}/.cargo/bin/cargo install \
+       --root /usr/local --path .
 
 # Copy dbt7 source and build.
 COPY . /usr/local/src/dbt7

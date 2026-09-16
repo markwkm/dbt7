@@ -19,5 +19,11 @@ fi
 if [ -n "${DBTTOOLSREF:-}" ]; then
 	set -- "${@}" --build-arg "DBTTOOLSREF=${DBTTOOLSREF}"
 fi
+if [ -n "${TSTOOLSREPO:-}" ]; then
+	set -- "${@}" --build-arg "TSTOOLSREPO=${TSTOOLSREPO}"
+fi
+if [ -n "${TSTOOLSREF:-}" ]; then
+	set -- "${@}" --build-arg "TSTOOLSREF=${TSTOOLSREF}"
+fi
 
 docker build "${@}" -t dbt7 -f "${TOPDIR}/Containerfile" "${TOPDIR}"

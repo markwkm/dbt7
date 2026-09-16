@@ -228,31 +228,54 @@ RUN wget -O /tmp/gnuplot-${GNUPLOTVER}.tar.gz -q \
 
 # Install the Rust toolchain only long enough to build spar from the
 # Touchstone Tools; nothing needs it after the image is built.
+
+# The release tarball is checked against its recorded checksum.  When
+# TSTOOLSREPO names a git repository, TSTOOLSREF a tag or branch in it,
+# or both, this step clones that source with depth 1 instead of
+# downloading the tarball.  A clone has no recorded checksum, so the
+# commit it resolved to is written beside the bundled license.
 ARG RUSTVER="1.97.1"
 ARG TSTOOLSVER="0.10.4"
 ARG TSTOOLSSHA256="19b5f9dcdc5b7cf4c5be4416599b538e59bb62bc5973c21d27590ef377bde298"
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-         -o /tmp/sh.rustup.sh && \
-    sh /tmp/sh.rustup.sh -y --default-toolchain ${RUSTVER} && \
-    curl -o /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz -SsL \
-         https://gitlab.com/touchstone/touchstone-tools/-/archive/v${TSTOOLSVER}/touchstone-tools-v${TSTOOLSVER}.tar.gz && \
-    echo "${TSTOOLSSHA256}  /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz" | \
-        sha256sum -c - && \
-    mkdir -p /usr/local/src/touchstone-tools-v${TSTOOLSVER} && \
-    tar -C /usr/local/src/touchstone-tools-v${TSTOOLSVER} \
-        --strip-components=1 \
-        -xf /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz && \
-    cd /usr/local/src/touchstone-tools-v${TSTOOLSVER} && \
-    cmake -H. -Bbuild/release -DCMAKE_INSTALL_PREFIX=/usr && \
-    (cd build/release && make -s install) && \
-    (cd spar && ${HOME}/.cargo/bin/cargo install --root /usr/local --path .) && \
-    mkdir -p /usr/local/share/licenses/touchstone-tools-v${TSTOOLSVER} && \
-    cp -p COPYRIGHT \
-       /usr/local/share/licenses/touchstone-tools-v${TSTOOLSVER}/ && \
-    cd / && \
-    rm -rf /usr/local/src/touchstone-tools-v${TSTOOLSVER} \
-       /tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz \
-       /tmp/sh.rustup.sh "${HOME}/.rustup" "${HOME}/.cargo"
+ARG TSTOOLSREPO=""
+ARG TSTOOLSREF=""
+RUN set -e; \
+    REPO="${TSTOOLSREPO:-https://gitlab.com/touchstone/touchstone-tools.git}"; \
+    REF="${TSTOOLSREF:-v${TSTOOLSVER}}"; \
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+         -o /tmp/sh.rustup.sh; \
+    sh /tmp/sh.rustup.sh -y --default-toolchain ${RUSTVER}; \
+    if [ -n "${TSTOOLSREPO}${TSTOOLSREF}" ]; then \
+        git -c advice.detachedHead=false clone -q --depth 1 \
+            --branch "${REF}" "${REPO}" /usr/local/src/touchstone-tools; \
+        cd /usr/local/src/touchstone-tools; \
+        LABEL="$(git describe --tags --always | tr '/' '-')"; \
+    else \
+        TARBALL="/tmp/touchstone-tools-v${TSTOOLSVER}.tar.gz"; \
+        curl -o "${TARBALL}" -SsL \
+             https://gitlab.com/touchstone/touchstone-tools/-/archive/v${TSTOOLSVER}/touchstone-tools-v${TSTOOLSVER}.tar.gz; \
+        echo "${TSTOOLSSHA256}  ${TARBALL}" | sha256sum -c -; \
+        mkdir -p /usr/local/src/touchstone-tools; \
+        tar -C /usr/local/src/touchstone-tools --strip-components=1 \
+            -xf "${TARBALL}"; \
+        rm -f "${TARBALL}"; \
+        cd /usr/local/src/touchstone-tools; \
+        LABEL="v${TSTOOLSVER}"; \
+    fi; \
+    cmake -H. -Bbuild/release -DCMAKE_INSTALL_PREFIX=/usr; \
+    (cd build/release && make -s install); \
+    (cd spar && ${HOME}/.cargo/bin/cargo install --root /usr/local --path .); \
+    LICENSEDIR="/usr/local/share/licenses/touchstone-tools-${LABEL}"; \
+    mkdir -p "${LICENSEDIR}"; \
+    cp -p COPYRIGHT "${LICENSEDIR}/"; \
+    if [ -d .git ]; then \
+        printf 'repository: %s\nref: %s\ncommit: %s\n' \
+               "${REPO}" "${REF}" "$(git rev-parse HEAD)" \
+               > "${LICENSEDIR}/SOURCE"; \
+    fi; \
+    cd /; \
+    rm -rf /usr/local/src/touchstone-tools /tmp/sh.rustup.sh \
+       "${HOME}/.rustup" "${HOME}/.cargo"
 
 WORKDIR /usr/local
 ARG APPIMAGETOOLVER="1.9.1"
