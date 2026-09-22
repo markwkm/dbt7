@@ -1,5 +1,9 @@
 vX.Y.Z (YYYY-MM-DD)
 
+- pgsql: fill the pg_plan_advice query templates with the plan advice of a
+  study on PostgreSQL 19 at scale factor 20 and make them a timed set:
+  dialects pgsqla and pgsqlaea in query_templates, the advice files under
+  advice/pg19-sf20 and tools/advise-templates.sh to regenerate the set
 - Shellchecked all scripts
 - Report script now automatically determines which tests ran
 - Prevent in-source builds to simply use of make

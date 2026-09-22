@@ -1,0 +1,1 @@
+INDEX_SCAN(i1 public.i_i_manufact_id item@expr_1 public.i_i_manufact) NO_GATHER(i1 item@expr_1)

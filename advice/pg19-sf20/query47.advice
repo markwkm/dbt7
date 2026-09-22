@@ -1,0 +1,1 @@
+JOIN_ORDER(v1_lead (v1_lag v1)) JOIN_ORDER(date_dim@v1 store_sales@v1 item@v1 store@v1) MERGE_JOIN_MATERIALIZE(v1 (v1 v1_lag)) NESTED_LOOP_PLAIN(store_sales@v1) HASH_JOIN(item@v1 store@v1) SEQ_SCAN(date_dim@v1 item@v1 store@v1) INDEX_SCAN(store_sales@v1 public.i_ss_sold_date_sk) GATHER_MERGE((item@v1 store_sales@v1 date_dim@v1 store@v1)) NO_GATHER(v1 v1_lag v1_lead)

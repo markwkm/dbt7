@@ -1,0 +1,1 @@
+JOIN_ORDER(time_dim store_sales household_demographics store) MERGE_JOIN_PLAIN(store) NESTED_LOOP_PLAIN(store_sales) HASH_JOIN(household_demographics) SEQ_SCAN(store) BITMAP_HEAP_SCAN(time_dim) INDEX_SCAN(store_sales public.i_ss_sold_time_sk household_demographics public.i_hd_dep_count) GATHER((store_sales household_demographics time_dim store))

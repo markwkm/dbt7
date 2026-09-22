@@ -1,0 +1,1 @@
+JOIN_ORDER(reason store_returns store_sales) NESTED_LOOP_PLAIN(store_returns store_sales) SEQ_SCAN(reason) INDEX_SCAN(store_returns public.i_sr_reason_sk store_sales public.pk_store_sales) NO_GATHER(store_sales store_returns reason)

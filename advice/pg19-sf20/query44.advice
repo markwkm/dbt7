@@ -1,0 +1,1 @@
+JOIN_ORDER(i1 v11 (i2 v21)) HASH_JOIN(v11 v21 (i2 v21)) SEQ_SCAN(i1 i2) BITMAP_HEAP_SCAN(store_sales@expr_1 store_sales@expr_2) INDEX_SCAN(ss1@v1 public.i_ss_store_sk ss1@v2 public.i_ss_store_sk) NO_GATHER(i1 i2 v11 v21 v1@v11 ss1@v1 v2@v21 ss1@v2 store_sales@expr_1 store_sales@expr_2)

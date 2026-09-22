@@ -1,0 +1,1 @@
+JOIN_ORDER(date_dim ws1 web_site customer_address wr1 ws2) NESTED_LOOP_PLAIN(ws1 wr1 ws2) HASH_JOIN(web_site customer_address) SEQ_SCAN(date_dim web_site) BITMAP_HEAP_SCAN(customer_address) INDEX_SCAN(ws1 public.i_ws_ship_date_sk ws2 public.i_ws_order_number) INDEX_ONLY_SCAN(wr1 public.i_wr_order_number) GATHER((ws1 date_dim customer_address web_site ws2 wr1))

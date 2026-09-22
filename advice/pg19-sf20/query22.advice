@@ -1,0 +1,1 @@
+JOIN_ORDER(inventory date_dim item) HASH_JOIN(date_dim item) SEQ_SCAN(item) INDEX_SCAN(inventory public.i_inv_item_sk date_dim public.pk_date_dim) GATHER((inventory date_dim item))

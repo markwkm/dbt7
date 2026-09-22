@@ -1,0 +1,1 @@
+JOIN_ORDER(store_sales@dw1 date_dim@dw1 item@dw1 store@dw1) MERGE_JOIN_PLAIN(item@dw1) HASH_JOIN(date_dim@dw1 store@dw1) SEQ_SCAN(date_dim@dw1 item@dw1 store@dw1) INDEX_SCAN(store_sales@dw1 public.i_ss_sold_date_sk) GATHER_MERGE((store_sales@dw1 date_dim@dw1 store@dw1 item@dw1)) NO_GATHER(dw2 dw1@dw2)

@@ -1,0 +1,1 @@
+JOIN_ORDER(item store_sales dt) NESTED_LOOP_PLAIN(store_sales) NESTED_LOOP_MEMOIZE(dt) INDEX_SCAN(item public.i_i_manufact_id store_sales public.i_ss_item_sk dt public.pk_date_dim) NO_GATHER(dt store_sales item)

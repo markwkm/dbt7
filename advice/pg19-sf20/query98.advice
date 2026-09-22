@@ -1,0 +1,1 @@
+JOIN_ORDER(date_dim store_sales item) NESTED_LOOP_PLAIN(store_sales) HASH_JOIN(item) SEQ_SCAN(date_dim) BITMAP_HEAP_SCAN(item) INDEX_SCAN(store_sales public.i_ss_sold_date_sk) GATHER_MERGE((store_sales item date_dim))

@@ -1,0 +1,1 @@
+JOIN_ORDER(warehouse@x (item@x inventory@x date_dim@x)) NESTED_LOOP_PLAIN(inventory@x (inventory@x item@x date_dim@x)) HASH_JOIN(date_dim@x) INDEX_SCAN(warehouse@x public.i_w_warehouse_name item@x public.pk_item inventory@x public.i_inv_item_sk date_dim@x public.i_d_date) GATHER((inventory@x item@x date_dim@x)) NO_GATHER(x warehouse@x)

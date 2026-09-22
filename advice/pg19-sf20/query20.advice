@@ -1,0 +1,1 @@
+JOIN_ORDER(date_dim catalog_sales item) NESTED_LOOP_PLAIN(catalog_sales) HASH_JOIN(item) BITMAP_HEAP_SCAN(catalog_sales) INDEX_SCAN(date_dim public.i_d_date item public.i_i_category) NO_GATHER(catalog_sales item date_dim)

@@ -1,0 +1,1 @@
+JOIN_ORDER(date_dim catalog_sales warehouse call_center ship_mode) MERGE_JOIN_PLAIN(warehouse) NESTED_LOOP_PLAIN(catalog_sales) HASH_JOIN(call_center ship_mode) SEQ_SCAN(date_dim warehouse call_center ship_mode) INDEX_SCAN(catalog_sales public.i_cs_ship_date_sk) GATHER_MERGE((catalog_sales warehouse ship_mode call_center date_dim))

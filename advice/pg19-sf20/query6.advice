@@ -1,0 +1,1 @@
+JOIN_ORDER(s d c i a) MERGE_JOIN_PLAIN(c) HASH_JOIN(d i a) SEQ_SCAN(s c i a) INDEX_SCAN(d public.i_d_month_seq date_dim@expr_1 public.i_d_year j@expr_2 public.i_i_category) NO_GATHER(a c s d i date_dim@expr_1 j@expr_2)

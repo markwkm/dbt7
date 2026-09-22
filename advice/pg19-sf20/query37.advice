@@ -1,0 +1,1 @@
+JOIN_ORDER(item (date_dim inventory) catalog_sales) NESTED_LOOP_PLAIN(inventory (inventory date_dim)) NESTED_LOOP_MEMOIZE(catalog_sales) BITMAP_HEAP_SCAN(item) INDEX_SCAN(date_dim public.i_d_date inventory public.pk_inventory) INDEX_ONLY_SCAN(catalog_sales public.i_cs_item_sk) NO_GATHER(item inventory date_dim catalog_sales)

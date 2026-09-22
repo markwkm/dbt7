@@ -1,0 +1,1 @@
+JOIN_ORDER(wswscs (wswscs#2 date_dim#2 date_dim)) JOIN_ORDER(x@wswscs date_dim@wswscs) HASH_JOIN(date_dim#2 date_dim (date_dim wswscs#2 date_dim#2) date_dim@wswscs) SEQ_SCAN(catalog_sales@wswscs web_sales@wswscs date_dim@wswscs) INDEX_SCAN(date_dim#2 public.i_d_year date_dim public.i_d_year) GATHER((date_dim@wswscs x@wswscs)) NO_GATHER(wswscs date_dim wswscs#2 date_dim#2)

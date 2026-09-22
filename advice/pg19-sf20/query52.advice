@@ -1,0 +1,1 @@
+JOIN_ORDER(dt store_sales item) NESTED_LOOP_PLAIN(store_sales) HASH_JOIN(item) INDEX_SCAN(dt public.i_d_year store_sales public.i_ss_sold_date_sk item public.i_i_manager_id) NO_GATHER(dt store_sales item)

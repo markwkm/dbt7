@@ -1,0 +1,1 @@
+JOIN_ORDER(inv1 inv2) JOIN_ORDER(inventory@foo date_dim@foo item@foo warehouse@foo) HASH_JOIN(inv2 date_dim@foo item@foo warehouse@foo) SEQ_SCAN(inventory@foo warehouse@foo) INDEX_SCAN(date_dim@foo public.i_d_year) INDEX_ONLY_SCAN(item@foo public.pk_item) GATHER((inventory@foo item@foo warehouse@foo date_dim@foo)) NO_GATHER(inv1 inv2 foo@inv)

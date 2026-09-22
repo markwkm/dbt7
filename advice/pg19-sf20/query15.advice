@@ -1,0 +1,1 @@
+JOIN_ORDER(date_dim catalog_sales customer customer_address) NESTED_LOOP_PLAIN(catalog_sales) HASH_JOIN(customer customer_address) SEQ_SCAN(customer customer_address) BITMAP_HEAP_SCAN(catalog_sales) INDEX_SCAN(date_dim public.i_d_year) NO_GATHER(catalog_sales customer customer_address date_dim)

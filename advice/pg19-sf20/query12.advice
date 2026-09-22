@@ -1,0 +1,1 @@
+JOIN_ORDER(date_dim web_sales item) NESTED_LOOP_PLAIN(web_sales) HASH_JOIN(item) SEQ_SCAN(date_dim) BITMAP_HEAP_SCAN(web_sales item) GATHER_MERGE((web_sales item date_dim))

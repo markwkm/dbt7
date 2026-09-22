@@ -1,0 +1,1 @@
+JOIN_ORDER(date_dim store_sales customer_demographics store item) NESTED_LOOP_PLAIN(store_sales) NESTED_LOOP_MATERIALIZE(store) HASH_JOIN(customer_demographics item) SEQ_SCAN(date_dim store item) INDEX_SCAN(store_sales public.i_ss_sold_date_sk customer_demographics public.i_cd_education_status) GATHER_MERGE((store_sales customer_demographics date_dim store item))

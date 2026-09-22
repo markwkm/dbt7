@@ -1,0 +1,1 @@
+JOIN_ORDER(wss#2 store#2 (wss store d) d#2) JOIN_ORDER(store_sales@wss date_dim@wss) NESTED_LOOP_PLAIN(d#2) HASH_JOIN(store#2 store d (wss store d) date_dim@wss) SEQ_SCAN(store#2 store store_sales@wss date_dim@wss) INDEX_SCAN(d public.i_d_month_seq d#2 public.i_d_week_seq) GATHER((store_sales@wss date_dim@wss)) NO_GATHER(wss store d wss#2 store#2 d#2)

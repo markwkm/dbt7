@@ -1,3 +1,35 @@
+Query templates advised by pg_plan_advice, for PostgreSQL 19.
+
+pg_plan_advice/ holds one copy of each of the 99 PostgreSQL query
+templates (the stock template, or the query_postgresql/ rewrite where
+one exists) with one line inserted before every statement:
+
+    RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', '...', false);
+
+The string is the generated advice of the fastest plan found for that
+statement in a plan study on PostgreSQL 19beta3 at scale factor 20
+(sets are kept under advice/ in the repository, with the study's
+provenance).  A statement without advice gets an empty string.  The
+templates are written by tools/advise-templates.sh from the plain
+templates and the advice files; they are not edited by hand.
+
+query_templates/pgsqla.tpl is the pgsql dialect with LOAD
+'pg_plan_advice' before the timing insert and RESET pg_plan_advice.advice
+before the timing update.  query_templates/pgsqlaea.tpl adds
+auto_explain with log_extension_options = 'plan_advice', so the results
+file carries each plan with the feedback on every supplied advice item
+and the generated advice of the executed plan.  The dialects sit in
+query_templates/ because dsqgen opens the dialect as
+DIRECTORY/DIALECT.tpl.  templates-pgsqla.lst lists the advised set:
+
+    dbt7 run -d pgsqla \
+        -i "${DSHOME}/query_templates/templates-pgsqla.lst" pgsql DIR
+
+Why set_config and not SET: SET is a keyword of the dsqgen template
+grammar and cannot start a line.  Why RESET first: the set_config
+statement is itself planned, and would otherwise be planned under the
+previous statement's advice.
+
 Index: dbt7/dsgen/pg_plan_advice/query1.tpl
 ===================================================================
 --- /dev/null
@@ -43,7 +75,7 @@ Index: dbt7/dsgen/pg_plan_advice/query1.tpl
 +define AGG_FIELD = text({"SR_RETURN_AMT",1},{"SR_FEE",1},{"SR_REFUNDED_CASH",1},{"SR_RETURN_AMT_INC_TAX",1},{"SR_REVERSED_CHARGE",1},{"SR_STORE_CREDIT",1},{"SR_RETURN_TAX",1});
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', '', false);
 +with customer_total_return as
 +(select sr_customer_sk as ctr_customer_sk
 +,sr_store_sk as ctr_store_sk
@@ -110,7 +142,7 @@ Index: dbt7/dsgen/pg_plan_advice/query10.tpl
 + define YEAR = random(1999,2002,uniform);
 + define _LIMIT=100; 
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(ca c (store_sales date_dim) customer_demographics) JOIN_ORDER(web_sales@exists_1 date_dim@exists_1) JOIN_ORDER(catalog_sales@exists_3 date_dim@exists_3) NESTED_LOOP_PLAIN(c (store_sales date_dim) customer_demographics) HASH_JOIN(date_dim date_dim@exists_1 date_dim@exists_3) INDEX_SCAN(ca public.i_ca_county c public.i_c_current_addr_sk store_sales public.i_ss_customer_sk date_dim public.i_d_year customer_demographics public.pk_customer_demographics web_sales@exists_1 public.i_ws_bill_customer_sk date_dim@exists_1 public.i_d_year catalog_sales@exists_3 public.i_cs_ship_customer_sk date_dim@exists_3 public.i_d_year) SEMIJOIN_NON_UNIQUE((store_sales date_dim)) NO_GATHER(c ca customer_demographics store_sales date_dim web_sales@exists_1 date_dim@exists_1 catalog_sales@exists_3 date_dim@exists_3) DO_NOT_SCAN(web_sales@exists_2 date_dim@exists_2 catalog_sales@exists_4 date_dim@exists_4)', false);
 + [_LIMITA] select [_LIMITB] 
 +  cd_gender,
 +  cd_marital_status,
@@ -216,7 +248,7 @@ Index: dbt7/dsgen/pg_plan_advice/query11.tpl
 +                       ,{"t_s_secyear.customer_email_address",1});
 + define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(t_s_secyear t_w_secyear t_s_firstyear t_w_firstyear) JOIN_ORDER(customer@unnamed_subquery store_sales@unnamed_subquery date_dim@unnamed_subquery) JOIN_ORDER(web_sales@unnamed_subquery_1 customer@unnamed_subquery_1 date_dim@unnamed_subquery_1) HASH_JOIN(t_w_secyear t_s_firstyear t_w_firstyear store_sales@unnamed_subquery date_dim@unnamed_subquery customer@unnamed_subquery_1 date_dim@unnamed_subquery_1) SEQ_SCAN(customer@unnamed_subquery store_sales@unnamed_subquery date_dim@unnamed_subquery web_sales@unnamed_subquery_1 customer@unnamed_subquery_1 date_dim@unnamed_subquery_1) GATHER((customer@unnamed_subquery store_sales@unnamed_subquery date_dim@unnamed_subquery) (customer@unnamed_subquery_1 web_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1)) NO_GATHER(t_s_firstyear t_s_secyear t_w_firstyear t_w_secyear unnamed_subquery#2@year_total unnamed_subquery#3@year_total)', false);
 + with year_total as (
 + select c_customer_id customer_id
 +       ,c_first_name customer_first_name
@@ -340,7 +372,7 @@ Index: dbt7/dsgen/pg_plan_advice/query12.tpl
 +define CATEGORY=ulist(dist(categories,1,1),3);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim web_sales item) NESTED_LOOP_PLAIN(web_sales) HASH_JOIN(item) SEQ_SCAN(date_dim) BITMAP_HEAP_SCAN(web_sales item) GATHER_MERGE((web_sales item date_dim))', false);
 +[_LIMITA] select [_LIMITB] i_item_id
 +      ,i_item_desc 
 +      ,i_category 
@@ -417,7 +449,7 @@ Index: dbt7/dsgen/pg_plan_advice/query13.tpl
 + define STATE= ulist(dist(fips_county, 3, 1), 9);
 + 
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim store_sales household_demographics customer_address customer_demographics store) MERGE_JOIN_PLAIN(customer_address store) NESTED_LOOP_PLAIN(store_sales customer_demographics) HASH_JOIN(household_demographics) SEQ_SCAN(date_dim store) BITMAP_HEAP_SCAN(household_demographics customer_address) INDEX_SCAN(store_sales public.i_ss_sold_date_sk customer_demographics public.pk_customer_demographics) GATHER((store_sales customer_demographics household_demographics customer_address date_dim)) NO_GATHER(store)', false);
 + select avg(ss_quantity)
 +       ,avg(ss_ext_sales_price)
 +       ,avg(ss_ext_wholesale_cost)
@@ -511,7 +543,7 @@ Index: dbt7/dsgen/pg_plan_advice/query14.tpl
 + define DAY = random(1,28,uniform);
 + define _LIMIT=100; 
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(store_sales@unnamed_subquery_3 date_dim@unnamed_subquery_3 cross_items@unnamed_subquery_3 item@unnamed_subquery_3) JOIN_ORDER(catalog_sales@unnamed_subquery_4 date_dim@unnamed_subquery_4 cross_items@unnamed_subquery_4 item@unnamed_subquery_4) JOIN_ORDER(web_sales@unnamed_subquery_5 date_dim@unnamed_subquery_5 cross_items@unnamed_subquery_5 item@unnamed_subquery_5) JOIN_ORDER(d1@setop_1 store_sales@setop_1 iss@setop_1) JOIN_ORDER(catalog_sales@setop_2 d2@setop_2 ics@setop_2) JOIN_ORDER(d3@setop_3 web_sales@setop_3 iws@setop_3) JOIN_ORDER(item@cross_items x@cross_items) JOIN_ORDER(date_dim@unnamed_subquery store_sales@unnamed_subquery) JOIN_ORDER(date_dim@unnamed_subquery_1 catalog_sales@unnamed_subquery_1) JOIN_ORDER(date_dim@unnamed_subquery_2 web_sales@unnamed_subquery_2) NESTED_LOOP_PLAIN(store_sales@setop_1) HASH_JOIN(date_dim@unnamed_subquery_3 cross_items@unnamed_subquery_3 item@unnamed_subquery_3 date_dim@unnamed_subquery_4 cross_items@unnamed_subquery_4 item@unnamed_subquery_4 date_dim@unnamed_subquery_5 cross_items@unnamed_subquery_5 item@unnamed_subquery_5 iss@setop_1 d2@setop_2 ics@setop_2 web_sales@setop_3 iws@setop_3 x@cross_items store_sales@unnamed_subquery catalog_sales@unnamed_subquery_1 web_sales@unnamed_subquery_2) SEQ_SCAN(store_sales@unnamed_subquery_3 item@unnamed_subquery_3 catalog_sales@unnamed_subquery_4 item@unnamed_subquery_4 web_sales@unnamed_subquery_5 item@unnamed_subquery_5 d1@setop_1 iss@setop_1 catalog_sales@setop_2 d2@setop_2 ics@setop_2 d3@setop_3 web_sales@setop_3 iws@setop_3 item@cross_items date_dim@unnamed_subquery store_sales@unnamed_subquery date_dim@unnamed_subquery_1 catalog_sales@unnamed_subquery_1 date_dim@unnamed_subquery_2 web_sales@unnamed_subquery_2) INDEX_SCAN(date_dim@unnamed_subquery_3 public.i_d_year date_dim@unnamed_subquery_4 public.i_d_year date_dim@unnamed_subquery_5 public.i_d_year store_sales@setop_1 public.i_ss_sold_date_sk) GATHER((store_sales@setop_1 iss@setop_1 d1@setop_1) (catalog_sales@setop_2 ics@setop_2 d2@setop_2) (web_sales@setop_3 iws@setop_3 d3@setop_3) x@avg_sales) SEMIJOIN_UNIQUE(cross_items@unnamed_subquery_3 cross_items@unnamed_subquery_4 cross_items@unnamed_subquery_5) NO_GATHER(unnamed_subquery unnamed_subquery#2 unnamed_subquery#3 store_sales@unnamed_subquery_3 item@unnamed_subquery_3 date_dim@unnamed_subquery_3 cross_items@unnamed_subquery_3 catalog_sales@unnamed_subquery_4 item@unnamed_subquery_4 date_dim@unnamed_subquery_4 cross_items@unnamed_subquery_4 web_sales@unnamed_subquery_5 item@unnamed_subquery_5 date_dim@unnamed_subquery_5 cross_items@unnamed_subquery_5 item@cross_items x@cross_items unnamed_subquery@x unnamed_subquery#2@x unnamed_subquery#3@x avg_sales@expr_1 avg_sales@expr_2 avg_sales@expr_3)', false);
 +with  cross_items as
 + (select i_item_sk ss_item_sk
 + from item,
@@ -614,7 +646,7 @@ Index: dbt7/dsgen/pg_plan_advice/query14.tpl
 + order by channel,i_brand_id,i_class_id,i_category_id
 + [_LIMITC];
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(store_sales@this_year date_dim@this_year cross_items@this_year item@this_year) JOIN_ORDER(store_sales@last_year date_dim@last_year cross_items@last_year item@last_year) JOIN_ORDER(this_year last_year) JOIN_ORDER(store_sales@setop_1 d1@setop_1 iss@setop_1) JOIN_ORDER(catalog_sales@setop_2 d2@setop_2 ics@setop_2) JOIN_ORDER(d3@setop_3 web_sales@setop_3 iws@setop_3) JOIN_ORDER(item@cross_items x@cross_items) JOIN_ORDER(date_dim@unnamed_subquery_2 web_sales@unnamed_subquery_2) JOIN_ORDER(store_sales@unnamed_subquery date_dim@unnamed_subquery) JOIN_ORDER(date_dim@unnamed_subquery_1 catalog_sales@unnamed_subquery_1) NESTED_LOOP_PLAIN(catalog_sales@unnamed_subquery_1) HASH_JOIN(date_dim@this_year cross_items@this_year item@this_year date_dim@last_year cross_items@last_year item@last_year last_year d1@setop_1 iss@setop_1 d2@setop_2 ics@setop_2 web_sales@setop_3 iws@setop_3 x@cross_items web_sales@unnamed_subquery_2 date_dim@unnamed_subquery) SEQ_SCAN(store_sales@this_year item@this_year store_sales@last_year item@last_year store_sales@setop_1 d1@setop_1 iss@setop_1 catalog_sales@setop_2 d2@setop_2 ics@setop_2 d3@setop_3 web_sales@setop_3 iws@setop_3 item@cross_items date_dim@unnamed_subquery_2 web_sales@unnamed_subquery_2 store_sales@unnamed_subquery date_dim@unnamed_subquery date_dim@unnamed_subquery_1) INDEX_SCAN(date_dim@this_year public.i_d_week_seq date_dim@last_year public.i_d_week_seq catalog_sales@unnamed_subquery_1 public.i_cs_sold_date_sk date_dim@expr_1 public.i_d_year date_dim@expr_3 public.i_d_year) GATHER((store_sales@setop_1 iss@setop_1 d1@setop_1) (catalog_sales@setop_2 ics@setop_2 d2@setop_2) (web_sales@setop_3 iws@setop_3 d3@setop_3) x@avg_sales) SEMIJOIN_UNIQUE(cross_items@this_year cross_items@last_year) NO_GATHER(this_year last_year store_sales@this_year item@this_year date_dim@this_year cross_items@this_year store_sales@last_year item@last_year date_dim@last_year cross_items@last_year item@cross_items x@cross_items unnamed_subquery@x unnamed_subquery#2@x unnamed_subquery#3@x date_dim@expr_1 avg_sales@expr_2 date_dim@expr_3 avg_sales@expr_4)', false);
 + with  cross_items as
 + (select i_item_sk ss_item_sk
 + from item,
@@ -765,7 +797,7 @@ Index: dbt7/dsgen/pg_plan_advice/query15.tpl
 + define QOY=random(1,2,uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim catalog_sales customer customer_address) NESTED_LOOP_PLAIN(catalog_sales) HASH_JOIN(customer customer_address) SEQ_SCAN(customer customer_address) BITMAP_HEAP_SCAN(catalog_sales) INDEX_SCAN(date_dim public.i_d_year) NO_GATHER(catalog_sales customer customer_address date_dim)', false);
 + [_LIMITA] select [_LIMITB] ca_zip
 +       ,sum(cs_sales_price)
 + from catalog_sales
@@ -835,7 +867,7 @@ Index: dbt7/dsgen/pg_plan_advice/query16.tpl
 +define COUNTY_E = distmember(fips_county, [COUNTYNUMBER.5], 2);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(call_center (date_dim cs1 customer_address cr1) cs2) NESTED_LOOP_PLAIN(cs1 cr1 cs2) HASH_JOIN(customer_address (cs1 date_dim customer_address cr1)) SEQ_SCAN(call_center) BITMAP_HEAP_SCAN(date_dim) INDEX_SCAN(cs1 public.i_cs_ship_date_sk customer_address public.i_ca_state cs2 public.i_cs_order_number) INDEX_ONLY_SCAN(cr1 public.i_cr_order_number) NO_GATHER(cs1 date_dim customer_address call_center cs2 cr1)', false);
 +[_LIMITA] select [_LIMITB] 
 +   count(distinct cs_order_number) as "order count"
 +  ,sum(cs_ext_ship_cost) as "total shipping cost"
@@ -908,7 +940,7 @@ Index: dbt7/dsgen/pg_plan_advice/query17.tpl
 + define YEAR= random(1998,2002, uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(d2 store_returns store_sales store item d1 catalog_sales d3) MERGE_JOIN_PLAIN(store d1) NESTED_LOOP_PLAIN(store_returns store_sales item catalog_sales d3) SEQ_SCAN(d2 store) INDEX_SCAN(store_returns public.i_sr_returned_date_sk store_sales public.pk_store_sales item public.pk_item d1 public.i_d_quarter_name catalog_sales public.i_cs_bill_customer_sk d3 public.pk_date_dim) GATHER_MERGE((store_sales store_returns d2 store item)) NO_GATHER(catalog_sales d1 d3)', false);
 + [_LIMITA] select [_LIMITB] i_item_id
 +       ,i_item_desc
 +       ,s_state
@@ -998,7 +1030,7 @@ Index: dbt7/dsgen/pg_plan_advice/query18.tpl
 + define MONTH=ulist(random(1,12,uniform),6);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim catalog_sales cd1 customer customer_address cd2 item) NESTED_LOOP_PLAIN(catalog_sales item) NESTED_LOOP_MEMOIZE(customer customer_address cd2) HASH_JOIN(cd1) SEQ_SCAN(date_dim) INDEX_SCAN(catalog_sales public.i_cs_sold_date_sk cd1 public.i_cd_education_status customer public.pk_customer customer_address public.pk_customer_address item public.pk_item) INDEX_ONLY_SCAN(cd2 public.pk_customer_demographics) GATHER((catalog_sales cd1 cd2 customer customer_address date_dim item))', false);
 + [_LIMITA] select [_LIMITB] i_item_id,
 +        ca_country,
 +        ca_state, 
@@ -1076,7 +1108,7 @@ Index: dbt7/dsgen/pg_plan_advice/query19.tpl
 + define MANAGER=random(distmember(i_manager_id, [MGR_IDX], 2), distmember(i_manager_id, [MGR_IDX], 3),uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim store_sales item store customer customer_address) MERGE_JOIN_PLAIN(store) NESTED_LOOP_PLAIN(store_sales customer customer_address) HASH_JOIN(item) SEQ_SCAN(date_dim store) BITMAP_HEAP_SCAN(item) INDEX_SCAN(store_sales public.i_ss_sold_date_sk customer public.pk_customer customer_address public.pk_customer_address) GATHER_MERGE((date_dim store_sales item customer customer_address store))', false);
 +[_LIMITA]  select [_LIMITB] i_brand_id brand_id, i_brand brand, i_manufact_id, i_manufact,
 + 	sum(ss_ext_sales_price) ext_price
 + from date_dim, store_sales, item,customer,customer_address,store
@@ -1143,7 +1175,7 @@ Index: dbt7/dsgen/pg_plan_advice/query2.tpl
 + define YEAR=random(1998,2001,uniform);
 + 
 +  
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(wswscs (wswscs#2 date_dim#2 date_dim)) JOIN_ORDER(x@wswscs date_dim@wswscs) HASH_JOIN(date_dim#2 date_dim (date_dim wswscs#2 date_dim#2) date_dim@wswscs) SEQ_SCAN(catalog_sales@wswscs web_sales@wswscs date_dim@wswscs) INDEX_SCAN(date_dim#2 public.i_d_year date_dim public.i_d_year) GATHER((date_dim@wswscs x@wswscs)) NO_GATHER(wswscs date_dim wswscs#2 date_dim#2)', false);
 + with wscs as
 + (select sold_date_sk
 +        ,sales_price
@@ -1245,7 +1277,7 @@ Index: dbt7/dsgen/pg_plan_advice/query20.tpl
 + define CATEGORY=ulist(dist(categories,1,1),3);
 + define _LIMIT=100; 
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim catalog_sales item) NESTED_LOOP_PLAIN(catalog_sales) HASH_JOIN(item) BITMAP_HEAP_SCAN(catalog_sales) INDEX_SCAN(date_dim public.i_d_date item public.i_i_category) NO_GATHER(catalog_sales item date_dim)', false);
 + [_LIMITA] select [_LIMITB] i_item_id
 +       ,i_item_desc 
 +       ,i_category 
@@ -1317,7 +1349,7 @@ Index: dbt7/dsgen/pg_plan_advice/query21.tpl
 + define SALES_DATE=date([YEAR]+"-01-31",[YEAR]+"-7-01",sales);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(warehouse@x (item@x inventory@x date_dim@x)) NESTED_LOOP_PLAIN(inventory@x (inventory@x item@x date_dim@x)) HASH_JOIN(date_dim@x) INDEX_SCAN(warehouse@x public.i_w_warehouse_name item@x public.pk_item inventory@x public.i_inv_item_sk date_dim@x public.i_d_date) GATHER((inventory@x item@x date_dim@x)) NO_GATHER(x warehouse@x)', false);
 + [_LIMITA] select [_LIMITB] *
 + from(select w_warehouse_name
 +            ,i_item_id
@@ -1387,7 +1419,7 @@ Index: dbt7/dsgen/pg_plan_advice/query22.tpl
 +
 +define _LIMIT=100;
 +define DMS = random(1176,1224,uniform); 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(inventory date_dim item) HASH_JOIN(date_dim item) SEQ_SCAN(item) INDEX_SCAN(inventory public.i_inv_item_sk date_dim public.pk_date_dim) GATHER((inventory date_dim item))', false);
 +[_LIMITA] select [_LIMITB] i_product_name
 +             ,i_brand
 +             ,i_class
@@ -1449,7 +1481,7 @@ Index: dbt7/dsgen/pg_plan_advice/query23.tpl
 + define TOPPERCENT=random(95,95,uniform); 
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(best_ss_customer@unnamed_subquery (date_dim@unnamed_subquery catalog_sales@unnamed_subquery frequent_ss_items@unnamed_subquery)) JOIN_ORDER(best_ss_customer@unnamed_subquery_1 (frequent_ss_items@unnamed_subquery_1 web_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1)) JOIN_ORDER(date_dim@frequent_ss_items store_sales@frequent_ss_items item@frequent_ss_items) JOIN_ORDER(date_dim@x store_sales@x customer@x) JOIN_ORDER(store_sales@best_ss_customer customer@best_ss_customer) NESTED_LOOP_PLAIN(catalog_sales@unnamed_subquery web_sales@unnamed_subquery_1 store_sales@frequent_ss_items store_sales@x) HASH_JOIN(frequent_ss_items@unnamed_subquery (catalog_sales@unnamed_subquery date_dim@unnamed_subquery frequent_ss_items@unnamed_subquery) date_dim@unnamed_subquery_1 (web_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1 frequent_ss_items@unnamed_subquery_1) item@frequent_ss_items customer@x customer@best_ss_customer) SEQ_SCAN(date_dim@frequent_ss_items item@frequent_ss_items date_dim@x store_sales@best_ss_customer) BITMAP_HEAP_SCAN(date_dim@unnamed_subquery) INDEX_SCAN(catalog_sales@unnamed_subquery public.i_cs_sold_date_sk web_sales@unnamed_subquery_1 public.i_ws_item_sk date_dim@unnamed_subquery_1 public.i_d_year store_sales@frequent_ss_items public.i_ss_sold_date_sk store_sales@x public.i_ss_sold_date_sk) INDEX_ONLY_SCAN(customer@x public.pk_customer customer@best_ss_customer public.pk_customer) GATHER((store_sales@frequent_ss_items date_dim@frequent_ss_items item@frequent_ss_items) (store_sales@x customer@x date_dim@x) (store_sales@best_ss_customer customer@best_ss_customer)) SEMIJOIN_NON_UNIQUE(best_ss_customer@unnamed_subquery best_ss_customer@unnamed_subquery_1) SEMIJOIN_UNIQUE(frequent_ss_items@unnamed_subquery frequent_ss_items@unnamed_subquery_1) NO_GATHER(unnamed_subquery unnamed_subquery#2 catalog_sales@unnamed_subquery date_dim@unnamed_subquery frequent_ss_items@unnamed_subquery best_ss_customer@unnamed_subquery web_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1 frequent_ss_items@unnamed_subquery_1 best_ss_customer@unnamed_subquery_1 max_store_sales@expr_1 x@max_store_sales)', false);
 + with frequent_ss_items as 
 + (select substr(i_item_desc,1,30) itemdesc,i_item_sk item_sk,d_date solddate,count(*) cnt
 +  from store_sales
@@ -1500,7 +1532,7 @@ Index: dbt7/dsgen/pg_plan_advice/query23.tpl
 +         and ws_bill_customer_sk in (select c_customer_sk from best_ss_customer)) y 
 + [_LIMITC]; 
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(best_ss_customer@unnamed_subquery (date_dim@unnamed_subquery catalog_sales@unnamed_subquery frequent_ss_items@unnamed_subquery) customer@unnamed_subquery) JOIN_ORDER(best_ss_customer@unnamed_subquery_1 (frequent_ss_items@unnamed_subquery_1 web_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1) customer@unnamed_subquery_1) JOIN_ORDER(date_dim@frequent_ss_items store_sales@frequent_ss_items item@frequent_ss_items) JOIN_ORDER(date_dim@x store_sales@x customer@x) JOIN_ORDER(store_sales@best_ss_customer customer@best_ss_customer) NESTED_LOOP_PLAIN(catalog_sales@unnamed_subquery customer@unnamed_subquery web_sales@unnamed_subquery_1 customer@unnamed_subquery_1 store_sales@frequent_ss_items store_sales@x) HASH_JOIN(frequent_ss_items@unnamed_subquery (catalog_sales@unnamed_subquery date_dim@unnamed_subquery frequent_ss_items@unnamed_subquery) date_dim@unnamed_subquery_1 (web_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1 frequent_ss_items@unnamed_subquery_1) item@frequent_ss_items customer@x customer@best_ss_customer) SEQ_SCAN(date_dim@frequent_ss_items item@frequent_ss_items date_dim@x store_sales@best_ss_customer) INDEX_SCAN(date_dim@unnamed_subquery public.i_d_year catalog_sales@unnamed_subquery public.i_cs_sold_date_sk customer@unnamed_subquery public.pk_customer web_sales@unnamed_subquery_1 public.i_ws_item_sk date_dim@unnamed_subquery_1 public.i_d_year customer@unnamed_subquery_1 public.pk_customer store_sales@frequent_ss_items public.i_ss_sold_date_sk store_sales@x public.i_ss_sold_date_sk) INDEX_ONLY_SCAN(customer@x public.pk_customer customer@best_ss_customer public.pk_customer) GATHER((store_sales@frequent_ss_items date_dim@frequent_ss_items item@frequent_ss_items) (store_sales@x customer@x date_dim@x) (store_sales@best_ss_customer customer@best_ss_customer)) SEMIJOIN_NON_UNIQUE(best_ss_customer@unnamed_subquery best_ss_customer@unnamed_subquery_1) SEMIJOIN_UNIQUE(frequent_ss_items@unnamed_subquery frequent_ss_items@unnamed_subquery_1) NO_GATHER(unnamed_subquery unnamed_subquery#2 catalog_sales@unnamed_subquery customer@unnamed_subquery date_dim@unnamed_subquery frequent_ss_items@unnamed_subquery best_ss_customer@unnamed_subquery web_sales@unnamed_subquery_1 customer@unnamed_subquery_1 date_dim@unnamed_subquery_1 frequent_ss_items@unnamed_subquery_1 best_ss_customer@unnamed_subquery_1 max_store_sales@expr_1 x@max_store_sales)', false);
 + with frequent_ss_items as
 + (select substr(i_item_desc,1,30) itemdesc,i_item_sk item_sk,d_date solddate,count(*) cnt
 +  from store_sales
@@ -1601,7 +1633,7 @@ Index: dbt7/dsgen/pg_plan_advice/query24.tpl
 +define AMOUNTONE=text({"ss_net_paid",1},{"ss_net_paid_inc_tax",1},{"ss_net_profit",1},{"ss_sales_price",1},{"ss_ext_sales_price",1});
 +define COLOR=ulist(dist(colors,1,1),2);
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(store@ssales customer_address@ssales customer@ssales store_sales@ssales store_returns@ssales item@ssales) NESTED_LOOP_PLAIN(customer@ssales store_sales@ssales store_returns@ssales item@ssales) NESTED_LOOP_MEMOIZE(customer_address@ssales) SEQ_SCAN(store@ssales) INDEX_SCAN(customer_address@ssales public.i_ca_zip customer@ssales public.i_c_current_addr_sk store_sales@ssales public.i_ss_customer_sk store_returns@ssales public.i_sr_ticket_number item@ssales public.pk_item) NO_GATHER(ssales store_sales@ssales store_returns@ssales store@ssales item@ssales customer@ssales customer_address@ssales ssales@expr_1)', false);
 +with ssales as
 +(select c_last_name
 +      ,c_first_name
@@ -1655,7 +1687,7 @@ Index: dbt7/dsgen/pg_plan_advice/query24.tpl
 +        ,s_store_name
 +;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(store@ssales customer_address@ssales customer@ssales store_sales@ssales store_returns@ssales item@ssales) NESTED_LOOP_PLAIN(store_sales@ssales store_returns@ssales item@ssales) NESTED_LOOP_MEMOIZE(customer_address@ssales customer@ssales) SEQ_SCAN(store@ssales) INDEX_SCAN(customer_address@ssales public.i_ca_zip customer@ssales public.i_c_current_addr_sk store_sales@ssales public.i_ss_customer_sk store_returns@ssales public.i_sr_ticket_number item@ssales public.pk_item) NO_GATHER(ssales store_sales@ssales store_returns@ssales store@ssales item@ssales customer@ssales customer_address@ssales ssales@expr_1)', false);
 +with ssales as
 +(select c_last_name
 +      ,c_first_name
@@ -1753,7 +1785,7 @@ Index: dbt7/dsgen/pg_plan_advice/query25.tpl
 + define AGG= text({"sum",1},{"min",1},{"max",1},{"avg",1},{"stddev_samp",1});
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(d2 store_returns store_sales store item d1 catalog_sales d3) MERGE_JOIN_PLAIN(item d1) NESTED_LOOP_PLAIN(store_returns store_sales catalog_sales d3) HASH_JOIN(store) SEQ_SCAN(d2 store item) INDEX_SCAN(store_returns public.i_sr_returned_date_sk store_sales public.pk_store_sales d1 public.i_d_year catalog_sales public.i_cs_bill_customer_sk d3 public.pk_date_dim) GATHER_MERGE((store_sales store_returns d2 store item)) NO_GATHER(catalog_sales d1 d3)', false);
 + [_LIMITA] select [_LIMITB] 
 + i_item_id
 + ,i_item_desc
@@ -1845,7 +1877,7 @@ Index: dbt7/dsgen/pg_plan_advice/query26.tpl
 + define YEAR = random(1998,2002,uniform);
 + define _LIMIT=100; 
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim catalog_sales customer_demographics item promotion) NESTED_LOOP_PLAIN(catalog_sales item promotion) HASH_JOIN(customer_demographics) SEQ_SCAN(date_dim) INDEX_SCAN(catalog_sales public.i_cs_sold_date_sk customer_demographics public.i_cd_education_status item public.pk_item promotion public.pk_promotion) GATHER((catalog_sales customer_demographics date_dim item promotion))', false);
 + [_LIMITA] select [_LIMITB] i_item_id, 
 +        avg(cs_quantity) agg1,
 +        avg(cs_list_price) agg2,
@@ -1919,7 +1951,7 @@ Index: dbt7/dsgen/pg_plan_advice/query27.tpl
 + define STATE_F=distmember(fips_county,[STATENUMBER.6], 3);
 + define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim store_sales customer_demographics store item) NESTED_LOOP_PLAIN(store_sales) NESTED_LOOP_MATERIALIZE(store) HASH_JOIN(customer_demographics item) SEQ_SCAN(date_dim store item) INDEX_SCAN(store_sales public.i_ss_sold_date_sk customer_demographics public.i_cd_education_status) GATHER_MERGE((store_sales customer_demographics date_dim store item))', false);
 + [_LIMITA] select [_LIMITB] i_item_id,
 +        s_state, grouping(s_state) g_state,
 +        avg(ss_quantity) agg1,
@@ -1986,7 +2018,7 @@ Index: dbt7/dsgen/pg_plan_advice/query28.tpl
 +define WHOLESALECOST=ulist(random(0, 80, uniform),6);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(b1 b2 b3 b4 b5 b6) NESTED_LOOP_PLAIN(b2 b3 b4 b5 b6) INDEX_SCAN(store_sales@b1 public.i_ss_quantity store_sales@b2 public.i_ss_quantity store_sales@b3 public.i_ss_quantity store_sales@b4 public.i_ss_quantity store_sales@b5 public.i_ss_quantity store_sales@b6 public.i_ss_quantity) NO_GATHER(b1 b2 b3 b4 b5 b6 store_sales@b1 store_sales@b2 store_sales@b3 store_sales@b4 store_sales@b5 store_sales@b6)', false);
 +[_LIMITA] select [_LIMITB] *
 +from (select avg(ss_list_price) B1_LP
 +            ,count(ss_list_price) B1_CNT
@@ -2081,7 +2113,7 @@ Index: dbt7/dsgen/pg_plan_advice/query29.tpl
 + define AGG= text({"sum",1},{"min",1},{"max",1},{"avg",1},{"stddev_samp",1}); 
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(d2 store_returns catalog_sales store_sales d1 d3 store item) NESTED_LOOP_PLAIN(store_returns catalog_sales store_sales d1 d3 store item) SEQ_SCAN(store) INDEX_SCAN(d2 public.i_d_year store_returns public.i_sr_returned_date_sk catalog_sales public.i_cs_bill_customer_sk store_sales public.pk_store_sales d1 public.pk_date_dim d3 public.pk_date_dim item public.pk_item) NO_GATHER(store_sales store_returns catalog_sales d1 d2 d3 store item)', false);
 + [_LIMITA] select [_LIMITB]  
 +     i_item_id
 +    ,i_item_desc
@@ -2172,7 +2204,7 @@ Index: dbt7/dsgen/pg_plan_advice/query3.tpl
 + define MANUFACT= random(1,1000,uniform);
 + define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(item store_sales dt) NESTED_LOOP_PLAIN(store_sales) NESTED_LOOP_MEMOIZE(dt) INDEX_SCAN(item public.i_i_manufact_id store_sales public.i_ss_item_sk dt public.pk_date_dim) NO_GATHER(dt store_sales item)', false);
 + [_LIMITA] select [_LIMITB] dt.d_year 
 +       ,item.i_brand_id brand_id 
 +       ,item.i_brand brand
@@ -2235,7 +2267,7 @@ Index: dbt7/dsgen/pg_plan_advice/query30.tpl
 + define YEAR= random(1999, 2002, uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', '', false);
 + with customer_total_return as
 + (select wr_returning_customer_sk as ctr_customer_sk
 +        ,ca_state as ctr_state, 
@@ -2307,7 +2339,7 @@ Index: dbt7/dsgen/pg_plan_advice/query31.tpl
 + define AGG= text({"ss1.ca_county",1},{"ss1.d_year",1},{"web_q1_q2_increase",1},{"store_q1_q2_increase",1},{"web_q2_q3_increase",1},{"store_q2_q3_increase",1}); 
 +
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(ws1 ws3 ss1 ss2 ws2 ss3) JOIN_ORDER(store_sales@ss customer_address@ss date_dim@ss) JOIN_ORDER(web_sales@ws customer_address@ws date_dim@ws) HASH_JOIN(ws3 ss1 ss2 ws2 ss3 customer_address@ss date_dim@ss customer_address@ws date_dim@ws) SEQ_SCAN(store_sales@ss customer_address@ss date_dim@ss web_sales@ws customer_address@ws date_dim@ws) GATHER((store_sales@ss date_dim@ss customer_address@ss) (web_sales@ws date_dim@ws customer_address@ws)) NO_GATHER(ss1 ss2 ss3 ws1 ws2 ws3)', false);
 + with ss as
 + (select ca_county,d_qoy, d_year,sum(ss_ext_sales_price) as store_sales
 + from store_sales,date_dim,customer_address
@@ -2402,7 +2434,7 @@ Index: dbt7/dsgen/pg_plan_advice/query32.tpl
 +define CSDATE = date([YEAR]+"-01-01",[YEAR]+"-04-01",sales);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim catalog_sales item) JOIN_ORDER(catalog_sales@expr_1 date_dim@expr_1) MERGE_JOIN_MATERIALIZE(item) NESTED_LOOP_PLAIN(catalog_sales) HASH_JOIN(date_dim@expr_1) SEQ_SCAN(date_dim) BITMAP_HEAP_SCAN(date_dim@expr_1) INDEX_SCAN(catalog_sales public.i_cs_sold_date_sk item public.i_i_manufact_id catalog_sales@expr_1 public.i_cs_item_sk) GATHER((catalog_sales date_dim)) NO_GATHER(item catalog_sales@expr_1 date_dim@expr_1)', false);
 +[_LIMITA] select [_LIMITB] sum(cs_ext_discount_amt)  as "excess discount amount" 
 +from 
 +   catalog_sales 
@@ -2475,7 +2507,7 @@ Index: dbt7/dsgen/pg_plan_advice/query33.tpl
 +define CATEGORY = text({"Books",1},{"Home",1},{"Electronics",1},{"Jewelry",1},{"Sports",1});
 +define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@ss store_sales@ss customer_address@ss item@ss item#2@ss) JOIN_ORDER(date_dim@cs catalog_sales@cs customer_address@cs item@cs item#2@cs) JOIN_ORDER(date_dim@ws web_sales@ws customer_address@ws item@ws item#2@ws) MERGE_JOIN_PLAIN(item#2@cs) NESTED_LOOP_PLAIN(store_sales@ss catalog_sales@cs web_sales@ws) NESTED_LOOP_MEMOIZE(item@cs customer_address@ws item@ws) HASH_JOIN(customer_address@ss item@ss item#2@ss customer_address@cs item#2@ws) SEQ_SCAN(date_dim@ss item@ss date_dim@ws) BITMAP_HEAP_SCAN(customer_address@ss item#2@ss item#2@ws) INDEX_SCAN(store_sales@ss public.i_ss_sold_date_sk date_dim@cs public.i_d_year catalog_sales@cs public.i_cs_sold_date_sk customer_address@cs public.i_ca_gmt_offset item@cs public.pk_item item#2@cs public.i_i_category web_sales@ws public.i_ws_sold_date_sk customer_address@ws public.pk_customer_address item@ws public.pk_item) GATHER_MERGE((store_sales@ss date_dim@ss customer_address@ss item@ss item#2@ss) (web_sales@ws date_dim@ws customer_address@ws item@ws item#2@ws)) SEMIJOIN_NON_UNIQUE(item#2@ss item#2@cs item#2@ws) NO_GATHER(ss cs ws catalog_sales@cs date_dim@cs customer_address@cs item@cs item#2@cs)', false);
 + with ss as (
 + select
 +          i_manufact_id,sum(ss_ext_sales_price) total_sales
@@ -2601,7 +2633,7 @@ Index: dbt7/dsgen/pg_plan_advice/query34.tpl
 + define COUNTY_H=distmember(fips_county, [COUNTYNUMBER.8], 2);
 + 
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@dn store_sales@dn household_demographics@dn store@dn) JOIN_ORDER(dn customer) NESTED_LOOP_PLAIN(store_sales@dn customer) HASH_JOIN(household_demographics@dn store@dn) SEQ_SCAN(date_dim@dn store@dn) INDEX_SCAN(store_sales@dn public.i_ss_sold_date_sk household_demographics@dn public.i_hd_buy_potential customer public.pk_customer) GATHER_MERGE((store_sales@dn date_dim@dn store@dn household_demographics@dn)) NO_GATHER(dn customer)', false);
 + select c_last_name
 +       ,c_first_name
 +       ,c_salutation
@@ -2677,7 +2709,7 @@ Index: dbt7/dsgen/pg_plan_advice/query35.tpl
 + define AGGTHREE= text({"sum",1},{"min",1},{"max",1},{"avg",1},{"stddev_samp",1}); 
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(ca (date_dim store_sales c customer_demographics)) JOIN_ORDER(web_sales@exists_1 date_dim@exists_1) JOIN_ORDER(catalog_sales@exists_3 date_dim@exists_3) NESTED_LOOP_PLAIN(store_sales c customer_demographics) HASH_JOIN((c customer_demographics store_sales date_dim) date_dim@exists_1 date_dim@exists_3) SEQ_SCAN(ca date_dim) INDEX_SCAN(store_sales public.i_ss_sold_date_sk c public.pk_customer customer_demographics public.pk_customer_demographics web_sales@exists_1 public.i_ws_bill_customer_sk date_dim@exists_1 public.i_d_year catalog_sales@exists_3 public.i_cs_ship_customer_sk date_dim@exists_3 public.i_d_year) GATHER_MERGE((store_sales date_dim)) SEMIJOIN_UNIQUE((store_sales date_dim)) NO_GATHER(c ca customer_demographics web_sales@exists_1 date_dim@exists_1 catalog_sales@exists_3 date_dim@exists_3) DO_NOT_SCAN(web_sales@exists_2 date_dim@exists_2 catalog_sales@exists_4 date_dim@exists_4)', false);
 + [_LIMITA] select [_LIMITB]  
 +  ca_state,
 +  cd_gender,
@@ -2786,7 +2818,7 @@ Index: dbt7/dsgen/pg_plan_advice/query36a.tpl
 + define STATE_H=distmember(fips_county,[STATENUMBER.8], 3);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(d1@results store_sales@results store@results item@results) NESTED_LOOP_PLAIN(store_sales@results) HASH_JOIN(store@results item@results) SEQ_SCAN(d1@results store@results item@results) INDEX_SCAN(store_sales@results public.i_ss_sold_date_sk) GATHER_MERGE((store_sales@results d1@results item@results store@results)) NO_GATHER(results_rollup unnamed_subquery@results_rollup unnamed_subquery#2@results_rollup unnamed_subquery#3@results_rollup results@setop_1 results@setop_2 results@setop_3)', false);
 + with results as
 + (select 
 +    sum(ss_net_profit) as ss_net_profit, sum(ss_ext_sales_price) as ss_ext_sales_price,
@@ -2872,7 +2904,7 @@ Index: dbt7/dsgen/pg_plan_advice/query37.tpl
 + define PRICE=random(10,70,uniform);
 + define _LIMIT=100;
 +  
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(item (date_dim inventory) catalog_sales) NESTED_LOOP_PLAIN(inventory (inventory date_dim)) NESTED_LOOP_MEMOIZE(catalog_sales) BITMAP_HEAP_SCAN(item) INDEX_SCAN(date_dim public.i_d_date inventory public.pk_inventory) INDEX_ONLY_SCAN(catalog_sales public.i_cs_item_sk) NO_GATHER(item inventory date_dim catalog_sales)', false);
 + [_LIMITA] select [_LIMITB] i_item_id
 +       ,i_item_desc
 +       ,i_current_price
@@ -2932,7 +2964,7 @@ Index: dbt7/dsgen/pg_plan_advice/query38.tpl
 +define DMS = random(1176,1224,uniform); 
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@setop_3 web_sales@setop_3 customer@setop_3) JOIN_ORDER(date_dim@setop_2 catalog_sales@setop_2 customer@setop_2) JOIN_ORDER(date_dim@setop_1 store_sales@setop_1 customer@setop_1) NESTED_LOOP_PLAIN(web_sales@setop_3 catalog_sales@setop_2 store_sales@setop_1) NESTED_LOOP_MEMOIZE(customer@setop_3) HASH_JOIN(customer@setop_2 customer@setop_1) SEQ_SCAN(date_dim@setop_3 date_dim@setop_2 customer@setop_2 date_dim@setop_1) INDEX_SCAN(web_sales@setop_3 public.i_ws_sold_date_sk customer@setop_3 public.pk_customer catalog_sales@setop_2 public.i_cs_sold_date_sk store_sales@setop_1 public.i_ss_sold_date_sk customer@setop_1 public.i_c_last_name) GATHER_MERGE((web_sales@setop_3 date_dim@setop_3 customer@setop_3) (catalog_sales@setop_2 date_dim@setop_2 customer@setop_2) (store_sales@setop_1 date_dim@setop_1 customer@setop_1)) NO_GATHER(hot_cust unnamed_subquery@hot_cust unnamed_subquery#2@hot_cust unnamed_subquery#3@hot_cust)', false);
 +[_LIMITA] select [_LIMITB] count(*) from (
 +    select distinct c_last_name, c_first_name, d_date
 +    from store_sales, date_dim, customer
@@ -2999,7 +3031,7 @@ Index: dbt7/dsgen/pg_plan_advice/query39.tpl
 +
 +
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(inv1 inv2) JOIN_ORDER(inventory@foo date_dim@foo item@foo warehouse@foo) HASH_JOIN(inv2 date_dim@foo item@foo warehouse@foo) SEQ_SCAN(inventory@foo warehouse@foo) INDEX_SCAN(date_dim@foo public.i_d_year) INDEX_ONLY_SCAN(item@foo public.pk_item) GATHER((inventory@foo item@foo warehouse@foo date_dim@foo)) NO_GATHER(inv1 inv2 foo@inv)', false);
 +with inv as
 +(select w_warehouse_name,w_warehouse_sk,i_item_sk,d_moy
 +       ,stdev,mean, case mean when 0 then null else stdev/mean end cov
@@ -3027,7 +3059,7 @@ Index: dbt7/dsgen/pg_plan_advice/query39.tpl
 +;
 +
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(inv1 inv2) JOIN_ORDER(inventory@foo date_dim@foo item@foo warehouse@foo) HASH_JOIN(inv2 date_dim@foo item@foo warehouse@foo) SEQ_SCAN(inventory@foo warehouse@foo) INDEX_SCAN(date_dim@foo public.i_d_year) INDEX_ONLY_SCAN(item@foo public.pk_item) GATHER((inventory@foo item@foo warehouse@foo date_dim@foo)) NO_GATHER(inv1 inv2 foo@inv)', false);
 +with inv as
 +(select w_warehouse_name,w_warehouse_sk,i_item_sk,d_moy
 +       ,stdev,mean, case mean when 0 then null else stdev/mean end cov
@@ -3100,7 +3132,7 @@ Index: dbt7/dsgen/pg_plan_advice/query4.tpl
 +                       ,{"t_s_secyear.customer_email_address",1});
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(t_s_firstyear t_w_firstyear t_s_secyear t_c_secyear t_w_secyear t_c_firstyear) JOIN_ORDER(store_sales@unnamed_subquery customer@unnamed_subquery date_dim@unnamed_subquery) JOIN_ORDER(customer@unnamed_subquery_1 catalog_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1) JOIN_ORDER(web_sales@unnamed_subquery_2 customer@unnamed_subquery_2 date_dim@unnamed_subquery_2) HASH_JOIN(t_w_firstyear t_s_secyear t_c_secyear t_w_secyear t_c_firstyear customer@unnamed_subquery date_dim@unnamed_subquery catalog_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1 customer@unnamed_subquery_2 date_dim@unnamed_subquery_2) SEQ_SCAN(store_sales@unnamed_subquery customer@unnamed_subquery date_dim@unnamed_subquery customer@unnamed_subquery_1 catalog_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1 web_sales@unnamed_subquery_2 customer@unnamed_subquery_2 date_dim@unnamed_subquery_2) GATHER((customer@unnamed_subquery store_sales@unnamed_subquery date_dim@unnamed_subquery) (customer@unnamed_subquery_1 catalog_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1) (customer@unnamed_subquery_2 web_sales@unnamed_subquery_2 date_dim@unnamed_subquery_2)) NO_GATHER(t_s_firstyear t_s_secyear t_c_firstyear t_c_secyear t_w_firstyear t_w_secyear unnamed_subquery#2@year_total unnamed_subquery#3@year_total unnamed_subquery#4@year_total)', false);
 +with year_total as (
 + select c_customer_id customer_id
 +       ,c_first_name customer_first_name
@@ -3257,7 +3289,7 @@ Index: dbt7/dsgen/pg_plan_advice/query40.tpl
 + define SALES_DATE=date([YEAR]+"-01-31",[YEAR]+"-7-01",sales);
 + define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim catalog_sales item catalog_returns warehouse) NESTED_LOOP_PLAIN(catalog_sales catalog_returns) NESTED_LOOP_MATERIALIZE(warehouse) HASH_JOIN(item) INDEX_SCAN(date_dim public.i_d_date catalog_sales public.i_cs_sold_date_sk item public.i_i_current_price catalog_returns public.i_cr_order_number warehouse public.i_w_state) NO_GATHER(catalog_sales catalog_returns warehouse item date_dim)', false);
 + [_LIMITA] select [_LIMITB] 
 +   w_state
 +  ,i_item_id
@@ -3328,7 +3360,7 @@ Index: dbt7/dsgen/pg_plan_advice/query41.tpl
 + define MANUFACT= random(667,1000,uniform); 
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'INDEX_SCAN(i1 public.i_i_manufact_id item@expr_1 public.i_i_manufact) NO_GATHER(i1 item@expr_1)', false);
 + [_LIMITA] select [_LIMITB] distinct(i_product_name)
 + from item i1
 + where i_manufact_id between [MANUFACT] and [MANUFACT]+40 
@@ -3422,7 +3454,7 @@ Index: dbt7/dsgen/pg_plan_advice/query42.tpl
 + define YEAR = random(1998,2002,uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(dt store_sales item) NESTED_LOOP_PLAIN(store_sales) HASH_JOIN(item) SEQ_SCAN(dt item) INDEX_SCAN(store_sales public.i_ss_sold_date_sk) GATHER((dt store_sales item))', false);
 +[_LIMITA]  select [_LIMITB] dt.d_year
 + 	,item.i_category_id
 + 	,item.i_category
@@ -3493,7 +3525,7 @@ Index: dbt7/dsgen/pg_plan_advice/query43.tpl
 + define YEAR=random(1998,2002,uniform);
 + define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim store_sales store) NESTED_LOOP_PLAIN(store_sales store) SEQ_SCAN(date_dim store) INDEX_SCAN(store_sales public.i_ss_sold_date_sk) GATHER_MERGE((date_dim store_sales store))', false);
 + [_LIMITA] select [_LIMITB] s_store_name, s_store_id,
 +        sum(case when (d_day_name='Sunday') then ss_sales_price else null end) sun_sales,
 +        sum(case when (d_day_name='Monday') then ss_sales_price else null end) mon_sales,
@@ -3554,7 +3586,7 @@ Index: dbt7/dsgen/pg_plan_advice/query44.tpl
 +define _LIMIT=100;
 +
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(i1 v11 (i2 v21)) HASH_JOIN(v11 v21 (i2 v21)) SEQ_SCAN(i1 i2) BITMAP_HEAP_SCAN(store_sales@expr_1 store_sales@expr_2) INDEX_SCAN(ss1@v1 public.i_ss_store_sk ss1@v2 public.i_ss_store_sk) NO_GATHER(i1 i2 v11 v21 v1@v11 ss1@v1 v2@v21 ss1@v2 store_sales@expr_1 store_sales@expr_2)', false);
 +[_LIMITA] select [_LIMITB] asceding.rnk, i1.i_product_name best_performing, i2.i_product_name worst_performing
 +from(select *
 +     from (select item_sk,rank() over (order by rank_col asc) rnk
@@ -3632,7 +3664,7 @@ Index: dbt7/dsgen/pg_plan_advice/query45.tpl
 + define QOY=random(1,2,uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim web_sales customer customer_address item) NESTED_LOOP_PLAIN(web_sales) NESTED_LOOP_MEMOIZE(customer) HASH_JOIN(customer_address item) SEQ_SCAN(date_dim customer_address) INDEX_SCAN(web_sales public.i_ws_sold_date_sk customer public.pk_customer item public.pk_item item@any_1 public.pk_item) GATHER_MERGE((web_sales customer customer_address date_dim item)) NO_GATHER(item@any_1)', false);
 + [_LIMITA] select [_LIMITB] ca_zip, [GBOBC], sum(ws_sales_price)
 + from web_sales, customer, customer_address, date_dim, item
 + where ws_bill_customer_sk = c_customer_sk
@@ -3700,7 +3732,7 @@ Index: dbt7/dsgen/pg_plan_advice/query46.tpl
 + define CITY_E = distmember(cities, [CITYNUMBER.5], 1);
 + define _LIMIT=100; 
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@dn store_sales@dn household_demographics@dn store@dn customer_address@dn) JOIN_ORDER(customer dn current_addr) MERGE_JOIN_PLAIN(dn) NESTED_LOOP_PLAIN(store_sales@dn current_addr) HASH_JOIN(household_demographics@dn store@dn customer_address@dn) SEQ_SCAN(date_dim@dn store@dn customer_address@dn) BITMAP_HEAP_SCAN(household_demographics@dn) INDEX_SCAN(store_sales@dn public.i_ss_sold_date_sk customer public.pk_customer current_addr public.pk_customer_address) GATHER_MERGE((store_sales@dn date_dim@dn store@dn household_demographics@dn customer_address@dn)) NO_GATHER(dn customer current_addr)', false);
 + [_LIMITA] select [_LIMITB] c_last_name
 +       ,c_first_name
 +       ,ca_city
@@ -3779,7 +3811,7 @@ Index: dbt7/dsgen/pg_plan_advice/query47.tpl
 + define SELECTTWO= text({",v1.d_year",1},{",v1.d_year, v1.d_moy",1}); 
 + define ORDERBY= text({"avg_monthly_sales",1},{"sum_sales",1},{"psum",1},{"nsum",1});
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(v1_lead (v1_lag v1)) JOIN_ORDER(date_dim@v1 store_sales@v1 item@v1 store@v1) MERGE_JOIN_MATERIALIZE(v1 (v1 v1_lag)) NESTED_LOOP_PLAIN(store_sales@v1) HASH_JOIN(item@v1 store@v1) SEQ_SCAN(date_dim@v1 item@v1 store@v1) INDEX_SCAN(store_sales@v1 public.i_ss_sold_date_sk) GATHER_MERGE((item@v1 store_sales@v1 date_dim@v1 store@v1)) NO_GATHER(v1 v1_lag v1_lead)', false);
 + with v1 as(
 + select i_category, i_brand,
 +        s_store_name, s_company_name,
@@ -3873,7 +3905,7 @@ Index: dbt7/dsgen/pg_plan_advice/query48.tpl
 + define STATE= ulist(dist(fips_county, 3, 1), 9);
 + define YEAR= random(1998,2002, uniform);
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim store_sales customer_address customer_demographics store) NESTED_LOOP_PLAIN(store_sales) NESTED_LOOP_MEMOIZE(store) HASH_JOIN(customer_address customer_demographics) SEQ_SCAN(date_dim) BITMAP_HEAP_SCAN(customer_demographics) INDEX_SCAN(store_sales public.i_ss_sold_date_sk customer_address public.i_ca_country) INDEX_ONLY_SCAN(store public.pk_store) GATHER((store_sales customer_demographics customer_address date_dim)) NO_GATHER(store)', false);
 + select sum (ss_quantity)
 + from store_sales, store, customer_demographics, customer_address, date_dim
 + where s_store_sk = ss_store_sk
@@ -3982,7 +4014,7 @@ Index: dbt7/dsgen/pg_plan_advice/query49.tpl
 + define MONTH=random(11,12,uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(wr@in_web ws@in_web date_dim@in_web) JOIN_ORDER(date_dim@in_cat cs@in_cat cr@in_cat) JOIN_ORDER(sr@in_store sts@in_store date_dim@in_store) NESTED_LOOP_PLAIN(ws@in_web cs@in_cat sts@in_store date_dim@in_store) HASH_JOIN(date_dim@in_web cr@in_cat) BITMAP_HEAP_SCAN(sr@in_store) INDEX_SCAN(wr@in_web public.i_wr_return_amt ws@in_web public.pk_web_sales date_dim@in_web public.i_d_year date_dim@in_cat public.i_d_year cs@in_cat public.i_cs_sold_date_sk cr@in_cat public.i_cr_return_amount sts@in_store public.pk_store_sales date_dim@in_store public.pk_date_dim) GATHER((sts@in_store sr@in_store)) NO_GATHER(query49 unnamed_subquery@query49 unnamed_subquery#2@query49 unnamed_subquery#3@query49 web@setop_1 in_web@web ws@in_web wr@in_web date_dim@in_web catalog@setop_2 in_cat@catalog cs@in_cat cr@in_cat date_dim@in_cat store@setop_3 in_store@store date_dim@in_store)', false);
 + [_LIMITA] select [_LIMITB] channel, item, return_ratio, return_rank, currency_rank from
 + (select
 + 'web' as channel
@@ -4152,7 +4184,7 @@ Index: dbt7/dsgen/pg_plan_advice/query5.tpl
 + define SALES_DATE=date([YEAR]+"-08-01",[YEAR]+"-08-30",sales);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(store@ssr (salesreturns@ssr date_dim@ssr)) JOIN_ORDER(salesreturns@csr date_dim@csr catalog_page@csr) JOIN_ORDER(web_returns@setop_6 web_sales@setop_6) JOIN_ORDER(web_site@wsr (salesreturns@wsr date_dim@wsr)) NESTED_LOOP_MATERIALIZE((salesreturns@wsr date_dim@wsr)) NESTED_LOOP_MEMOIZE(catalog_page@csr web_sales@setop_6) HASH_JOIN(date_dim@ssr (salesreturns@ssr date_dim@ssr) date_dim@csr date_dim@wsr) SEQ_SCAN(store_sales@setop_1 store_returns@setop_2 catalog_sales@setop_3 catalog_returns@setop_4 web_sales@setop_5 web_returns@setop_6) INDEX_SCAN(store@ssr public.i_s_store_id date_dim@ssr public.i_d_date date_dim@csr public.i_d_date catalog_page@csr public.pk_catalog_page web_sales@setop_6 public.pk_web_sales web_site@wsr public.i_web_site_id date_dim@wsr public.i_d_date) GATHER(x)', false);
 + with ssr as
 + (select s_store_id,
 +        sum(sales_price) as sales,
@@ -4324,7 +4356,7 @@ Index: dbt7/dsgen/pg_plan_advice/query50.tpl
 +define MONTH = random(8,10,uniform);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(store (d2 store_returns store_sales) d1) NESTED_LOOP_PLAIN(store_returns store_sales) NESTED_LOOP_MEMOIZE(d1) HASH_JOIN((store_sales store_returns d2)) INDEX_SCAN(store public.i_s_store_name d2 public.i_d_year store_returns public.i_sr_returned_date_sk store_sales public.pk_store_sales) INDEX_ONLY_SCAN(d1 public.pk_date_dim) NO_GATHER(store_sales store_returns store d1 d2)', false);
 +[_LIMITA] select [_LIMITB] 
 +   s_store_name
 +  ,s_company_id
@@ -4425,7 +4457,7 @@ Index: dbt7/dsgen/pg_plan_advice/query51.tpl
 +define DMS = random(1176,1224,uniform);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@web web_sales@web) JOIN_ORDER(date_dim@store store_sales@store) JOIN_ORDER(web@y store@y) MERGE_JOIN_PLAIN(store@y) NESTED_LOOP_PLAIN(web_sales@web store_sales@store) SEQ_SCAN(date_dim@web date_dim@store) INDEX_SCAN(web_sales@web public.i_ws_sold_date_sk store_sales@store public.i_ss_sold_date_sk) GATHER_MERGE((web_sales@web date_dim@web) (store_sales@store date_dim@store)) NO_GATHER(y web@y store@y)', false);
 +WITH web_v1 as (
 +select
 +  ws_item_sk item_sk, d_date,
@@ -4511,7 +4543,7 @@ Index: dbt7/dsgen/pg_plan_advice/query52.tpl
 + define YEAR = random(1998,2002,uniform);
 + define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(dt store_sales item) NESTED_LOOP_PLAIN(store_sales) HASH_JOIN(item) INDEX_SCAN(dt public.i_d_year store_sales public.i_ss_sold_date_sk item public.i_i_manager_id) NO_GATHER(dt store_sales item)', false);
 +[_LIMITA]  select [_LIMITB] dt.d_year
 + 	,item.i_brand_id brand_id
 + 	,item.i_brand brand
@@ -4576,7 +4608,7 @@ Index: dbt7/dsgen/pg_plan_advice/query53.tpl
 +define DMS = random(1176,1224,uniform);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(item@tmp1 store_sales@tmp1 date_dim@tmp1 store@tmp1) NESTED_LOOP_PLAIN(store_sales@tmp1) HASH_JOIN(date_dim@tmp1 store@tmp1) SEQ_SCAN(store@tmp1) BITMAP_HEAP_SCAN(item@tmp1) INDEX_SCAN(store_sales@tmp1 public.i_ss_item_sk date_dim@tmp1 public.i_d_month_seq) NO_GATHER(tmp1 item@tmp1 store_sales@tmp1 date_dim@tmp1 store@tmp1)', false);
 +[_LIMITA] select [_LIMITB] * from 
 +(select i_manufact_id,
 +sum(ss_sales_price) sum_sales,
@@ -4649,7 +4681,7 @@ Index: dbt7/dsgen/pg_plan_advice/query54.tpl
 + define CLASS = dist(distmember(categories,[CINDX],2),1,1); 
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(item@my_customers cs_or_ws_sales@my_customers date_dim@my_customers customer@my_customers) JOIN_ORDER(my_customers@my_revenue customer_address@my_revenue store@my_revenue store_sales@my_revenue date_dim@my_revenue) NESTED_LOOP_PLAIN(cs_or_ws_sales@my_customers customer@my_customers customer_address@my_revenue store@my_revenue store_sales@my_revenue date_dim@my_revenue) HASH_JOIN(date_dim@my_customers) BITMAP_HEAP_SCAN(item@my_customers) INDEX_SCAN(catalog_sales@my_customers public.i_cs_item_sk web_sales@my_customers public.i_ws_item_sk date_dim@my_customers public.i_d_year customer@my_customers public.pk_customer customer_address@my_revenue public.pk_customer_address store@my_revenue public.i_s_state store_sales@my_revenue public.i_ss_customer_sk date_dim@my_revenue public.pk_date_dim date_dim@expr_1 public.i_d_year date_dim@expr_2 public.i_d_year) NO_GATHER(my_revenue my_customers@my_revenue store_sales@my_revenue customer_address@my_revenue store@my_revenue date_dim@my_revenue item@my_customers date_dim@my_customers customer@my_customers catalog_sales@my_customers web_sales@my_customers date_dim@expr_1 date_dim@expr_2)', false);
 + with my_customers as (
 + select distinct c_customer_sk
 +        , c_current_addr_sk
@@ -4748,7 +4780,7 @@ Index: dbt7/dsgen/pg_plan_advice/query55.tpl
 + define MANAGER=random(1,100,uniform); 
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(item store_sales date_dim) NESTED_LOOP_PLAIN(store_sales) HASH_JOIN(date_dim) SEQ_SCAN(item) INDEX_SCAN(store_sales public.i_ss_item_sk date_dim public.i_d_year) GATHER_MERGE((date_dim store_sales item))', false);
 +[_LIMITA]  select [_LIMITB] i_brand_id brand_id, i_brand brand,
 + 	sum(ss_ext_sales_price) ext_price
 + from date_dim, store_sales, item
@@ -4807,7 +4839,7 @@ Index: dbt7/dsgen/pg_plan_advice/query56.tpl
 + define COLOR=ulist(dist(colors,1,1),3);
 + define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(item@ss item#2@ss store_sales@ss date_dim@ss customer_address@ss) JOIN_ORDER(date_dim@cs catalog_sales@cs customer_address@cs item@cs item#2@cs) JOIN_ORDER(item#2@ws item@ws web_sales@ws date_dim@ws customer_address@ws) NESTED_LOOP_PLAIN(store_sales@ss customer_address@ss catalog_sales@cs item@cs item@ws web_sales@ws customer_address@ws) NESTED_LOOP_MEMOIZE(customer_address@cs) HASH_JOIN(item#2@ss date_dim@ss item#2@cs date_dim@ws) SEQ_SCAN(item@ss) INDEX_SCAN(item#2@ss public.i_i_color store_sales@ss public.i_ss_item_sk date_dim@ss public.i_d_year customer_address@ss public.pk_customer_address date_dim@cs public.i_d_year catalog_sales@cs public.i_cs_sold_date_sk customer_address@cs public.pk_customer_address item@cs public.pk_item item#2@cs public.i_i_color item#2@ws public.i_i_color item@ws public.i_i_item_id web_sales@ws public.i_ws_item_sk date_dim@ws public.i_d_year customer_address@ws public.pk_customer_address) GATHER((store_sales@ss date_dim@ss customer_address@ss item@ss item#2@ss)) SEMIJOIN_NON_UNIQUE(item#2@ss item#2@cs) SEMIJOIN_UNIQUE(item#2@ws) NO_GATHER(ss cs ws catalog_sales@cs date_dim@cs customer_address@cs item@cs item#2@cs web_sales@ws date_dim@ws customer_address@ws item@ws item#2@ws)', false);
 + with ss as (
 + select i_item_id,sum(ss_ext_sales_price) total_sales
 + from
@@ -4922,7 +4954,7 @@ Index: dbt7/dsgen/pg_plan_advice/query57.tpl
 +
 + define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(v1_lead (v1_lag v1)) JOIN_ORDER(catalog_sales@v1 date_dim@v1 call_center@v1 item@v1) MERGE_JOIN_PLAIN(item@v1) HASH_JOIN(v1 (v1 v1_lag) date_dim@v1 call_center@v1) SEQ_SCAN(catalog_sales@v1 call_center@v1 item@v1) BITMAP_HEAP_SCAN(date_dim@v1) GATHER_MERGE((item@v1 catalog_sales@v1 date_dim@v1 call_center@v1)) NO_GATHER(v1 v1_lag v1_lead)', false);
 + with v1 as(
 + select i_category, i_brand,
 +        cc_name,
@@ -5012,7 +5044,7 @@ Index: dbt7/dsgen/pg_plan_advice/query58.tpl
 + define SALES_DATE=date([YEAR]+"-01-01",[YEAR]+"-07-24",sales); 
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim#2@ws_items date_dim@ws_items web_sales@ws_items item@ws_items) JOIN_ORDER(date_dim#2@ss_items date_dim@ss_items store_sales@ss_items item@ss_items) JOIN_ORDER(date_dim#2@cs_items date_dim@cs_items catalog_sales@cs_items item@cs_items) JOIN_ORDER(ws_items (ss_items cs_items)) MERGE_JOIN_PLAIN((ss_items cs_items)) NESTED_LOOP_PLAIN(date_dim@ws_items web_sales@ws_items date_dim@ss_items store_sales@ss_items date_dim@cs_items catalog_sales@cs_items) HASH_JOIN(item@ws_items item@ss_items item@cs_items cs_items) SEQ_SCAN(item@ws_items item@ss_items item@cs_items) INDEX_SCAN(date_dim#2@ws_items public.i_d_week_seq date_dim@ws_items public.i_d_date web_sales@ws_items public.i_ws_sold_date_sk date_dim#2@ss_items public.i_d_week_seq date_dim@ss_items public.i_d_date store_sales@ss_items public.i_ss_sold_date_sk date_dim#2@cs_items public.i_d_week_seq date_dim@cs_items public.i_d_date catalog_sales@cs_items public.i_cs_sold_date_sk date_dim@expr_1 public.i_d_date date_dim@expr_2 public.i_d_date date_dim@expr_3 public.i_d_date) SEMIJOIN_UNIQUE(date_dim#2@ws_items date_dim#2@ss_items date_dim#2@cs_items) NO_GATHER(ss_items cs_items ws_items web_sales@ws_items item@ws_items date_dim@ws_items date_dim#2@ws_items store_sales@ss_items item@ss_items date_dim@ss_items date_dim#2@ss_items catalog_sales@cs_items item@cs_items date_dim@cs_items date_dim#2@cs_items date_dim@expr_1 date_dim@expr_2 date_dim@expr_3)', false);
 + with ss_items as
 + (select i_item_id item_id
 +        ,sum(ss_ext_sales_price) ss_item_rev 
@@ -5118,7 +5150,7 @@ Index: dbt7/dsgen/pg_plan_advice/query59.tpl
 + define DMS = random(1176,1212,uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(wss#2 store#2 (wss store d) d#2) JOIN_ORDER(store_sales@wss date_dim@wss) NESTED_LOOP_PLAIN(d#2) HASH_JOIN(store#2 store d (wss store d) date_dim@wss) SEQ_SCAN(store#2 store store_sales@wss date_dim@wss) INDEX_SCAN(d public.i_d_month_seq d#2 public.i_d_week_seq) GATHER((store_sales@wss date_dim@wss)) NO_GATHER(wss store d wss#2 store#2 d#2)', false);
 + with wss as 
 + (select d_week_seq,
 +        ss_store_sk,
@@ -5204,7 +5236,7 @@ Index: dbt7/dsgen/pg_plan_advice/query6.tpl
 + define MONTH= random(1,7,uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(s d c i a) MERGE_JOIN_PLAIN(c) HASH_JOIN(d i a) SEQ_SCAN(s c i a) INDEX_SCAN(d public.i_d_month_seq date_dim@expr_1 public.i_d_year j@expr_2 public.i_i_category) NO_GATHER(a c s d i date_dim@expr_1 j@expr_2)', false);
 + [_LIMITA] select [_LIMITB] a.ca_state state, count(*) cnt
 + from customer_address a
 +     ,customer c
@@ -5274,7 +5306,7 @@ Index: dbt7/dsgen/pg_plan_advice/query60.tpl
 + define CATEGORY = text({"Children",1},{"Men",1},{"Music",1},{"Jewelry",1},{"Shoes",1});
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@ss store_sales@ss customer_address@ss item@ss item#2@ss) JOIN_ORDER(date_dim@cs catalog_sales@cs customer_address@cs item@cs item#2@cs) JOIN_ORDER(date_dim@ws web_sales@ws customer_address@ws item@ws item#2@ws) MERGE_JOIN_PLAIN(item@ss) NESTED_LOOP_PLAIN(store_sales@ss catalog_sales@cs web_sales@ws item@ws) HASH_JOIN(customer_address@ss item#2@ss customer_address@cs item@cs item#2@cs customer_address@ws item#2@ws) SEQ_SCAN(date_dim@ss customer_address@ss item@ss item@cs date_dim@ws) BITMAP_HEAP_SCAN(item#2@ss item#2@ws) INDEX_SCAN(store_sales@ss public.i_ss_sold_date_sk date_dim@cs public.i_d_year catalog_sales@cs public.i_cs_sold_date_sk customer_address@cs public.i_ca_gmt_offset item#2@cs public.i_i_category web_sales@ws public.i_ws_sold_date_sk customer_address@ws public.i_ca_gmt_offset item@ws public.pk_item) GATHER_MERGE((store_sales@ss date_dim@ss customer_address@ss item@ss item#2@ss) (web_sales@ws date_dim@ws customer_address@ws item@ws item#2@ws)) SEMIJOIN_NON_UNIQUE(item#2@ss item#2@cs item#2@ws) NO_GATHER(ss cs ws catalog_sales@cs date_dim@cs customer_address@cs item@cs item#2@cs)', false);
 + with ss as (
 + select
 +          i_item_id,sum(ss_ext_sales_price) total_sales
@@ -5396,7 +5428,7 @@ Index: dbt7/dsgen/pg_plan_advice/query61.tpl
 +define CATEGORY = text({"Books",1},{"Home",1},{"Electronics",1},{"Jewelry",1},{"Sports",1});
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@promotional_sales store_sales@promotional_sales store@promotional_sales item@promotional_sales customer@promotional_sales customer_address@promotional_sales promotion@promotional_sales) JOIN_ORDER(date_dim@all_sales store_sales@all_sales store@all_sales item@all_sales customer@all_sales customer_address@all_sales) JOIN_ORDER(promotional_sales all_sales) NESTED_LOOP_PLAIN(store_sales@promotional_sales item@promotional_sales customer@promotional_sales customer_address@promotional_sales store_sales@all_sales item@all_sales customer@all_sales customer_address@all_sales all_sales) NESTED_LOOP_MATERIALIZE(promotion@promotional_sales) HASH_JOIN(store@promotional_sales store@all_sales) SEQ_SCAN(promotion@promotional_sales) INDEX_SCAN(date_dim@promotional_sales public.i_d_year store_sales@promotional_sales public.i_ss_sold_date_sk store@promotional_sales public.i_s_gmt_offset item@promotional_sales public.pk_item customer@promotional_sales public.pk_customer customer_address@promotional_sales public.pk_customer_address date_dim@all_sales public.i_d_year store_sales@all_sales public.i_ss_sold_date_sk store@all_sales public.i_s_gmt_offset item@all_sales public.pk_item customer@all_sales public.pk_customer customer_address@all_sales public.pk_customer_address) NO_GATHER(promotional_sales all_sales store_sales@promotional_sales store@promotional_sales promotion@promotional_sales date_dim@promotional_sales customer@promotional_sales customer_address@promotional_sales item@promotional_sales store_sales@all_sales store@all_sales date_dim@all_sales customer@all_sales customer_address@all_sales item@all_sales)', false);
 +[_LIMITA] select [_LIMITB] promotions,total,cast(promotions as decimal(15,4))/cast(total as decimal(15,4))*100
 +from
 +  (select sum(ss_ext_sales_price) promotions
@@ -5482,7 +5514,7 @@ Index: dbt7/dsgen/pg_plan_advice/query62.tpl
 +define DMS = random(1176,1224,uniform);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim web_sales ship_mode web_site warehouse) MERGE_JOIN_PLAIN(warehouse) NESTED_LOOP_PLAIN(web_sales) HASH_JOIN(ship_mode web_site) SEQ_SCAN(date_dim ship_mode web_site warehouse) INDEX_SCAN(web_sales public.i_ws_ship_date_sk) GATHER_MERGE((web_sales warehouse ship_mode web_site date_dim))', false);
 +[_LIMITA] select [_LIMITB] 
 +   substr(w_warehouse_name,1,20)
 +  ,sm_type
@@ -5558,7 +5590,7 @@ Index: dbt7/dsgen/pg_plan_advice/query63.tpl
 +define DMS = random(1176,1224,uniform);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(item@tmp1 store_sales@tmp1 date_dim@tmp1 store@tmp1) NESTED_LOOP_PLAIN(store_sales@tmp1) HASH_JOIN(date_dim@tmp1 store@tmp1) SEQ_SCAN(store@tmp1) INDEX_SCAN(item@tmp1 public.pk_item store_sales@tmp1 public.i_ss_item_sk date_dim@tmp1 public.i_d_month_seq) GATHER((item@tmp1 store_sales@tmp1 date_dim@tmp1 store@tmp1)) NO_GATHER(tmp1)', false);
 +[_LIMITA] select [_LIMITB] * 
 +from (select i_manager_id
 +             ,sum(ss_sales_price) sum_sales
@@ -5630,7 +5662,7 @@ Index: dbt7/dsgen/pg_plan_advice/query64.tpl
 +define PRICE=random(0,85,uniform);
 +define YEAR = random(1999, 2001, uniform);
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(cs1 cs2) JOIN_ORDER(catalog_returns@cs_ui catalog_sales@cs_ui) JOIN_ORDER(cs_ui@cross_sales item@cross_sales store_returns@cross_sales store_sales@cross_sales hd1@cross_sales ad1@cross_sales d1@cross_sales cd1@cross_sales store@cross_sales customer@cross_sales d3@cross_sales hd2@cross_sales d2@cross_sales ib2@cross_sales cd2@cross_sales promotion@cross_sales ad2@cross_sales ib1@cross_sales) NESTED_LOOP_PLAIN(cs2 catalog_sales@cs_ui item@cross_sales store_returns@cross_sales store_sales@cross_sales hd1@cross_sales ad1@cross_sales d1@cross_sales cd1@cross_sales store@cross_sales customer@cross_sales d3@cross_sales hd2@cross_sales d2@cross_sales ib2@cross_sales cd2@cross_sales promotion@cross_sales ad2@cross_sales ib1@cross_sales) SEQ_SCAN(catalog_returns@cs_ui) INDEX_SCAN(catalog_sales@cs_ui public.pk_catalog_sales item@cross_sales public.pk_item store_sales@cross_sales public.pk_store_sales hd1@cross_sales public.pk_household_demographics ad1@cross_sales public.pk_customer_address d1@cross_sales public.pk_date_dim cd1@cross_sales public.pk_customer_demographics store@cross_sales public.pk_store customer@cross_sales public.pk_customer d3@cross_sales public.pk_date_dim hd2@cross_sales public.pk_household_demographics d2@cross_sales public.pk_date_dim cd2@cross_sales public.pk_customer_demographics ad2@cross_sales public.pk_customer_address) INDEX_ONLY_SCAN(store_returns@cross_sales public.pk_store_returns ib2@cross_sales public.pk_income_band promotion@cross_sales public.pk_promotion ib1@cross_sales public.pk_income_band) GATHER_MERGE((catalog_sales@cs_ui catalog_returns@cs_ui)) NO_GATHER(cs1 cs2 store_sales@cross_sales store_returns@cross_sales cs_ui@cross_sales d1@cross_sales d2@cross_sales d3@cross_sales store@cross_sales customer@cross_sales cd1@cross_sales cd2@cross_sales promotion@cross_sales hd1@cross_sales hd2@cross_sales ad1@cross_sales ad2@cross_sales ib1@cross_sales ib2@cross_sales item@cross_sales)', false);
 +with cs_ui as
 + (select cs_item_sk
 +        ,sum(cs_ext_list_price) as sale,sum(cr_refunded_cash+cr_reversed_charge+cr_store_credit) as refund
@@ -5790,7 +5822,7 @@ Index: dbt7/dsgen/pg_plan_advice/query65.tpl
 +-- 
 + define DMS = random(1176,1224,uniform);
 + define _LIMIT=100; 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@sc store_sales@sc) JOIN_ORDER(date_dim@sa store_sales@sa) JOIN_ORDER(store (sc sb) item) NESTED_LOOP_PLAIN(store_sales@sc store_sales@sa item) NESTED_LOOP_MATERIALIZE((sb sc)) HASH_JOIN(sb) SEQ_SCAN(date_dim@sc date_dim@sa) INDEX_SCAN(store_sales@sc public.i_ss_sold_date_sk store_sales@sa public.i_ss_sold_date_sk store public.i_s_store_name item public.pk_item) GATHER((store_sales@sc date_dim@sc) (store_sales@sa date_dim@sa)) NO_GATHER(store item sb sc sa@sb)', false);
 + [_LIMITA] select [_LIMITB]
 +	s_store_name,
 +	i_item_desc,
@@ -5865,7 +5897,7 @@ Index: dbt7/dsgen/pg_plan_advice/query66.tpl
 + define SALESTWO = text({"cs_sales_price",1},{"cs_ext_sales_price",1},{"cs_ext_list_price",1});
 + define _LIMIT=100; 
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(warehouse@unnamed_subquery (date_dim@unnamed_subquery web_sales@unnamed_subquery ship_mode@unnamed_subquery time_dim@unnamed_subquery)) JOIN_ORDER(warehouse@unnamed_subquery_1 (date_dim@unnamed_subquery_1 catalog_sales@unnamed_subquery_1 ship_mode@unnamed_subquery_1 time_dim@unnamed_subquery_1)) NESTED_LOOP_PLAIN(web_sales@unnamed_subquery catalog_sales@unnamed_subquery_1) HASH_JOIN(ship_mode@unnamed_subquery time_dim@unnamed_subquery (web_sales@unnamed_subquery date_dim@unnamed_subquery time_dim@unnamed_subquery ship_mode@unnamed_subquery) ship_mode@unnamed_subquery_1 time_dim@unnamed_subquery_1 (catalog_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1 time_dim@unnamed_subquery_1 ship_mode@unnamed_subquery_1)) SEQ_SCAN(date_dim@unnamed_subquery ship_mode@unnamed_subquery date_dim@unnamed_subquery_1 ship_mode@unnamed_subquery_1) INDEX_SCAN(warehouse@unnamed_subquery public.i_w_warehouse_name web_sales@unnamed_subquery public.i_ws_sold_date_sk time_dim@unnamed_subquery public.i_t_time warehouse@unnamed_subquery_1 public.i_w_warehouse_name catalog_sales@unnamed_subquery_1 public.i_cs_sold_date_sk time_dim@unnamed_subquery_1 public.i_t_time) GATHER((web_sales@unnamed_subquery date_dim@unnamed_subquery time_dim@unnamed_subquery ship_mode@unnamed_subquery) (catalog_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1 time_dim@unnamed_subquery_1 ship_mode@unnamed_subquery_1)) NO_GATHER(unnamed_subquery unnamed_subquery#2 warehouse@unnamed_subquery warehouse@unnamed_subquery_1)', false);
 + [_LIMITA] select [_LIMITB]  
 +         w_warehouse_name
 + 	,w_warehouse_sq_ft
@@ -6126,7 +6158,7 @@ Index: dbt7/dsgen/pg_plan_advice/query67.tpl
 + define DMS = random(1176,1224,uniform);
 + define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(store_sales@dw1 date_dim@dw1 item@dw1 store@dw1) MERGE_JOIN_PLAIN(item@dw1) HASH_JOIN(date_dim@dw1 store@dw1) SEQ_SCAN(date_dim@dw1 item@dw1 store@dw1) INDEX_SCAN(store_sales@dw1 public.i_ss_sold_date_sk) GATHER_MERGE((store_sales@dw1 date_dim@dw1 store@dw1 item@dw1)) NO_GATHER(dw2 dw1@dw2)', false);
 +[_LIMITA] select [_LIMITB] *
 +from (select i_category
 +            ,i_class
@@ -6218,7 +6250,7 @@ Index: dbt7/dsgen/pg_plan_advice/query68.tpl
 + define CITY_B = distmember(cities, [CITYNUMBER.2], 1);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@dn store_sales@dn household_demographics@dn customer_address@dn store@dn) JOIN_ORDER(dn customer current_addr) NESTED_LOOP_PLAIN(store_sales@dn customer current_addr) HASH_JOIN(household_demographics@dn customer_address@dn store@dn) SEQ_SCAN(date_dim@dn household_demographics@dn customer_address@dn store@dn) INDEX_SCAN(store_sales@dn public.i_ss_sold_date_sk customer public.pk_customer current_addr public.pk_customer_address) GATHER((store_sales@dn date_dim@dn household_demographics@dn customer_address@dn)) NO_GATHER(dn customer current_addr store@dn)', false);
 + [_LIMITA] select [_LIMITB] c_last_name
 +       ,c_first_name
 +       ,ca_city
@@ -6303,7 +6335,7 @@ Index: dbt7/dsgen/pg_plan_advice/query69.tpl
 + define STATE= ulist(dist(fips_county, 3, 1), 3);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(c (date_dim store_sales) ca customer_demographics (web_sales date_dim#2) (catalog_sales date_dim#3)) NESTED_LOOP_PLAIN(store_sales ca customer_demographics date_dim#2 date_dim#3 (catalog_sales date_dim#3)) HASH_JOIN((store_sales date_dim) (web_sales date_dim#2)) SEQ_SCAN(c) INDEX_SCAN(date_dim public.i_d_year store_sales public.i_ss_sold_date_sk ca public.pk_customer_address customer_demographics public.pk_customer_demographics web_sales public.i_ws_bill_customer_sk date_dim#2 public.pk_date_dim catalog_sales public.i_cs_ship_customer_sk date_dim#3 public.pk_date_dim) SEMIJOIN_NON_UNIQUE((store_sales date_dim)) NO_GATHER(c ca customer_demographics store_sales date_dim web_sales date_dim#2 catalog_sales date_dim#3)', false);
 + [_LIMITA] select [_LIMITB] 
 +  cd_gender,
 +  cd_marital_status,
@@ -6395,7 +6427,7 @@ Index: dbt7/dsgen/pg_plan_advice/query7.tpl
 + define YEAR = random(1998,2002,uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim store_sales customer_demographics item promotion) NESTED_LOOP_PLAIN(store_sales promotion) HASH_JOIN(customer_demographics item) SEQ_SCAN(date_dim item) INDEX_SCAN(store_sales public.i_ss_sold_date_sk customer_demographics public.i_cd_education_status promotion public.pk_promotion) GATHER_MERGE((store_sales customer_demographics date_dim item)) NO_GATHER(promotion)', false);
 + [_LIMITA] select [_LIMITB] i_item_id, 
 +        avg(ss_quantity) agg1,
 +        avg(ss_list_price) agg2,
@@ -6457,7 +6489,7 @@ Index: dbt7/dsgen/pg_plan_advice/query70.tpl
 +-- 
 + define _LIMIT=100; 
 + define DMS = random(1176,1224,uniform);
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@tmp1 store_sales@tmp1 store@tmp1) JOIN_ORDER(d1@results store_sales@results store@results tmp1@results) MERGE_JOIN_PLAIN(tmp1@results) NESTED_LOOP_PLAIN(store_sales@tmp1 store_sales@results) HASH_JOIN(store@tmp1 store@results) SEQ_SCAN(date_dim@tmp1 store@tmp1 d1@results store@results) INDEX_SCAN(store_sales@tmp1 public.i_ss_sold_date_sk store_sales@results public.i_ss_sold_date_sk) GATHER_MERGE((store_sales@results d1@results store@results) (store_sales@tmp1 store@tmp1 date_dim@tmp1)) NO_GATHER(results_rollup unnamed_subquery@results_rollup unnamed_subquery#2@results_rollup unnamed_subquery#3@results_rollup results@setop_1 results@setop_2 results@setop_3 tmp1@results)', false);
 + with results as
 +( select
 +    sum(ss_net_profit) as total_sum ,s_state ,s_county, 0 as gstate, 0 as g_county
@@ -6541,7 +6573,7 @@ Index: dbt7/dsgen/pg_plan_advice/query71.tpl
 +  define YEAR= random(1998, 2002, uniform);
 + define MONTH=random(11,12,uniform);
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@unnamed_subquery web_sales@unnamed_subquery) JOIN_ORDER(date_dim@unnamed_subquery_1 catalog_sales@unnamed_subquery_1) JOIN_ORDER(date_dim@unnamed_subquery_2 store_sales@unnamed_subquery_2) JOIN_ORDER(tmp item time_dim) NESTED_LOOP_PLAIN(store_sales@unnamed_subquery_2 time_dim) NESTED_LOOP_MEMOIZE(web_sales@unnamed_subquery catalog_sales@unnamed_subquery_1) HASH_JOIN(item) SEQ_SCAN(date_dim@unnamed_subquery date_dim@unnamed_subquery_2) INDEX_SCAN(web_sales@unnamed_subquery public.i_ws_sold_date_sk date_dim@unnamed_subquery_1 public.i_d_year catalog_sales@unnamed_subquery_1 public.i_cs_sold_date_sk store_sales@unnamed_subquery_2 public.i_ss_sold_date_sk item public.i_i_manager_id time_dim public.pk_time_dim) GATHER((web_sales@unnamed_subquery date_dim@unnamed_subquery) (store_sales@unnamed_subquery_2 date_dim@unnamed_subquery_2)) NO_GATHER(item time_dim unnamed_subquery unnamed_subquery#2 unnamed_subquery#3 catalog_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1)', false);
 + select i_brand_id brand_id, i_brand brand,t_hour,t_minute,
 + 	sum(ext_price) ext_price
 + from item, (select ws_ext_sales_price as ext_price, 
@@ -6624,7 +6656,7 @@ Index: dbt7/dsgen/pg_plan_advice/query72.tpl
 +define BP= text({"1001-5000",1},{">10000",1},{"501-1000",1});
 +define MS= dist(marital_status, 1, 1);
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(d1 catalog_sales household_demographics customer_demographics (d2 inventory) warehouse item d3 promotion) MERGE_JOIN_PLAIN(warehouse) NESTED_LOOP_PLAIN(catalog_sales inventory (inventory d2) item d3) NESTED_LOOP_MEMOIZE(customer_demographics) HASH_JOIN(household_demographics promotion) SEQ_SCAN(d1 warehouse promotion) INDEX_SCAN(catalog_sales public.i_cs_sold_date_sk household_demographics public.i_hd_buy_potential customer_demographics public.pk_customer_demographics d2 public.i_d_week_seq inventory public.pk_inventory item public.pk_item d3 public.pk_date_dim) GATHER_MERGE((catalog_sales inventory warehouse item customer_demographics household_demographics d1 d2)) NO_GATHER(d3 promotion)', false);
 +[_LIMITA] select [_LIMITB] i_item_desc
 +      ,w_warehouse_name
 +      ,d1.d_week_seq
@@ -6700,7 +6732,7 @@ Index: dbt7/dsgen/pg_plan_advice/query73.tpl
 + define COUNTY_C=distmember(fips_county, [COUNTYNUMBER.3], 2);
 + define COUNTY_D=distmember(fips_county, [COUNTYNUMBER.4], 2);
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@dj store_sales@dj household_demographics@dj store@dj) JOIN_ORDER(dj customer) MERGE_JOIN_PLAIN(store@dj) NESTED_LOOP_PLAIN(store_sales@dj customer) HASH_JOIN(household_demographics@dj) SEQ_SCAN(date_dim@dj store@dj) INDEX_SCAN(store_sales@dj public.i_ss_sold_date_sk household_demographics@dj public.i_hd_buy_potential customer public.pk_customer) GATHER((store_sales@dj date_dim@dj household_demographics@dj)) NO_GATHER(dj customer store@dj)', false);
 + select c_last_name
 +       ,c_first_name
 +       ,c_salutation
@@ -6772,7 +6804,7 @@ Index: dbt7/dsgen/pg_plan_advice/query74.tpl
 +
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(t_s_firstyear t_s_secyear t_w_firstyear t_w_secyear) JOIN_ORDER(store_sales@unnamed_subquery date_dim@unnamed_subquery customer@unnamed_subquery) JOIN_ORDER(web_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1 customer@unnamed_subquery_1) HASH_JOIN(t_s_secyear t_w_firstyear t_w_secyear date_dim@unnamed_subquery customer@unnamed_subquery date_dim@unnamed_subquery_1 customer@unnamed_subquery_1) SEQ_SCAN(store_sales@unnamed_subquery date_dim@unnamed_subquery customer@unnamed_subquery web_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1 customer@unnamed_subquery_1) GATHER((customer@unnamed_subquery store_sales@unnamed_subquery date_dim@unnamed_subquery) (customer@unnamed_subquery_1 web_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1)) NO_GATHER(t_s_firstyear t_s_secyear t_w_firstyear t_w_secyear unnamed_subquery#2@year_total unnamed_subquery#3@year_total)', false);
 + with year_total as (
 + select c_customer_id customer_id
 +       ,c_first_name customer_first_name
@@ -6877,7 +6909,7 @@ Index: dbt7/dsgen/pg_plan_advice/query75.tpl
 +define YEAR = random(1999,2002,uniform);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(curr_yr prev_yr) JOIN_ORDER(item@setop_2 store_sales@setop_2 date_dim@setop_2 store_returns@setop_2) JOIN_ORDER(item@setop_1 catalog_sales@setop_1 date_dim@setop_1 catalog_returns@setop_1) JOIN_ORDER(item@setop_3 web_sales@setop_3 date_dim@setop_3 web_returns@setop_3) NESTED_LOOP_PLAIN(store_sales@setop_2 catalog_sales@setop_1 web_sales@setop_3) NESTED_LOOP_MEMOIZE(date_dim@setop_1 date_dim@setop_3) HASH_JOIN(prev_yr date_dim@setop_2 store_returns@setop_2 catalog_returns@setop_1 web_returns@setop_3) SEQ_SCAN(date_dim@setop_2 store_returns@setop_2 catalog_returns@setop_1 web_returns@setop_3) BITMAP_HEAP_SCAN(item@setop_2 item@setop_1 item@setop_3) INDEX_SCAN(store_sales@setop_2 public.i_ss_item_sk catalog_sales@setop_1 public.i_cs_item_sk date_dim@setop_1 public.pk_date_dim web_sales@setop_3 public.i_ws_item_sk date_dim@setop_3 public.pk_date_dim) GATHER((unnamed_subquery@sales_detail unnamed_subquery#2@sales_detail unnamed_subquery#3@sales_detail)) NO_GATHER(curr_yr prev_yr sales_detail@all_sales)', false);
 +WITH all_sales AS (
 + SELECT d_year
 +       ,i_brand_id
@@ -6989,7 +7021,7 @@ Index: dbt7/dsgen/pg_plan_advice/query76.tpl
 +define NULLCOLWS=text({"ws_bill_customer_sk",1},{"ws_bill_hdemo_sk",1},{"ws_bill_addr_sk",1},{"ws_ship_customer_sk",1},{"ws_ship_cdemo_sk",1},{"ws_ship_hdemo_sk",1},{"ws_ship_addr_sk",1},{"ws_web_page_sk",1},{"ws_web_site_sk",1},{"ws_ship_mode_sk",1},{"ws_warehouse_sk",1},{"ws_promo_sk",1});
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(store_sales@unnamed_subquery date_dim@unnamed_subquery item@unnamed_subquery) JOIN_ORDER(catalog_sales@unnamed_subquery_2 date_dim@unnamed_subquery_2 item@unnamed_subquery_2) JOIN_ORDER(item@unnamed_subquery_1 web_sales@unnamed_subquery_1 date_dim@unnamed_subquery_1) MERGE_JOIN_PLAIN(web_sales@unnamed_subquery_1) HASH_JOIN(date_dim@unnamed_subquery item@unnamed_subquery date_dim@unnamed_subquery_2 item@unnamed_subquery_2 date_dim@unnamed_subquery_1) SEQ_SCAN(date_dim@unnamed_subquery item@unnamed_subquery catalog_sales@unnamed_subquery_2 date_dim@unnamed_subquery_2 item@unnamed_subquery_2 item@unnamed_subquery_1 date_dim@unnamed_subquery_1) BITMAP_HEAP_SCAN(web_sales@unnamed_subquery_1) INDEX_SCAN(store_sales@unnamed_subquery public.i_ss_promo_sk) GATHER_MERGE(foo)', false);
 +[_LIMITA] select [_LIMITB] channel, col_name, d_year, d_qoy, i_category, COUNT(*) sales_cnt, SUM(ext_sales_price) sales_amt FROM (
 +        SELECT 'store' as channel, '[NULLCOLSS]' col_name, d_year, d_qoy, i_category, ss_ext_sales_price ext_sales_price
 +         FROM store_sales, item, date_dim
@@ -7058,7 +7090,7 @@ Index: dbt7/dsgen/pg_plan_advice/query77.tpl
 + define SALES_DATE=date([YEAR]+"-08-01",[YEAR]+"-08-30",sales);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@ss store_sales@ss store@ss) JOIN_ORDER(store@sr (date_dim@sr store_returns@sr)) JOIN_ORDER(ss@unnamed_subquery sr@unnamed_subquery) JOIN_ORDER(date_dim@cs catalog_sales@cs) JOIN_ORDER(date_dim@cr catalog_returns@cr) JOIN_ORDER(cs@unnamed_subquery_1 cr@unnamed_subquery_1) JOIN_ORDER(date_dim@ws web_sales@ws web_page@ws) JOIN_ORDER(date_dim@wr web_returns@wr web_page@wr) JOIN_ORDER(ws@unnamed_subquery_2 wr@unnamed_subquery_2) MERGE_JOIN_PLAIN((store_returns@sr date_dim@sr) sr@unnamed_subquery web_page@wr wr@unnamed_subquery_2) NESTED_LOOP_PLAIN(store_sales@ss store_returns@sr catalog_sales@cs catalog_returns@cr web_sales@ws web_returns@wr) NESTED_LOOP_MATERIALIZE(cr@unnamed_subquery_1) HASH_JOIN(store@ss web_page@ws) SEQ_SCAN(date_dim@ss store@ss date_dim@ws web_page@ws) INDEX_SCAN(store_sales@ss public.i_ss_sold_date_sk date_dim@sr public.i_d_date store_returns@sr public.i_sr_returned_date_sk date_dim@cs public.i_d_date catalog_sales@cs public.i_cs_sold_date_sk date_dim@cr public.i_d_date catalog_returns@cr public.i_cr_returned_date_sk web_sales@ws public.i_ws_sold_date_sk date_dim@wr public.i_d_date web_returns@wr public.i_wr_returned_date_sk) INDEX_ONLY_SCAN(store@sr public.pk_store web_page@wr public.pk_web_page) GATHER_MERGE((store_sales@ss date_dim@ss store@ss) (web_sales@ws date_dim@ws web_page@ws)) NO_GATHER(unnamed_subquery unnamed_subquery#2 unnamed_subquery#3 ss@unnamed_subquery sr@unnamed_subquery store_returns@sr date_dim@sr store@sr cs@unnamed_subquery_1 cr@unnamed_subquery_1 catalog_sales@cs date_dim@cs catalog_returns@cr date_dim@cr ws@unnamed_subquery_2 wr@unnamed_subquery_2 web_returns@wr date_dim@wr web_page@wr)', false);
 + with ss as
 + (select s_store_sk,
 +         sum(ss_ext_sales_price) as sales,
@@ -7210,7 +7242,7 @@ Index: dbt7/dsgen/pg_plan_advice/query78.tpl
 +
 +define _LIMIT = 100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@ws web_sales@ws web_returns@ws) JOIN_ORDER(date_dim@ss store_sales@ss store_returns@ss) JOIN_ORDER(date_dim@cs catalog_sales@cs catalog_returns@cs) JOIN_ORDER(ws (ss cs)) MERGE_JOIN_MATERIALIZE(cs (ss cs)) NESTED_LOOP_PLAIN(web_sales@ws web_returns@ws store_sales@ss catalog_sales@cs) HASH_JOIN(store_returns@ss catalog_returns@cs) SEQ_SCAN(date_dim@ws date_dim@ss date_dim@cs) INDEX_SCAN(web_sales@ws public.i_ws_sold_date_sk web_returns@ws public.i_wr_order_number store_sales@ss public.i_ss_sold_date_sk catalog_sales@cs public.i_cs_sold_date_sk) INDEX_ONLY_SCAN(store_returns@ss public.pk_store_returns catalog_returns@cs public.pk_catalog_returns) GATHER_MERGE((web_sales@ws web_returns@ws date_dim@ws) (store_sales@ss store_returns@ss date_dim@ss) (catalog_sales@cs catalog_returns@cs date_dim@cs)) NO_GATHER(ss ws cs)', false);
 +with ws as
 +  (select d_year AS ws_sold_year, ws_item_sk,
 +    ws_bill_customer_sk ws_customer_sk,
@@ -7310,7 +7342,7 @@ Index: dbt7/dsgen/pg_plan_advice/query79.tpl
 + define VEHCNT=random(-1,4,uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@ms store_sales@ms household_demographics@ms store@ms) JOIN_ORDER(customer ms) MERGE_JOIN_PLAIN(ms) NESTED_LOOP_PLAIN(store_sales@ms) HASH_JOIN(household_demographics@ms store@ms) SEQ_SCAN(date_dim@ms household_demographics@ms store@ms) INDEX_SCAN(store_sales@ms public.i_ss_sold_date_sk customer public.pk_customer) GATHER_MERGE((store_sales@ms date_dim@ms store@ms household_demographics@ms)) NO_GATHER(ms customer)', false);
 + [_LIMITA] select [_LIMITB]
 +  c_last_name,c_first_name,substr(s_city,1,30),ss_ticket_number,amt,profit
 +  from
@@ -7376,7 +7408,7 @@ Index: dbt7/dsgen/pg_plan_advice/query8.tpl
 + define ZIP=ulist(random(10000,99999,uniform),400);  
 + define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(customer_address@a1 customer@a1) JOIN_ORDER(store a2 (date_dim store_sales)) NESTED_LOOP_PLAIN(store_sales) HASH_JOIN(customer@a1 a2 (store_sales date_dim)) SEQ_SCAN(customer_address@a1 date_dim) INDEX_SCAN(customer@a1 public.i_c_preferred_cust_flag store public.i_s_store_name store_sales public.i_ss_sold_date_sk) INDEX_ONLY_SCAN(customer_address@setop_1 public.i_ca_zip) GATHER((customer_address@a1 customer@a1) (store_sales date_dim)) NO_GATHER(store a2 unnamed_subquery@a2 unnamed_subquery#2@a2 a1@setop_2 customer_address@setop_1)', false);
 + [_LIMITA] select [_LIMITB] s_store_name
 +      ,sum(ss_net_profit)
 + from store_sales
@@ -7525,7 +7557,7 @@ Index: dbt7/dsgen/pg_plan_advice/query80.tpl
 + define SALES_DATE=date([YEAR]+"-08-01",[YEAR]+"-08-30",sales);
 + define _LIMIT=100; 
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(store@ssr (date_dim@ssr store_sales@ssr item@ssr store_returns@ssr promotion@ssr)) JOIN_ORDER(date_dim@csr catalog_sales@csr item@csr promotion@csr catalog_returns@csr catalog_page@csr) JOIN_ORDER(web_site@wsr (date_dim@wsr web_sales@wsr item@wsr web_returns@wsr) promotion@wsr) MERGE_JOIN_PLAIN(promotion@csr) MERGE_JOIN_MATERIALIZE((store_sales@ssr store_returns@ssr date_dim@ssr item@ssr promotion@ssr) (web_sales@wsr web_returns@wsr date_dim@wsr item@wsr)) NESTED_LOOP_PLAIN(store_sales@ssr store_returns@ssr promotion@ssr catalog_sales@csr catalog_returns@csr catalog_page@csr web_sales@wsr web_returns@wsr promotion@wsr) HASH_JOIN(item@ssr item@csr item@wsr) SEQ_SCAN(date_dim@ssr promotion@csr date_dim@wsr) BITMAP_HEAP_SCAN(item@wsr) INDEX_SCAN(store@ssr public.i_s_store_id store_sales@ssr public.i_ss_sold_date_sk item@ssr public.i_i_current_price store_returns@ssr public.pk_store_returns promotion@ssr public.pk_promotion date_dim@csr public.i_d_date catalog_sales@csr public.i_cs_sold_date_sk item@csr public.i_i_current_price catalog_returns@csr public.pk_catalog_returns catalog_page@csr public.pk_catalog_page web_site@wsr public.i_web_site_id web_sales@wsr public.i_ws_sold_date_sk web_returns@wsr public.i_wr_order_number promotion@wsr public.pk_promotion) GATHER((store_sales@ssr store_returns@ssr date_dim@ssr item@ssr) (web_sales@wsr web_returns@wsr date_dim@wsr item@wsr)) NO_GATHER(ssr csr wsr store@ssr promotion@ssr catalog_sales@csr catalog_returns@csr date_dim@csr catalog_page@csr item@csr promotion@csr web_site@wsr promotion@wsr)', false);
 + with ssr as
 + (select  s_store_id as store_id,
 +          sum(ss_ext_sales_price) as sales,
@@ -7662,7 +7694,7 @@ Index: dbt7/dsgen/pg_plan_advice/query81.tpl
 + define YEAR= random(1998, 2002, uniform);
 + define _LIMIT=100; 
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', '', false);
 + with customer_total_return as
 + (select cr_returning_customer_sk as ctr_customer_sk
 +        ,ca_state as ctr_state, 
@@ -7738,7 +7770,7 @@ Index: dbt7/dsgen/pg_plan_advice/query82.tpl
 + define MANUFACT_ID=ulist(random(1,1000,uniform),4);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(item (date_dim inventory) store_sales) NESTED_LOOP_PLAIN(inventory (inventory date_dim)) NESTED_LOOP_MEMOIZE(store_sales) BITMAP_HEAP_SCAN(item) INDEX_SCAN(date_dim public.i_d_date inventory public.pk_inventory) INDEX_ONLY_SCAN(store_sales public.i_ss_item_sk) NO_GATHER(item inventory date_dim store_sales)', false);
 + [_LIMITA] select [_LIMITB] i_item_id
 +       ,i_item_desc
 +       ,i_current_price
@@ -7800,7 +7832,7 @@ Index: dbt7/dsgen/pg_plan_advice/query83.tpl
 + define RETURNED_DATE_THREE=date([YEAR]+"-11-01",[YEAR]+"-11-24",sales);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim#3@sr_items date_dim#2@sr_items date_dim@sr_items store_returns@sr_items item@sr_items) JOIN_ORDER(date_dim#3@cr_items date_dim#2@cr_items date_dim@cr_items catalog_returns@cr_items item@cr_items) JOIN_ORDER(date_dim#3@wr_items date_dim#2@wr_items date_dim@wr_items web_returns@wr_items item@wr_items) JOIN_ORDER(sr_items cr_items wr_items) NESTED_LOOP_PLAIN(date_dim#2@sr_items date_dim@sr_items store_returns@sr_items date_dim@cr_items catalog_returns@cr_items date_dim#2@wr_items date_dim@wr_items web_returns@wr_items item@wr_items) NESTED_LOOP_MEMOIZE(date_dim#2@cr_items) HASH_JOIN(item@sr_items item@cr_items cr_items wr_items) SEQ_SCAN(item@sr_items item@cr_items) INDEX_SCAN(date_dim#3@sr_items public.i_d_date date_dim#2@sr_items public.i_d_week_seq date_dim@sr_items public.i_d_date store_returns@sr_items public.i_sr_returned_date_sk date_dim#3@cr_items public.i_d_date date_dim#2@cr_items public.i_d_week_seq date_dim@cr_items public.i_d_date catalog_returns@cr_items public.i_cr_returned_date_sk date_dim#3@wr_items public.i_d_date date_dim#2@wr_items public.i_d_week_seq date_dim@wr_items public.i_d_date web_returns@wr_items public.i_wr_returned_date_sk item@wr_items public.pk_item) SEMIJOIN_UNIQUE((date_dim#2@sr_items date_dim#3@sr_items) date_dim#3@sr_items (date_dim#2@cr_items date_dim#3@cr_items) date_dim#3@cr_items (date_dim#2@wr_items date_dim#3@wr_items) date_dim#3@wr_items) NO_GATHER(sr_items cr_items wr_items store_returns@sr_items item@sr_items date_dim@sr_items date_dim#2@sr_items date_dim#3@sr_items catalog_returns@cr_items item@cr_items date_dim@cr_items date_dim#2@cr_items date_dim#3@cr_items web_returns@wr_items item@wr_items date_dim@wr_items date_dim#2@wr_items date_dim#3@wr_items)', false);
 + with sr_items as
 + (select i_item_id item_id,
 +        sum(sr_return_quantity) sr_item_qty
@@ -7908,7 +7940,7 @@ Index: dbt7/dsgen/pg_plan_advice/query84.tpl
 + define INCOME = random(0, 70000, uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(customer_address customer (income_band household_demographics) store_returns customer_demographics) NESTED_LOOP_PLAIN(customer household_demographics store_returns customer_demographics) HASH_JOIN((household_demographics income_band)) SEQ_SCAN(income_band) INDEX_SCAN(customer_address public.i_ca_city customer public.i_c_current_addr_sk household_demographics public.i_hd_income_band_sk) INDEX_ONLY_SCAN(store_returns public.i_sr_cdemo_sk customer_demographics public.pk_customer_demographics) NO_GATHER(customer customer_address customer_demographics household_demographics income_band store_returns)', false);
 + [_LIMITA] select [_LIMITB] c_customer_id as customer_id
 +       , coalesce(c_last_name,'') || ', ' || coalesce(c_first_name,'') as customername
 + from customer
@@ -7974,7 +8006,7 @@ Index: dbt7/dsgen/pg_plan_advice/query85.tpl
 + define YEAR= random(1998,2002, uniform);
 + define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(web_returns customer_address cd1 reason web_sales cd2 web_page date_dim) MERGE_JOIN_PLAIN(reason) NESTED_LOOP_PLAIN(web_sales cd2 web_page date_dim) HASH_JOIN(customer_address cd1) SEQ_SCAN(web_returns reason web_page) BITMAP_HEAP_SCAN(customer_address cd1) INDEX_SCAN(web_sales public.pk_web_sales cd2 public.pk_customer_demographics date_dim public.pk_date_dim) GATHER((web_sales web_returns cd1 cd2 customer_address reason)) NO_GATHER(web_page date_dim)', false);
 + [_LIMITA] select [_LIMITB] substr(r_reason_desc,1,20)
 +       ,avg(ws_quantity)
 +       ,avg(wr_refunded_cash)
@@ -8098,7 +8130,7 @@ Index: dbt7/dsgen/pg_plan_advice/query86.tpl
 + define DMS = random(1176,1224,uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(d1@results web_sales@results item@results) MERGE_JOIN_PLAIN(item@results) NESTED_LOOP_PLAIN(web_sales@results) SEQ_SCAN(d1@results item@results) INDEX_SCAN(web_sales@results public.i_ws_sold_date_sk) GATHER_MERGE((web_sales@results d1@results item@results)) NO_GATHER(results_rollup unnamed_subquery@results_rollup unnamed_subquery#2@results_rollup unnamed_subquery#3@results_rollup results@setop_1 results@setop_2 results@setop_3)', false);
 + with results as
 +( select sum(ws_net_paid) as total_sum, i_category, i_class, 0 as g_category, 0 as g_class 
 + from
@@ -8172,7 +8204,7 @@ Index: dbt7/dsgen/pg_plan_advice/query87.tpl
 +-- 
 +define DMS = random(1176,1224, uniform); 
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@setop_1 store_sales@setop_1 customer@setop_1) JOIN_ORDER(date_dim@setop_2 catalog_sales@setop_2 customer@setop_2) JOIN_ORDER(date_dim@setop_3 web_sales@setop_3 customer@setop_3) NESTED_LOOP_PLAIN(store_sales@setop_1 catalog_sales@setop_2 web_sales@setop_3 customer@setop_3) HASH_JOIN(customer@setop_1 customer@setop_2) SEQ_SCAN(date_dim@setop_1 customer@setop_1 date_dim@setop_2 customer@setop_2 date_dim@setop_3) INDEX_SCAN(store_sales@setop_1 public.i_ss_sold_date_sk catalog_sales@setop_2 public.i_cs_sold_date_sk web_sales@setop_3 public.i_ws_sold_date_sk customer@setop_3 public.pk_customer) GATHER_MERGE((store_sales@setop_1 date_dim@setop_1 customer@setop_1) (catalog_sales@setop_2 date_dim@setop_2 customer@setop_2) (web_sales@setop_3 date_dim@setop_3 customer@setop_3)) NO_GATHER(cool_cust unnamed_subquery@cool_cust unnamed_subquery#2@cool_cust unnamed_subquery#3@cool_cust)', false);
 +select count(*) 
 +from ((select distinct c_last_name, c_first_name, d_date
 +       from store_sales, date_dim, customer
@@ -8235,7 +8267,7 @@ Index: dbt7/dsgen/pg_plan_advice/query88.tpl
 + define HOUR = ulist(random(-1,4,uniform),3);
 + define STORE = dist(stores,1,1);
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(time_dim@s1 store_sales@s1 household_demographics@s1 store@s1) JOIN_ORDER(time_dim@s2 store_sales@s2 household_demographics@s2 store@s2) JOIN_ORDER(time_dim@s3 store_sales@s3 household_demographics@s3 store@s3) JOIN_ORDER(time_dim@s4 store_sales@s4 household_demographics@s4 store@s4) JOIN_ORDER(time_dim@s5 store_sales@s5 household_demographics@s5 store@s5) JOIN_ORDER(time_dim@s6 store_sales@s6 household_demographics@s6 store@s6) JOIN_ORDER(time_dim@s7 store_sales@s7 household_demographics@s7 store@s7) JOIN_ORDER(time_dim@s8 store_sales@s8 household_demographics@s8 store@s8) JOIN_ORDER(s1 s2 s3 s4 s5 s6 s7 s8) NESTED_LOOP_PLAIN(store_sales@s1 store_sales@s2 store_sales@s3 store_sales@s4 store_sales@s5 store_sales@s6 store_sales@s7 store_sales@s8 s2 s3 s4 s5 s6 s7 s8) HASH_JOIN(household_demographics@s1 store@s1 household_demographics@s2 store@s2 household_demographics@s3 store@s3 household_demographics@s4 store@s4 household_demographics@s5 store@s5 household_demographics@s6 store@s6 household_demographics@s7 store@s7 household_demographics@s8 store@s8) SEQ_SCAN(store@s1 store@s2 store@s3 store@s4 store@s5 store@s6 store@s7 store@s8) BITMAP_HEAP_SCAN(time_dim@s1 household_demographics@s1 time_dim@s2 household_demographics@s2 time_dim@s3 household_demographics@s3 time_dim@s4 household_demographics@s4 time_dim@s5 household_demographics@s5 time_dim@s6 household_demographics@s6 time_dim@s7 household_demographics@s7 time_dim@s8 household_demographics@s8) INDEX_SCAN(store_sales@s1 public.i_ss_sold_time_sk store_sales@s2 public.i_ss_sold_time_sk store_sales@s3 public.i_ss_sold_time_sk store_sales@s4 public.i_ss_sold_time_sk store_sales@s5 public.i_ss_sold_time_sk store_sales@s6 public.i_ss_sold_time_sk store_sales@s7 public.i_ss_sold_time_sk store_sales@s8 public.i_ss_sold_time_sk) GATHER((store_sales@s1 household_demographics@s1 time_dim@s1 store@s1) (store_sales@s2 household_demographics@s2 time_dim@s2 store@s2) (store_sales@s3 household_demographics@s3 time_dim@s3 store@s3) (store_sales@s4 household_demographics@s4 time_dim@s4 store@s4) (store_sales@s5 household_demographics@s5 time_dim@s5 store@s5) (store_sales@s6 household_demographics@s6 time_dim@s6 store@s6) (store_sales@s7 household_demographics@s7 time_dim@s7 store@s7) (store_sales@s8 household_demographics@s8 time_dim@s8 store@s8)) NO_GATHER(s1 s2 s3 s4 s5 s6 s7 s8)', false);
 +select  *
 +from
 + (select count(*) h8_30_to_9
@@ -8382,7 +8414,7 @@ Index: dbt7/dsgen/pg_plan_advice/query89.tpl
 +define CLASS_F = DIST(distmember(categories, [IDX.6], 2), 1, 1);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(item@tmp1 store_sales@tmp1 date_dim@tmp1 store@tmp1) NESTED_LOOP_PLAIN(store_sales@tmp1) NESTED_LOOP_MEMOIZE(store@tmp1) HASH_JOIN(date_dim@tmp1) SEQ_SCAN(item@tmp1) INDEX_SCAN(store_sales@tmp1 public.i_ss_item_sk date_dim@tmp1 public.i_d_year store@tmp1 public.pk_store) GATHER_MERGE((item@tmp1 store_sales@tmp1 date_dim@tmp1 store@tmp1)) NO_GATHER(tmp1)', false);
 +[_LIMITA] select [_LIMITB] *
 +from(
 +select i_category, i_class, i_brand,
@@ -8451,7 +8483,7 @@ Index: dbt7/dsgen/pg_plan_advice/query9.tpl
 +define AGGCELSE= text({"ss_net_paid",1},{"ss_net_paid_inc_tax",1},{"ss_net_profit",1});
 +define RC=ulist(random(1, rowcount("store_sales")/5,uniform),5);
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'SEQ_SCAN(store_sales@expr_5 store_sales@expr_14) INDEX_SCAN(store_sales@expr_2 public.i_ss_quantity store_sales@expr_3 public.i_ss_quantity store_sales@expr_6 public.i_ss_quantity store_sales@expr_8 public.i_ss_quantity store_sales@expr_9 public.i_ss_quantity store_sales@expr_11 public.i_ss_quantity store_sales@expr_12 public.i_ss_quantity store_sales@expr_15 public.i_ss_quantity) INDEX_ONLY_SCAN(reason public.pk_reason store_sales@expr_1 public.i_ss_quantity store_sales@expr_4 public.i_ss_quantity store_sales@expr_7 public.i_ss_quantity store_sales@expr_10 public.i_ss_quantity store_sales@expr_13 public.i_ss_quantity) GATHER(store_sales@expr_1 store_sales@expr_2 store_sales@expr_3 store_sales@expr_4 store_sales@expr_5 store_sales@expr_6 store_sales@expr_7 store_sales@expr_8 store_sales@expr_9 store_sales@expr_10 store_sales@expr_11 store_sales@expr_12 store_sales@expr_13 store_sales@expr_14 store_sales@expr_15) NO_GATHER(reason)', false);
 +select case when (select count(*) 
 +                  from store_sales 
 +                  where ss_quantity between 1 and 20) > [RC.1]
@@ -8546,7 +8578,7 @@ Index: dbt7/dsgen/pg_plan_advice/query90.tpl
 + define HOUR_PM = random(13,21,uniform);
 + define _LIMIT=100;
 + 
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(web_page@at web_sales@at time_dim@at household_demographics@at) JOIN_ORDER(web_page@pt web_sales@pt time_dim@pt household_demographics@pt) JOIN_ORDER(at pt) NESTED_LOOP_PLAIN(web_sales@at web_sales@pt pt) HASH_JOIN(time_dim@at household_demographics@at time_dim@pt household_demographics@pt) SEQ_SCAN(web_page@at web_page@pt) INDEX_SCAN(web_sales@at public.i_ws_web_page_sk time_dim@at public.i_t_hour household_demographics@at public.i_hd_dep_count web_sales@pt public.i_ws_web_page_sk time_dim@pt public.i_t_hour household_demographics@pt public.i_hd_dep_count) NO_GATHER(at pt web_sales@at household_demographics@at time_dim@at web_page@at web_sales@pt household_demographics@pt time_dim@pt web_page@pt)', false);
 + [_LIMITA] select [_LIMITB] cast(amc as decimal(15,4))/cast(pmc as decimal(15,4)) am_pm_ratio
 + from ( select count(*) amc
 +       from web_sales, household_demographics , time_dim, web_page
@@ -8611,7 +8643,7 @@ Index: dbt7/dsgen/pg_plan_advice/query91.tpl
 +define BUY_POTENTIAL = text({"1001-5000",1},{">10000",1},{"501-1000",1},{"0-500",1},{"Unknown",1},{"5001-10000",1});
 +define GMT = text({"-6",1},{"-7",1});
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(call_center (date_dim catalog_returns customer household_demographics customer_address customer_demographics)) NESTED_LOOP_PLAIN(catalog_returns customer customer_address customer_demographics) NESTED_LOOP_MATERIALIZE((catalog_returns date_dim customer customer_address customer_demographics household_demographics)) HASH_JOIN(household_demographics) SEQ_SCAN(household_demographics) INDEX_SCAN(call_center public.i_cc_name date_dim public.i_d_year catalog_returns public.i_cr_returned_date_sk customer public.pk_customer customer_address public.pk_customer_address customer_demographics public.pk_customer_demographics) NO_GATHER(call_center catalog_returns date_dim customer customer_address customer_demographics household_demographics)', false);
 +select  
 +        cc_call_center_id Call_Center,
 +        cc_name Call_Center_Name,
@@ -8685,7 +8717,7 @@ Index: dbt7/dsgen/pg_plan_advice/query92.tpl
 +define WSDATE = date([YEAR]+"-01-01",[YEAR]+"-04-01",sales);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim web_sales item) JOIN_ORDER(web_sales@expr_1 date_dim@expr_1) NESTED_LOOP_PLAIN(web_sales) HASH_JOIN(item date_dim@expr_1) SEQ_SCAN(date_dim) INDEX_SCAN(web_sales public.i_ws_sold_date_sk item public.i_i_manufact_id web_sales@expr_1 public.i_ws_item_sk date_dim@expr_1 public.i_d_date) GATHER((web_sales date_dim)) NO_GATHER(item web_sales@expr_1 date_dim@expr_1)', false);
 +[_LIMITA] select [_LIMITB] 
 +   sum(ws_ext_discount_amt)  as "Excess Discount Amount" 
 +from 
@@ -8757,7 +8789,7 @@ Index: dbt7/dsgen/pg_plan_advice/query93.tpl
 +define REASON= dist(return_reasons, 1, 1);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(reason store_returns store_sales) NESTED_LOOP_PLAIN(store_returns store_sales) SEQ_SCAN(reason) INDEX_SCAN(store_returns public.i_sr_reason_sk store_sales public.pk_store_sales) NO_GATHER(store_sales store_returns reason)', false);
 +[_LIMITA] select [_LIMITB] ss_customer_sk
 +            ,sum(act_sales) sumsales
 +      from (select ss_item_sk
@@ -8818,7 +8850,7 @@ Index: dbt7/dsgen/pg_plan_advice/query94.tpl
 +define STATE = dist(fips_county,3,1);   
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim ws1 web_site customer_address wr1 ws2) NESTED_LOOP_PLAIN(ws1 wr1 ws2) HASH_JOIN(web_site customer_address) SEQ_SCAN(date_dim web_site) BITMAP_HEAP_SCAN(customer_address) INDEX_SCAN(ws1 public.i_ws_ship_date_sk ws2 public.i_ws_order_number) INDEX_ONLY_SCAN(wr1 public.i_wr_order_number) GATHER((ws1 date_dim customer_address web_site ws2 wr1))', false);
 +[_LIMITA] select [_LIMITB] 
 +   count(distinct ws_order_number) as "order count"
 +  ,sum(ws_ext_ship_cost) as "total shipping cost"
@@ -8891,7 +8923,7 @@ Index: dbt7/dsgen/pg_plan_advice/query95.tpl
 +define STATE = dist(fips_county,3,1);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim ws1 web_site customer_address (ws_wh#2 web_returns) ws_wh) JOIN_ORDER(ws1@ws_wh ws2@ws_wh) HASH_JOIN(ws1 web_site customer_address web_returns (web_returns ws_wh#2) ws_wh ws2@ws_wh) SEQ_SCAN(date_dim ws1 web_site ws1@ws_wh ws2@ws_wh) BITMAP_HEAP_SCAN(customer_address) INDEX_ONLY_SCAN(web_returns public.i_wr_order_number) GATHER((ws1 date_dim customer_address web_site) (ws1@ws_wh ws2@ws_wh)) SEMIJOIN_UNIQUE(ws_wh (web_returns ws_wh#2)) NO_GATHER(ws_wh web_returns ws_wh#2)', false);
 +with ws_wh as
 +(select ws1.ws_order_number,ws1.ws_warehouse_sk wh1,ws2.ws_warehouse_sk wh2
 + from web_sales ws1,web_sales ws2
@@ -8967,7 +8999,7 @@ Index: dbt7/dsgen/pg_plan_advice/query96.tpl
 +define DEPCNT=random(0,9,uniform);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(time_dim store_sales household_demographics store) MERGE_JOIN_PLAIN(store) NESTED_LOOP_PLAIN(store_sales) HASH_JOIN(household_demographics) SEQ_SCAN(store) BITMAP_HEAP_SCAN(time_dim) INDEX_SCAN(store_sales public.i_ss_sold_time_sk household_demographics public.i_hd_dep_count) GATHER((store_sales household_demographics time_dim store))', false);
 +[_LIMITA] select [_LIMITB] count(*) 
 +from store_sales
 +    ,household_demographics 
@@ -9026,7 +9058,7 @@ Index: dbt7/dsgen/pg_plan_advice/query97.tpl
 +
 +
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim@ssci store_sales@ssci) JOIN_ORDER(date_dim@csci catalog_sales@csci) JOIN_ORDER(ssci csci) MERGE_JOIN_PLAIN(csci) NESTED_LOOP_PLAIN(store_sales@ssci catalog_sales@csci) SEQ_SCAN(date_dim@csci) INDEX_SCAN(date_dim@ssci public.pk_date_dim store_sales@ssci public.i_ss_sold_date_sk catalog_sales@csci public.i_cs_sold_date_sk) NO_GATHER(ssci csci store_sales@ssci date_dim@ssci catalog_sales@csci date_dim@csci)', false);
 +with ssci as (
 +select ss_customer_sk customer_sk
 +      ,ss_item_sk item_sk
@@ -9093,7 +9125,7 @@ Index: dbt7/dsgen/pg_plan_advice/query98.tpl
 +define SDATE=date([YEAR]+"-01-01",[YEAR]+"-07-01",sales);
 +define CATEGORY=ulist(dist(categories,1,1),3);
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim store_sales item) NESTED_LOOP_PLAIN(store_sales) HASH_JOIN(item) SEQ_SCAN(date_dim) BITMAP_HEAP_SCAN(item) INDEX_SCAN(store_sales public.i_ss_sold_date_sk) GATHER_MERGE((store_sales item date_dim))', false);
 +select i_item_id
 +      ,i_item_desc 
 +      ,i_category 
@@ -9167,7 +9199,7 @@ Index: dbt7/dsgen/pg_plan_advice/query99.tpl
 +define DMS = random(1176,1224, uniform);
 +define _LIMIT=100;
 +
-+EXPLAIN (PLAN_ADVICE, ANALYZE, BUFFERS, VERBOSE)
++RESET pg_plan_advice.advice; select set_config('pg_plan_advice.advice', 'JOIN_ORDER(date_dim catalog_sales warehouse call_center ship_mode) MERGE_JOIN_PLAIN(warehouse) NESTED_LOOP_PLAIN(catalog_sales) HASH_JOIN(call_center ship_mode) SEQ_SCAN(date_dim warehouse call_center ship_mode) INDEX_SCAN(catalog_sales public.i_cs_ship_date_sk) GATHER_MERGE((catalog_sales warehouse ship_mode call_center date_dim))', false);
 +[_LIMITA] select [_LIMITB] 
 +   substr(w_warehouse_name,1,20)
 +  ,sm_type
@@ -9200,20 +9232,30 @@ Index: dbt7/dsgen/pg_plan_advice/query99.tpl
 +        ,sm_type
 +        ,cc_name
 +[_LIMITC];
-Index: dbt7/dsgen/query_postgresql/pgsqla.tpl
+Index: dbt7/dsgen/query_templates/pgsqla.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/query_postgresql/pgsqla.tpl
++++ dbt7/dsgen/query_templates/pgsqla.tpl
 @@ -0,0 +1,5 @@
 +define __LIMITA = "";
 +define __LIMITB = "";
 +define __LIMITC = "limit %d";
-+define _BEGIN = "LOAD 'pg_plan_advice';INSERT INTO time_statistics (template, s_time, stream, query, seed) VALUES ('"+ [_TEMPLATE] + "', TRANSACTION_TIMESTAMP(), " + [_STREAM] + ", " + [_QUERY] + ", " + [_SEED] + ");";
-+define _END = "UPDATE time_statistics SET e_time = TRANSACTION_TIMESTAMP() WHERE template = '" + [_TEMPLATE] + "' AND stream = " + [_STREAM] + ";";
-Index: dbt7/dsgen/query_postgresql/templates-pgsqla.lst
++define _BEGIN = "LOAD 'pg_plan_advice'; INSERT INTO time_statistics (template, s_time, stream, query, seed) VALUES ('"+ [_TEMPLATE] + "', TRANSACTION_TIMESTAMP(), " + [_STREAM] + ", " + [_QUERY] + ", " + [_SEED] + ");";
++define _END = "RESET pg_plan_advice.advice; UPDATE time_statistics SET e_time = TRANSACTION_TIMESTAMP() WHERE template = '" + [_TEMPLATE] + "' AND stream = " + [_STREAM] + ";";
+Index: dbt7/dsgen/query_templates/pgsqlaea.tpl
 ===================================================================
 --- /dev/null
-+++ dbt7/dsgen/query_postgresql/templates-pgsqla.lst
++++ dbt7/dsgen/query_templates/pgsqlaea.tpl
+@@ -0,0 +1,5 @@
++define __LIMITA = "";
++define __LIMITB = "";
++define __LIMITC = "limit %d";
++define _BEGIN = "LOAD 'pg_plan_advice'; LOAD 'auto_explain'; SET pg_plan_advice.always_store_advice_details TO on; SET auto_explain.log_min_duration TO 0; SET auto_explain.log_analyze TO on; SET auto_explain.log_buffers TO on; SET auto_explain.log_verbose TO on; SET auto_explain.log_extension_options TO 'plan_advice'; SET auto_explain.log_level TO notice; INSERT INTO time_statistics (template, s_time, stream, query, seed) VALUES ('"+ [_TEMPLATE] + "', TRANSACTION_TIMESTAMP(), " + [_STREAM] + ", " + [_QUERY] + ", " + [_SEED] + ");";
++define _END = "RESET pg_plan_advice.advice; UPDATE time_statistics SET e_time = TRANSACTION_TIMESTAMP() WHERE template = '" + [_TEMPLATE] + "' AND stream = " + [_STREAM] + ";";
+Index: dbt7/dsgen/query_templates/templates-pgsqla.lst
+===================================================================
+--- /dev/null
++++ dbt7/dsgen/query_templates/templates-pgsqla.lst
 @@ -0,0 +1,99 @@
 +../pg_plan_advice/query1.tpl
 +../pg_plan_advice/query2.tpl
