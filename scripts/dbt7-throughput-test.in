@@ -6,6 +6,7 @@
 #
 # Copyright The DBT-7 Authors
 
+DM_FAILED=0
 PRIVILEGED=1
 RESTART=0
 PROFILE=0
@@ -57,9 +58,17 @@ run_data_maintenance()
 	S_TIME_POWER=$(date +%s)
 	dbt7-"${DATABASE}"-time-statistics -s -n "DATAMAINT${NUM}"
 	for I in $(seq ${STREAM_START} ${STREAM_END}); do
-		dbt7-"${DATABASE}"-data-maintenance -i "${OUTPUT_DIR}/.." \
-				-o "${OUTPUT_DIR}" -n "$I" ${PRIVILEGED_ARG} \
+		# Keep running the remaining streams and tests after a failure,
+		# but report it and fail the throughput test at the end.
+		if ! dbt7-"${DATABASE}"-data-maintenance \
+				-i "${OUTPUT_DIR}/.." -o "${OUTPUT_DIR}" \
+				-n "$I" ${PRIVILEGED_ARG} \
 				> "${OUTPUT_DIR}/dm_${I}".txt 2>&1
+		then
+			echo "ERROR: data maintenance stream ${I} failed," \
+				"see ${OUTPUT_DIR}/dm_${I}.txt"
+			DM_FAILED=1
+		fi
 	done
 	dbt7-"${DATABASE}"-time-statistics -e -n "DATAMAINT${NUM}"
 	E_TIME_POWER=$(date +%s)
@@ -305,4 +314,9 @@ fi
 if [ $PROFILE -eq 1 ]; then
 	echo "Generating Linux perf reports for throughput test..."
 	ts profile -o "${OUTPUT_DIR}/profile" -p
+fi
+
+if [ "${DM_FAILED}" -ne 0 ]; then
+	echo "ERROR: one or more data maintenance streams failed"
+	exit 1
 fi

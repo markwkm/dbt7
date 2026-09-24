@@ -23,6 +23,8 @@ vX.Y.Z (YYYY-MM-DD)
   generation was chunked, so that single-processor systems load them
 - gp: find data maintenance refresh data files whether or not their
   generation was chunked, so that single-processor systems load them
+- throughput-test: report failed data maintenance streams and fail the
+  test after all streams and tests have run
 - AppImage: bump Touchstone Tools version from v0.10.0 to v0.10.5
 - Add dsgen and dsgen-clean make targets to apply the TPC-DS Tools patch
   series with quilt and build the tools, and to undo both
