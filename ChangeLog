@@ -19,6 +19,8 @@ vX.Y.Z (YYYY-MM-DD)
 - pgsql: re-enable allowing parallel data loading
 - pgsql: fix data maintenance test execution when running as privileged
   database user
+- pgsql: find data maintenance refresh data files whether or not their
+  generation was chunked, so that single-processor systems load them
 - AppImage: bump Touchstone Tools version from v0.10.0 to v0.10.5
 - Add dsgen and dsgen-clean make targets to apply the TPC-DS Tools patch
   series with quilt and build the tools, and to undo both

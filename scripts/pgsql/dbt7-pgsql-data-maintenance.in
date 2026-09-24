@@ -11,7 +11,6 @@
 # that do not preserve PK/FK relationship by using
 # INSERT ... ON CONFLICT DO NOTHING.
 
-CPUS=1
 PSQL="psql -v ON_ERROR_STOP=1 -X -e -d $DBT7DBNAME"
 PRIVILEGED=1
 
@@ -55,12 +54,15 @@ ALTER TABLE $TABLE
 SET (autovacuum_enabled = false, toast.autovacuum_enabled = false);
 __EOF__
 
+	# Chunked refresh data generation creates a file per dsdgen child
+	# (pattern: table_child_chunks.dat), where tables too small for dsdgen
+	# to chunk are emitted by the first child only; unchunked generation
+	# creates a single table_stream.dat.  The leading [0-9] keeps a table
+	# from matching the files of another table it is a name prefix of,
+	# e.g. s_purchase and s_purchase_lineitem.
 	JOBS=""
-	for I in $(seq 1 ${CPUS}); do
-		FILENAME="${DS_DATA}/${STREAM}/${TABLE}_${I}_${CPUS}.dat"
+	for FILENAME in "${DS_DATA}/${STREAM}/${TABLE}"_[0-9]*.dat; do
 		if [ ! -f "$FILENAME" ]; then
-			# Smaller scale factors may not generate as many data files as there
-			# are available processors.
 			continue
 		fi
 		if [ $PRIVILEGED -ne 1 ]; then
@@ -71,6 +73,11 @@ ${COPYPREFIX}COPY $TABLE FROM '$FILENAME' WITH (DELIMITER '|', NULL '');
 __EOF__
 		JOBS="${JOBS} ${!}"
 	done
+	if [ -z "${JOBS}" ]; then
+		echo "ERROR: no refresh data files for table ${TABLE} in" \
+			"${DS_DATA}/${STREAM}"
+		exit 1
+	fi
 
 	RC=0
 	for JOB in ${JOBS}; do
@@ -159,16 +166,6 @@ if [ -f "$SEED_FILE" ]; then
 	read -r SEED < "${SEED_FILE}"
 	echo "Using generated seed file: $SEED"
 fi
-
-# Determine number of processors for parallelism.  The refresh data
-# files are located by the processor count detected when
-# dbt7-throughput-test generated them, so both detections must match.
-if command -v nproc > /dev/null 2>&1; then
-	CPUS=$(nproc)
-elif [ -f "/proc/stat" ]; then
-	CPUS=$(( $(grep -c cpu /proc/stat) - 1 ))
-fi
-echo "detected ${CPUS} processors for parallel data generation and loading"
 
 for T in s_purchase_lineitem s_purchase s_catalog_order s_web_order \
 		s_catalog_order_lineitem s_web_order_lineitem s_store_returns \
