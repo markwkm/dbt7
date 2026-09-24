@@ -225,9 +225,7 @@ dbt7-generate-queries \
 		"${DATABASE}" \
 		"${OUTPUT_DIR}" || exit 1
 
-# Determine number of processors for parallelism.  The data maintenance
-# scripts locate the refresh data files by the processor count detected
-# there, so both detections must match.
+# Determine number of processors for parallelism.
 CPUS=1
 if command -v nproc > /dev/null 2>&1; then
 	CPUS=$(nproc)
